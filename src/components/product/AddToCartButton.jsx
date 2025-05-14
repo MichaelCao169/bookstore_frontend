@@ -16,7 +16,7 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
   const handleAddToCart = async () => {
     // 1. Kiểm tra đăng nhập
     if (!isAuthenticated) {
-      toast.warn('Please login to add items to your cart.');
+      toast.warn('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
       // Redirect đến trang login, nhớ kèm theo URL hiện tại để quay lại
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
@@ -24,7 +24,7 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
 
     // 2. Kiểm tra tồn kho (mặc dù nút đã disable, kiểm tra lại cho chắc)
     if (stockQuantity <= 0) {
-      toast.error('This product is out of stock.');
+      toast.error('Sản phẩm này đã hết hàng.');
       return;
     }
 
@@ -37,14 +37,14 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
         quantity: 1, // Mặc định thêm 1 sản phẩm mỗi lần click
       });
 
-      toast.success('Product added to cart!');
+      toast.success('Đã thêm sản phẩm vào giỏ hàng!');
       // *** GỌI FETCH CART COUNT ĐỂ CẬP NHẬT STATE ***
       if (fetchCartCount) await fetchCartCount();
 
     } catch (error) {
       console.error('Failed to add to cart:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || error.response?.data || 'Could not add product to cart.';
-      toast.error(`Error: ${errorMessage}`); // Thông báo lỗi
+      const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể thêm sản phẩm vào giỏ hàng.';
+      toast.error(`Lỗi: ${errorMessage}`); // Thông báo lỗi
     } finally {
       setIsLoading(false); // Kết thúc loading
     }
@@ -62,14 +62,14 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
           ? 'bg-orange-400 cursor-wait' // Màu nhạt hơn khi loading
           : 'bg-orange-500 hover:bg-orange-600'
         }`}
-      aria-label={isDisabled ? 'Out of stock' : 'Add to cart'}
+      aria-label={isDisabled ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
     >
       {isLoading ? (
         <FiLoader className="animate-spin mr-2" size={18} /> // Icon loading
       ) : (
         <FiShoppingCart className="inline mr-2" size={18} />
       )}
-      {isDisabled ? 'Out of Stock' : isLoading ? 'Adding...' : 'Add to Cart'}
+      {isDisabled ? 'Hết hàng' : isLoading ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
     </button>
   );
 };

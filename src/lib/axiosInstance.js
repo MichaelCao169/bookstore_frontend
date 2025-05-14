@@ -2,24 +2,88 @@
 import axios from 'axios';
 import { useAuthStore } from '@/store/authStore'; // *** IMPORT AUTH STORE ***
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+// Sử dụng URL đầy đủ thay vì biến môi trường
+// const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+const apiBaseUrl = 'http://localhost:8080';  // Quay lại URL gốc, không thêm /api
+
+// IMPORTANT: Set this to true to bypass authentication completely for API calls
+// This should match the same setting in admin layout
+const FORCE_BYPASS_AUTH = false; // Set to false in production
 
 const axiosInstance = axios.create({
   baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // Gửi cookies với các request cross-domain
 });
+
+// Thêm hàm debug cho requests API
+const DEBUG_API = true; // Đặt thành false để tắt log
+function logApiCall(method, url, headers, data = null) {
+  if (!DEBUG_API) return;
+  
+  console.group(`🌐 API Call (${method}): ${url}`);
+  console.log('📝 Headers:', headers);
+  if (data) console.log('📦 Data:', data);
+  
+  const token = headers?.Authorization;
+  if (token) {
+    console.log('🔑 Token present:', token.substring(0, 15) + '...');
+    try {
+      // Log phần payload của token để debug
+      const tokenParts = token.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        console.log('👤 Token payload:', payload);
+        
+        // Kiểm tra hết hạn
+        if (payload.exp) {
+          const expiryDate = new Date(payload.exp * 1000);
+          const now = new Date();
+          console.log(`⏱️ Token expires: ${expiryDate.toLocaleString()} (${expiryDate > now ? 'Valid' : 'EXPIRED'})`);
+        }
+      }
+    } catch (e) {
+      console.log('Could not decode token:', e);
+    }
+  } else {
+    console.log('⚠️ No token present in request');
+  }
+  
+  console.groupEnd();
+}
 
 // --- Request Interceptor ---
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Lấy token từ Zustand store
-    const token = useAuthStore.getState().accessToken; // Dùng getState() để đọc state bên ngoài React component
-    // console.log('Interceptor - Current Token:', token); // Debug
-    // Gắn token vào header nếu tồn tại và không phải là request đến refresh endpoint
-    if (token && config.url && !config.url.endsWith('/auth/refresh')) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-      // console.log('Interceptor - Added Auth Header'); // Debug
+    // Tự động thêm prefix /api/ vào các URL nếu chưa có
+    if (config.url && !config.url.startsWith('/api/') && !config.url.startsWith('http')) {
+      console.log(`Interceptor: Adding /api prefix to route: ${config.url}`);
+      config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
     }
+    
+    // For admin routes in bypass mode, use a demo token or skip authentication
+    if (FORCE_BYPASS_AUTH && config.url && 
+        (config.url.includes('/admin/') || 
+         config.url.includes('/users/') || 
+         config.url.includes('/products/') ||
+         config.url.includes('/orders/') ||
+         config.url.includes('/dashboard/'))) {
+      console.log(`Interceptor: Bypassing authentication for admin route: ${config.url}`);
+      // Either skip token completely or use a mock token
+      // config.headers['Authorization'] = 'Bearer mock-token-for-development';
+      return config;
+    }
+    
+    // Normal auth flow - only add token for non-refresh endpoints
+    const token = useAuthStore.getState().accessToken;
+    if (token && config.url) {
+      console.log(`Adding auth token to request: ${config.url}`);
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Log request details
+    logApiCall(config.method.toUpperCase(), config.url, config.headers, config.data);
+    
     return config;
   },
   (error) => {
@@ -45,82 +109,207 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
+// Hàm chuyển hướng đến trang login
+const redirectToLogin = () => {
+  // Check if we're in a browser environment
+  if (typeof window !== 'undefined') {
+    // Store the current URL to redirect back after login (optional)
+    const currentPath = window.location.pathname;
+    if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
+      sessionStorage.setItem('redirectAfterLogin', currentPath);
+    }
+    
+    // Redirect to login page
+    window.location.href = '/login';
+  }
+};
 
 axiosInstance.interceptors.response.use(
   (response) => response, // Trả về response nếu thành công (status 2xx)
   async (error) => {
     const originalRequest = error.config;
-    // console.log('Response Error - Status:', error.response?.status); // Debug
-    // console.log('Response Error - URL:', originalRequest.url); // Debug
+    
+    // If in bypass mode and accessing admin routes, return mock successful response
+    if (FORCE_BYPASS_AUTH && originalRequest.url && 
+        (originalRequest.url.includes('/admin/') || 
+         originalRequest.url.includes('/users/') || 
+         originalRequest.url.includes('/products/') ||
+         originalRequest.url.includes('/orders/') ||
+         originalRequest.url.includes('/dashboard/'))) {
+      console.log(`Interceptor: Using mock response for bypassed route: ${originalRequest.url}`);
+      
+      // Create a mock successful response based on the request URL
+      // This prevents 401/403 errors during development when backend authentication is not working
+      return Promise.resolve({
+        data: getMockResponseData(originalRequest.url),
+        status: 200,
+        statusText: 'OK (MOCK)',
+        headers: {},
+        config: originalRequest
+      });
+    }
 
-    // Chỉ xử lý lỗi 401 và không phải là request refresh token ban đầu VÀ request chưa được thử lại
-    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh') {
-       // console.log('Interceptor: Detected 401, not a retry, not refresh endpoint.'); // Debug
+    // Xử lý lỗi 401 (Unauthorized) hoặc 403 (Forbidden) do token hết hạn
+    if ((error.response?.status === 401 || error.response?.status === 403) 
+        && !originalRequest._retry 
+        && originalRequest.url !== '/api/auth/refresh') {
+      console.log('Token expired or invalid. Attempting to refresh...');
 
       if (isRefreshing) {
-         // Nếu đang có request refresh khác chạy, thêm request lỗi này vào hàng đợi
-         // console.log('Interceptor: Already refreshing, adding to queue.'); // Debug
-        return new Promise(function(resolve, reject) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
-           // Khi refresh xong, thử lại request này với token mới
-           // console.log('Interceptor: Retrying request from queue with new token.'); // Debug
-          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          // When token is refreshed, retry with new token
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
           return axiosInstance(originalRequest);
         }).catch(err => {
-           // Nếu quá trình chờ refresh thất bại
-           return Promise.reject(err);
+          return Promise.reject(err);
         });
       }
 
-      // Đánh dấu là đang retry và bắt đầu quá trình refresh
+      // Mark as retrying and refreshing
       originalRequest._retry = true;
       isRefreshing = true;
-      console.log('Interceptor: Access token expired or invalid, attempting to refresh...');
 
       try {
-        // Gọi API refresh (Backend tự đọc HttpOnly cookie)
-        const refreshResponse = await axiosInstance.post('/auth/refresh');
-        const newAccessToken = refreshResponse.data.accessToken; // Lấy token mới từ response
-        console.log('Interceptor: Token refreshed successfully!');
+        // Trước khi refresh, kiểm tra xem người dùng đã đăng nhập chưa
+        const user = useAuthStore.getState().user;
+        if (!user) {
+          console.error('Cannot refresh token: No user logged in');
+          throw new Error('No user logged in');
+        }
 
-        // Cập nhật token trong Zustand store
-        useAuthStore.getState().setAccessToken(newAccessToken);
-
-        // Cập nhật header mặc định cho các request sau này (tùy chọn)
-        // axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-
-        // Cập nhật header cho request gốc bị lỗi
-        originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-
-        // Thực thi lại các request trong hàng đợi (nếu có) với token mới
-        processQueue(null, newAccessToken);
-
-        // Thử lại request gốc với token mới
+        // Call the refresh endpoint
+        const response = await axiosInstance.post('/api/auth/refresh');
+        const newToken = response.data.accessToken;
+        
+        // Update token in store
+        useAuthStore.getState().setAccessToken(newToken);
+        
+        // Update auth header
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        
+        // Process queued requests
+        processQueue(null, newToken);
+        
+        // Retry original request
         return axiosInstance(originalRequest);
-
       } catch (refreshError) {
-        console.error('Interceptor: Failed to refresh token:', refreshError.response?.data || refreshError.message);
-        // Xử lý lỗi khi refresh thất bại
-        processQueue(refreshError, null); // Báo lỗi cho các request đang chờ
-        useAuthStore.getState().logout(); // Gọi logout để xóa state client
-        // TODO: Chuyển hướng về trang login một cách an toàn
-        // Không dùng window.location ở đây vì có thể gây lỗi trong môi trường non-browser
-        // Cần cơ chế redirect tốt hơn (ví dụ: event bus, hoặc kiểm tra state ở component)
-        console.error("Redirecting to login due to refresh failure is needed here.");
-        // return Promise.reject(refreshError); // Trả về lỗi gốc của refresh
-        // Nên trả về lỗi gốc của request ban đầu để component gọi có thể xử lý
-         return Promise.reject(error); // Trả về lỗi 401 gốc
-
+        // Log the error
+        console.error('Failed to refresh token:', refreshError);
+        
+        // Process queued requests with error
+        processQueue(refreshError);
+        
+        // Logout user
+        useAuthStore.getState().logout();
+        
+        // Redirect to login
+        redirectToLogin();
+        
+        return Promise.reject(error);
       } finally {
-        isRefreshing = false; // Đặt lại cờ sau khi hoàn tất (thành công hoặc thất bại)
+        isRefreshing = false;
       }
-    } // Kết thúc xử lý 401
+    }
 
-    // Trả về lỗi cho các trường hợp khác (không phải 401 hoặc là lỗi từ refresh)
+    // Trả về lỗi cho các trường hợp khác
     return Promise.reject(error);
   }
 );
 
+// Helper function to generate mock data based on request URL
+function getMockResponseData(url) {
+  // Dashboard stats
+  if (url.includes('/dashboard/stats')) {
+    return {
+      totalProducts: 156,
+      totalOrders: 74,
+      totalUsers: 42,
+      totalRevenue: 15750000,
+      recentOrders: [
+        { id: 'mock-1', orderId: 'mock-1', total: 250000, status: 'COMPLETED', createdAt: new Date().toISOString() },
+        { id: 'mock-2', orderId: 'mock-2', total: 180000, status: 'PROCESSING', createdAt: new Date().toISOString() }
+      ]
+    };
+  }
+  
+  // Orders list
+  if (url.includes('/admin/orders') || url.includes('/orders')) {
+    return {
+      content: Array(5).fill().map((_, index) => ({
+        id: `mock-order-${index + 1}`,
+        orderId: `mock-order-${index + 1}`,
+        orderNumber: `ORD-${10000 + index}`,
+        total: 100000 + (index * 50000),
+        totalAmount: 100000 + (index * 50000),
+        status: ['PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'][Math.floor(Math.random() * 4)],
+        createdAt: new Date(Date.now() - (index * 86400000)).toISOString(),
+        orderDate: new Date(Date.now() - (index * 86400000)).toISOString(),
+        user: { name: 'Khách hàng mẫu', email: `customer${index + 1}@example.com` },
+        customerName: 'Khách hàng mẫu',
+        items: [{ quantity: 2, product: { title: 'Sách mẫu', price: 50000 } }]
+      })),
+      totalPages: 1,
+      totalElements: 5,
+      size: 10,
+      number: 0
+    };
+  }
+  
+  // Products list
+  if (url.includes('/admin/products') || url.includes('/products')) {
+    const mockProducts = Array(5).fill().map((_, index) => ({
+      id: `mock-product-${index + 1}`,
+      title: `Sách mẫu ${index + 1}`,
+      author: `Tác giả mẫu ${index + 1}`,
+      price: 100000 + (index * 20000),
+      imageUrl: '/product-placeholder.jpg',
+      stock: 10 + index,
+      stockQuantity: 10 + index,
+      soldCount: 50 + (index * 10),
+      createdAt: new Date(Date.now() - (index * 86400000)).toISOString()
+    }));
+    
+    // If top-selling endpoint, return the array directly
+    if (url.includes('/top-selling')) {
+      return mockProducts;
+    }
+    
+    // Otherwise return paginated format
+    return {
+      content: mockProducts,
+      totalPages: 1,
+      totalElements: 5,
+      size: 10,
+      number: 0
+    };
+  }
+  
+  // Users list
+  if (url.includes('/admin/users') || url.includes('/users')) {
+    return {
+      content: Array(5).fill().map((_, index) => ({
+        id: `mock-user-${index + 1}`,
+        name: `Người dùng mẫu ${index + 1}`,
+        email: `user${index + 1}@example.com`,
+        roles: index === 0 ? ['ROLE_ADMIN', 'ROLE_USER'] : ['ROLE_USER'],
+        createdAt: new Date(Date.now() - (index * 86400000)).toISOString()
+      })),
+      totalPages: 1,
+      totalElements: 5,
+      size: 10,
+      number: 0
+    };
+  }
+  
+  // Default mock data for any other request
+  return {
+    status: "success",
+    message: "Mock data for development",
+    timestamp: new Date().toISOString()
+  };
+}
 
 export default axiosInstance;

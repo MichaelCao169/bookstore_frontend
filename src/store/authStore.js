@@ -1,138 +1,140 @@
 // src/store/authStore.js
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware'; // Import persist middleware
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-// Hàm helper để kiểm tra token hết hạn (ví dụ đơn giản)
-// Cần thư viện như jwt-decode để làm chính xác hơn: npm install jwt-decode
-// import { jwtDecode } from 'jwt-decode'; // Bỏ comment nếu cài jwt-decode
+/**
+ * A simple function to check if a token is expired
+ * @param {string} token - JWT token
+ * @returns {boolean} true if token is expired or invalid
+ */
 const isTokenExpired = (token) => {
   if (!token) return true;
+  
   try {
-    // --- CÁCH CHÍNH XÁC (Cần cài jwt-decode) ---
-    // const decoded = jwtDecode(token);
-    // const currentTime = Date.now() / 1000; // Giây
-    // return decoded.exp < currentTime;
-    // --- CÁCH TẠM THỜI (Không chính xác, chỉ để demo) ---
-    // Giả sử token hết hạn sau 1 giờ (cần khớp với backend)
-    // const decoded = JSON.parse(atob(token.split('.')[1])); // Giải mã payload tạm
-    // const expirationTime = decoded.exp * 1000; // Chuyển sang mili giây
-    // return Date.now() > expirationTime;
-    // --- Bỏ qua kiểm tra hết hạn ở client nếu chỉ dựa vào refresh ---
-     console.warn('Client-side token expiration check is simplified/disabled.');
-     return false; // Tạm thời coi là không hết hạn ở client, dựa vào API và refresh
+    // Decode the token (JWT consists of three parts separated by dots)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const expTime = payload.exp * 1000; // Convert to milliseconds
+    return Date.now() > expTime;
   } catch (error) {
-    console.error("Error decoding token:", error);
-    return true; // Coi là hết hạn nếu lỗi giải mã
+    console.error("Error checking token expiration:", error);
+    return true; // Consider invalid tokens as expired
   }
 };
 
-// Tạo store với persist middleware
+// Create authentication store with persistence
 export const useAuthStore = create(
   persist(
     (set, get) => ({
-      // --- State ---
+      // Auth state
       accessToken: null,
-      user: null, // Lưu thông tin user (id, name, email, roles)
+      user: null,
       isAuthenticated: false,
-      isLoading: true, // Ban đầu là true để chờ kiểm tra trạng thái từ localStorage/session
-
-      // --- Actions ---
-      // Hàm này sẽ được gọi khi login thành công
+      isLoading: true,
+      
+      // Login action
       login: (userData, token) => {
-         console.log("AuthStore: Logging in user", userData);
-         set({
-           isAuthenticated: true,
-           user: userData,
-           accessToken: token,
-           isLoading: false, // Đã xác định trạng thái
-         });
-         // Axios interceptor sẽ tự động dùng token mới này từ đây (cần sửa interceptor)
+        console.log("Authentication store: Logging in user", userData.email);
+        
+        // Ensure userData has avatarUrl or use default
+        if (!userData.avatarUrl || typeof userData.avatarUrl !== 'string') {
+          console.log("Setting default avatar URL for user");
+          userData.avatarUrl = '/default-avatar.png';
+        }
+        
+        // Update auth state
+        set({
+          accessToken: token,
+          user: userData,
+          isAuthenticated: true,
+          isLoading: false
+        });
       },
-
-      // Hàm này sẽ được gọi khi logout
+      
+      // Logout action
       logout: () => {
-        console.log("AuthStore: Logging out");
+        console.log("Authentication store: Logging out user");
         set({
           accessToken: null,
           user: null,
           isAuthenticated: false,
-          isLoading: false, // Đã xác định trạng thái
+          isLoading: false
         });
-        // Việc xóa HttpOnly refresh token cookie do backend xử lý khi gọi API logout
-        // Interceptor cũng cần được cập nhật để không dùng token cũ nữa
       },
-
-       // Hàm được gọi khi refresh token thành công
-       setAccessToken: (token) => {
-           console.log("AuthStore: Setting new access token");
-           set({ accessToken: token, isLoading: false }); // Cập nhật token, đảm bảo isLoading là false
-       },
-
-      // Hàm kiểm tra trạng thái khi ứng dụng tải lần đầu
-      // Nó sẽ được gọi tự động bởi middleware persist khi state được hydrate
+      
+      // Update user information
+      updateUser: (userData) => {
+        console.log("Authentication store: Updating user information");
+        
+        // Ensure userData has avatarUrl or use existing/default
+        if (!userData.avatarUrl || typeof userData.avatarUrl !== 'string') {
+          userData.avatarUrl = get().user?.avatarUrl || '/default-avatar.png';
+        }
+        
+        set({ user: { ...get().user, ...userData } });
+      },
+      
+      // Update token
+      setAccessToken: (token) => {
+        console.log("Authentication store: Setting new access token");
+        set({ accessToken: token });
+      },
+      
+      // Check authentication state on app initialization
       checkAuthState: () => {
-        console.log("AuthStore: Checking auth state on load");
-        const { accessToken } = get(); // Lấy state hiện tại (đã được load từ storage)
-        if (accessToken && !isTokenExpired(accessToken)) {
-           console.log("AuthStore: Token found and seems valid, setting authenticated");
-           // Thông tin user đã được persist, không cần set lại ở đây trừ khi muốn fetch lại
+        console.log("Authentication store: Checking initial auth state");
+        const { accessToken, user } = get();
+        
+        if (accessToken && !isTokenExpired(accessToken) && user) {
+          console.log("Authentication store: Valid token found, user is authenticated");
           set({ isAuthenticated: true, isLoading: false });
         } else {
-           console.log("AuthStore: No valid token found, setting unauthenticated");
-           // Nếu token hết hạn hoặc không có, đảm bảo trạng thái là logout
-           set({ accessToken: null, user: null, isAuthenticated: false, isLoading: false });
+          console.log("Authentication store: No valid token or missing user data");
+          set({
+            accessToken: null,
+            user: null, 
+            isAuthenticated: false, 
+            isLoading: false
+          });
         }
       },
-
-       // Hàm để đánh dấu hoàn tất kiểm tra trạng thái ban đầu
-       finishLoading: () => {
-           if (get().isLoading) {
-                console.log("AuthStore: Initial auth check complete (no persisted state or token invalid)");
-               set({ isLoading: false });
-           }
-       }
+      
+      // Finish loading state
+      finishLoading: () => {
+        if (get().isLoading) {
+          console.log("Authentication store: Finishing loading state");
+          set({ isLoading: false });
+        }
+      }
     }),
     {
-      // Cấu hình persist middleware
-      name: 'auth-storage', // Tên key trong localStorage
-      storage: createJSONStorage(() => localStorage), // Dùng localStorage (hoặc sessionStorage)
+      // Configuration for persistence
+      name: 'auth-storage',
+      storage: createJSONStorage(() => localStorage),
+      
+      // Only persist these fields
       partialize: (state) => ({
-        // Chỉ lưu những phần state này vào localStorage
         accessToken: state.accessToken,
-        user: state.user,
-        // Không cần lưu isAuthenticated, isLoading vì sẽ được tính toán lại khi load
+        user: state.user
       }),
-      // Hàm này chạy sau khi state được hydrate (lấy từ storage)
-       onRehydrateStorage: (state) => {
-         console.log("AuthStore: Hydration finished.");
-         // Gọi hàm kiểm tra trạng thái sau khi state được load
-         // Dùng setTimeout để đảm bảo nó chạy sau khi quá trình hydrate hoàn tất hoàn toàn
-         setTimeout(() => {
-             useAuthStore.getState().checkAuthState();
-         }, 0);
-       },
-        // Optional: Nếu state chưa được hydrate (ví dụ: lần đầu mở app)
-        onHydrationStart: () => {
-             console.log("AuthStore: Hydration starting...");
-             // Đánh dấu đang loading
-             useAuthStore.setState({ isLoading: true });
-        },
-         // Optional: Xử lý lỗi hydrate
-         onHydrationError: (error) => {
-             console.error("AuthStore: Hydration failed!", error);
-             useAuthStore.getState().finishLoading(); // Kết thúc loading dù lỗi
-         }
+      
+      // After rehydration, check auth state
+      onRehydrateStorage: () => {
+        console.log("Authentication store: Rehydration complete");
+        return () => {
+          useAuthStore.getState().checkAuthState();
+        };
+      }
     }
   )
 );
 
-// Gọi hàm kiểm tra trạng thái ban đầu ngay sau khi store được tạo
-// Điều này xử lý trường hợp không có state nào được lưu trong localStorage
-// (ví dụ lần đầu chạy hoặc sau khi clear localStorage)
-if (typeof window !== 'undefined' && !localStorage.getItem('auth-storage')) {
-     setTimeout(() => {
-          useAuthStore.getState().finishLoading();
-     }, 0);
+// Check authentication state if no persisted state exists
+if (typeof window !== 'undefined') {
+  // Rút ngắn thời gian loading trạng thái ban đầu
+  setTimeout(() => {
+    useAuthStore.getState().checkAuthState();
+    useAuthStore.getState().finishLoading();
+  }, 100);
 }
 
 // Custom hook để dễ dàng truy cập state và actions (tùy chọn)

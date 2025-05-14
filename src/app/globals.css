@@ -1,6 +1,21 @@
 @import "tailwindcss";
 
-
 body {
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Animation cho chuyển đổi theme */
+@keyframes theme-toggle {
+  0% {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+.theme-icon {
+  animation: theme-toggle 0.3s ease-out;
 }

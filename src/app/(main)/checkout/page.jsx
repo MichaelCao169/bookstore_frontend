@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
-import { FiShoppingCart, FiMapPin, FiPhone, FiUser, FiCreditCard, FiLoader, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiShoppingCart, FiMapPin, FiPhone, FiUser, FiCreditCard, FiLoader, FiAlertCircle, FiCheckCircle, FiSave } from 'react-icons/fi';
 import { formatCurrency } from '@/components/order/OrderHelpers'; // Import hàm format tiền tệ
 
 // Components Loading/Error
@@ -48,6 +48,7 @@ const CheckoutPage = () => {
     const [country, setCountry] = useState('Việt Nam'); // Mặc định
     const [notes, setNotes] = useState('');
     const [formErrors, setFormErrors] = useState({}); // Lỗi validation form
+    const [saveAddress, setSaveAddress] = useState(false); // State cho checkbox lưu địa chỉ mặc định
 
     // Auth state và router
     const user = useAuthStore((state) => state.user);
@@ -55,6 +56,33 @@ const CheckoutPage = () => {
     const isAuthLoading = useAuthStore((state) => state.isLoading);
     const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
+
+    // ---- Fetch User Profile and Cart Data ----
+    const fetchUserProfile = useCallback(async () => {
+        if (!user || !user.id) return;
+
+        try {
+            const response = await axiosInstance.get('/users/profile');
+            const profileData = response.data;
+
+            // Pre-fill with user profile data if available
+            if (profileData) {
+                setRecipientName(profileData.name || user.name || '');
+                setPhone(profileData.phone || '');
+
+                // Pre-fill address if saved
+                if (profileData.defaultAddress) {
+                    setStreet(profileData.defaultAddress.street || '');
+                    setDistrict(profileData.defaultAddress.district || '');
+                    setCity(profileData.defaultAddress.city || '');
+                    setCountry(profileData.defaultAddress.country || 'Việt Nam');
+                }
+            }
+        } catch (err) {
+            console.error('Failed to fetch user profile:', err);
+            // Don't show error for profile fetch, just log it
+        }
+    }, [user]);
 
     // ---- Fetch Cart Data ----
     const fetchCart = useCallback(async () => {
@@ -69,12 +97,9 @@ const CheckoutPage = () => {
                 toast.info("Giỏ hàng của bạn đang trống.");
                 router.replace('/cart'); // Hoặc '/'
             }
-            // Tự điền tên và sđt nếu profile có (lấy từ user state)
-            if (user) {
-                setRecipientName(user.name || '');
-                // Giả sử user có trường phone, nếu không thì để trống
-                // setPhone(user.phone || '');
-            }
+
+            // Fetch user profile to pre-fill address
+            await fetchUserProfile();
 
         } catch (err) {
             console.error('Failed to fetch cart for checkout:', err);
@@ -89,7 +114,7 @@ const CheckoutPage = () => {
         } finally {
             setIsLoadingCart(false);
         }
-    }, [router, logout, user]); // Thêm user dependency
+    }, [router, logout, fetchUserProfile]); // Remove user dependency, use fetchUserProfile
 
     // useEffect để fetch cart và kiểm tra auth
     useEffect(() => {
@@ -133,17 +158,22 @@ const CheckoutPage = () => {
 
         setIsPlacingOrder(true);
 
+        // Prepare the address object
+        const addressData = {
+            recipientName,
+            phone,
+            street,
+            district,
+            city,
+            country,
+        };
+
+        // Prepare order request
         const orderRequest = {
-            shippingAddress: {
-                recipientName,
-                phone,
-                street,
-                district,
-                city,
-                country,
-            },
+            shippingAddress: addressData,
             paymentMethod: 'COD', // Mặc định là COD cho phiên bản này
             notes: notes,
+            saveAddressAsDefault: saveAddress, // Add flag to save address
         };
 
         try {
@@ -152,6 +182,17 @@ const CheckoutPage = () => {
             const createdOrder = response.data; // OrderDTO
             console.log('Order placed successfully:', createdOrder);
             toast.success(`Đơn hàng #${createdOrder.orderId} đã được đặt thành công!`);
+
+            // Save address as default if requested
+            if (saveAddress) {
+                try {
+                    await axiosInstance.post('/users/default-address', addressData);
+                    console.log('Default address saved');
+                } catch (addressError) {
+                    console.error('Failed to save default address:', addressError);
+                    // Don't block order process if saving address fails
+                }
+            }
 
             // Chuyển hướng đến trang thông báo thành công hoặc chi tiết đơn hàng
             // router.push(`/orders/${createdOrder.orderId}`);
@@ -194,33 +235,35 @@ const CheckoutPage = () => {
     // --- Hiển thị trang Checkout ---
     return (
         <div className="container mx-auto py-8 px-4">
-            <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-dark-text border-b pb-3">Thanh toán</h1>
+            <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-100 border-b pb-3 dark:border-gray-700">Thanh toán</h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
 
                 {/* Cột Thông tin Giao hàng & Thanh toán */}
                 <div className="lg:col-span-2">
                     {/* Form Địa chỉ Giao hàng */}
-                    <div className="bg-white dark:bg-dark-surface p-6 rounded-lg shadow border dark:border-gray-700 mb-6">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center"><FiMapPin className="mr-2 text-orange-500" />Địa chỉ Giao hàng</h2>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700 mb-6">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-800 dark:text-gray-200">
+                            <FiMapPin className="mr-2 text-orange-500" />Địa chỉ Giao hàng
+                        </h2>
                         <form className="space-y-4">
                             {/* Tên người nhận */}
                             <div>
-                                <label htmlFor="recipientName" className="block text-sm font-medium mb-1">Tên người nhận</label>
+                                <label htmlFor="recipientName" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Tên người nhận</label>
                                 <input type="text" id="recipientName" value={recipientName} onChange={e => setRecipientName(e.target.value)} required
                                     className={`input-field ${formErrors.recipientName ? 'input-error' : ''}`} />
                                 {formErrors.recipientName && <p className="input-error-message">{formErrors.recipientName}</p>}
                             </div>
                             {/* Số điện thoại */}
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium mb-1">Số điện thoại</label>
+                                <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Số điện thoại</label>
                                 <input type="tel" id="phone" value={phone} onChange={e => setPhone(e.target.value)} required
                                     className={`input-field ${formErrors.phone ? 'input-error' : ''}`} />
                                 {formErrors.phone && <p className="input-error-message">{formErrors.phone}</p>}
                             </div>
                             {/* Địa chỉ đường */}
                             <div>
-                                <label htmlFor="street" className="block text-sm font-medium mb-1">Địa chỉ (Số nhà, tên đường)</label>
+                                <label htmlFor="street" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Địa chỉ (Số nhà, tên đường)</label>
                                 <input type="text" id="street" value={street} onChange={e => setStreet(e.target.value)} required
                                     className={`input-field ${formErrors.street ? 'input-error' : ''}`} />
                                 {formErrors.street && <p className="input-error-message">{formErrors.street}</p>}
@@ -228,13 +271,13 @@ const CheckoutPage = () => {
                             {/* Quận/Huyện & Tỉnh/Thành phố */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="district" className="block text-sm font-medium mb-1">Quận / Huyện</label>
+                                    <label htmlFor="district" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Quận / Huyện</label>
                                     <input type="text" id="district" value={district} onChange={e => setDistrict(e.target.value)} required
                                         className={`input-field ${formErrors.district ? 'input-error' : ''}`} />
                                     {formErrors.district && <p className="input-error-message">{formErrors.district}</p>}
                                 </div>
                                 <div>
-                                    <label htmlFor="city" className="block text-sm font-medium mb-1">Tỉnh / Thành phố</label>
+                                    <label htmlFor="city" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Tỉnh / Thành phố</label>
                                     <input type="text" id="city" value={city} onChange={e => setCity(e.target.value)} required
                                         className={`input-field ${formErrors.city ? 'input-error' : ''}`} />
                                     {formErrors.city && <p className="input-error-message">{formErrors.city}</p>}
@@ -242,27 +285,42 @@ const CheckoutPage = () => {
                             </div>
                             {/* Quốc gia */}
                             <div>
-                                <label htmlFor="country" className="block text-sm font-medium mb-1">Quốc gia</label>
+                                <label htmlFor="country" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Quốc gia</label>
                                 <input type="text" id="country" value={country} onChange={e => setCountry(e.target.value)} required
                                     className={`input-field ${formErrors.country ? 'input-error' : ''}`} />
                                 {formErrors.country && <p className="input-error-message">{formErrors.country}</p>}
                             </div>
                             {/* Ghi chú */}
                             <div>
-                                <label htmlFor="notes" className="block text-sm font-medium mb-1">Ghi chú (Tùy chọn)</label>
+                                <label htmlFor="notes" className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Ghi chú (Tùy chọn)</label>
                                 <textarea id="notes" value={notes} onChange={e => setNotes(e.target.value)} rows="3"
                                     className="input-field"></textarea>
+                            </div>
+                            {/* Checkbox lưu địa chỉ mặc định */}
+                            <div className="flex items-center mt-4">
+                                <input
+                                    type="checkbox"
+                                    id="saveAddress"
+                                    checked={saveAddress}
+                                    onChange={e => setSaveAddress(e.target.checked)}
+                                    className="h-4 w-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 dark:border-gray-600 dark:focus:ring-orange-400"
+                                />
+                                <label htmlFor="saveAddress" className="ml-2 block text-sm text-gray-700 dark:text-gray-300 flex items-center">
+                                    <FiSave className="mr-1 text-orange-500" /> Lưu làm địa chỉ mặc định
+                                </label>
                             </div>
                         </form>
                     </div>
 
                     {/* Phương thức thanh toán */}
-                    <div className="bg-white dark:bg-dark-surface p-6 rounded-lg shadow border dark:border-gray-700">
-                        <h2 className="text-xl font-semibold mb-4 flex items-center"><FiCreditCard className="mr-2 text-orange-500" />Phương thức Thanh toán</h2>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700">
+                        <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-800 dark:text-gray-200">
+                            <FiCreditCard className="mr-2 text-orange-500" />Phương thức Thanh toán
+                        </h2>
                         {/* Hiện tại chỉ hỗ trợ COD */}
-                        <div className="border rounded-md p-4 border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-900/30">
+                        <div className="border rounded-md p-4 border-orange-300 bg-orange-50 dark:border-orange-700 dark:bg-orange-900/20">
                             <label htmlFor="cod" className="flex items-center cursor-pointer">
-                                <input id="cod" name="paymentMethod" type="radio" className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500" checked readOnly />
+                                <input id="cod" name="paymentMethod" type="radio" className="h-4 w-4 text-orange-600 border-gray-300 focus:ring-orange-500 dark:border-gray-600" checked readOnly />
                                 <span className="ml-3 block text-sm font-medium text-orange-800 dark:text-orange-200">
                                     Thanh toán khi nhận hàng (COD)
                                 </span>
@@ -276,14 +334,16 @@ const CheckoutPage = () => {
 
                 {/* Cột Tóm tắt Đơn hàng */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white dark:bg-dark-surface p-6 rounded-lg shadow border dark:border-gray-700 sticky top-24">
-                        <h2 className="text-xl font-semibold mb-4 border-b pb-2 dark:border-gray-600">Tóm tắt Đơn hàng</h2>
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700 sticky top-24">
+                        <h2 className="text-xl font-semibold mb-4 border-b pb-2 dark:border-gray-600 text-gray-800 dark:text-gray-200">Tóm tắt Đơn hàng</h2>
                         {/* Danh sách sản phẩm tóm tắt */}
-                        <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-2"> {/* Scroll nếu nhiều sản phẩm */}
+                        <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-2 text-gray-700 dark:text-gray-300"> {/* Scroll nếu nhiều sản phẩm */}
                             {cartData.items.map(item => (
                                 <div key={item.cartItemId} className="flex justify-between items-center text-sm">
                                     <div className='flex items-center gap-2'>
-                                        <span className='font-medium bg-gray-100 dark:bg-gray-700 rounded px-1.5 py-0.5 text-xs'>{item.quantity}x</span>
+                                        <span className='font-medium bg-gray-100 dark:bg-gray-700 rounded px-1.5 py-0.5 text-xs'>
+                                            {item.quantity}x
+                                        </span>
                                         <span className='truncate max-w-[150px]'>{item.productTitle}</span>
                                     </div>
                                     <span>{formatCurrency(item.subtotal)}</span>
@@ -291,16 +351,16 @@ const CheckoutPage = () => {
                             ))}
                         </div>
                         {/* Tổng tiền */}
-                        <div className="space-y-2 border-t pt-4 dark:border-gray-600">
+                        <div className="space-y-2 border-t pt-4 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                             <div className="flex justify-between text-sm">
                                 <span>Tạm tính ({cartData.totalItems} items)</span>
                                 <span>{formatCurrency(cartData.totalPrice)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span>Phí vận chuyển</span>
-                                <span className="text-green-600">FREE</span>
+                                <span className="text-green-600 dark:text-green-400">FREE</span>
                             </div>
-                            <div className="flex justify-between font-bold text-lg pt-2 border-t dark:border-gray-600 mt-2">
+                            <div className="flex justify-between font-bold text-lg pt-2 border-t dark:border-gray-600 mt-2 text-gray-800 dark:text-gray-100">
                                 <span>Tổng cộng</span>
                                 <span>{formatCurrency(cartData.totalPrice)}</span>
                             </div>
@@ -335,8 +395,9 @@ const CheckoutPage = () => {
             width: 100%;
             border-radius: 0.375rem; /* rounded-md */
             border-width: 0;
-            padding: 0.375rem 0.75rem; /* py-1.5 px-3 */
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
             color: #111827; /* text-gray-900 */
+            background-color: #f9fafb; /* bg-gray-50 */
             box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); /* shadow-sm */
             ring-width: 1px;
             ring-color: #d1d5db; /* ring-gray-300 */
@@ -344,12 +405,13 @@ const CheckoutPage = () => {
          }
          .dark .input-field {
              background-color: #374151; /* dark:bg-gray-700 */
-             color: white; /* dark:text-white */
+             color: #f3f4f6; /* dark:text-gray-100 */
              ring-color: #4b5563; /* dark:ring-gray-600 */
          }
           .input-field:focus {
               ring-width: 2px;
               ring-color: #f97316; /* focus:ring-orange-600 */
+              outline: none;
           }
           .dark .input-field:focus {
                ring-color: #fb923c; /* dark:focus:ring-orange-500 */

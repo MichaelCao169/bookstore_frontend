@@ -7,7 +7,7 @@ export const OrderStatusBadge = ({ status }) => {
     let bgColor = 'bg-gray-100 dark:bg-gray-700';
     let textColor = 'text-gray-600 dark:text-gray-300';
     let dotColor = 'bg-gray-400';
-    let icon = <FiInfo size={12} className="hidden sm:inline"/>; // Default icon, ẩn trên mobile
+    let icon = <FiInfo size={12} className="hidden sm:inline" />; // Default icon, ẩn trên mobile
 
     // Mặc định Enum từ Backend: PENDING, PENDING_PAYMENT, PROCESSING, SHIPPED, DELIVERED, CANCELLED, PAYMENT_FAILED
     switch (status) {
@@ -15,38 +15,38 @@ export const OrderStatusBadge = ({ status }) => {
             bgColor = 'bg-yellow-50 dark:bg-yellow-900/30';
             textColor = 'text-yellow-700 dark:text-yellow-400';
             dotColor = 'bg-yellow-500';
-            icon = <FiLoader size={12} className="hidden sm:inline animate-spin"/>;
+            icon = <FiLoader size={12} className="hidden sm:inline animate-spin" />;
             break;
         case 'PENDING_PAYMENT':
             bgColor = 'bg-orange-50 dark:bg-orange-900/30';
             textColor = 'text-orange-700 dark:text-orange-400';
             dotColor = 'bg-orange-500';
-            icon = <FiDollarSign size={12} className="hidden sm:inline"/>;
+            icon = <FiDollarSign size={12} className="hidden sm:inline" />;
             break;
         case 'PROCESSING':
             bgColor = 'bg-blue-50 dark:bg-blue-900/30';
             textColor = 'text-blue-700 dark:text-blue-400';
             dotColor = 'bg-blue-500';
-            icon = <FiPackage size={12} className="hidden sm:inline"/>;
+            icon = <FiPackage size={12} className="hidden sm:inline" />;
             break;
         case 'SHIPPED':
             bgColor = 'bg-indigo-50 dark:bg-indigo-900/30';
             textColor = 'text-indigo-700 dark:text-indigo-400';
             dotColor = 'bg-indigo-500';
-            icon = <FiTruck size={12} className="hidden sm:inline"/>;
+            icon = <FiTruck size={12} className="hidden sm:inline" />;
             break;
         case 'DELIVERED':
             bgColor = 'bg-green-50 dark:bg-green-900/30';
             textColor = 'text-green-700 dark:text-green-400';
             dotColor = 'bg-green-500';
-            icon = <FiCheckCircle size={12} className="hidden sm:inline"/>;
+            icon = <FiCheckCircle size={12} className="hidden sm:inline" />;
             break;
         case 'CANCELLED':
         case 'PAYMENT_FAILED':
             bgColor = 'bg-red-50 dark:bg-red-900/30';
             textColor = 'text-red-700 dark:text-red-400';
             dotColor = 'bg-red-500';
-            icon = <FiXCircle size={12} className="hidden sm:inline"/>;
+            icon = <FiXCircle size={12} className="hidden sm:inline" />;
             break;
         default: // Xử lý trường hợp status không khớp
             status = 'UNKNOWN';
@@ -65,25 +65,23 @@ export const OrderStatusBadge = ({ status }) => {
 
 
 // --- Format Currency Function ---
-export const formatCurrency = (amount, currency = 'USD', locale = 'en-US') => {
+export const formatCurrency = (amount, currency = 'VND', locale = 'vi-VN') => {
     if (amount == null || isNaN(amount)) return 'N/A';
 
-    // Ví dụ thêm tùy chọn định dạng
-    // if (currency === 'VND') {
-    //     locale = 'vi-VN';
-    //     // Có thể nhân tỉ giá ở đây nếu amount luôn là USD từ backend
-    //     // amount = amount * 25000; // Ví dụ tỉ giá
-    // }
-
+    // Mặc định tiền Việt Nam đồng
+    // Có thể dùng 'USD' cho Đô la Mỹ nếu cần
     try {
         return new Intl.NumberFormat(locale, {
             style: 'currency',
             currency: currency,
-            // maximumFractionDigits: currency === 'VND' ? 0 : 2, // VND không cần số thập phân
+            maximumFractionDigits: currency === 'VND' ? 0 : 2, // VND không cần số thập phân
         }).format(amount);
     } catch (error) {
         console.error("Error formatting currency:", error);
-        return `${currency} ${amount.toFixed(2)}`; // Fallback đơn giản
+        if (currency === 'VND') {
+            return `${amount.toLocaleString('vi-VN')} ₫`; // Fallback đơn giản cho VND
+        }
+        return `${currency} ${amount.toFixed(2)}`; // Fallback cho các loại tiền khác
     }
 }
 
@@ -110,7 +108,7 @@ export const formatDate = (isoString, options = {}) => {
 
 // --- Format DateTime Function ---
 export const formatDateTime = (isoString, options = {}) => {
-     if (!isoString) return 'N/A';
+    if (!isoString) return 'N/A';
 
     const defaultOptions = {
         year: 'numeric', month: 'short', day: 'numeric',

@@ -4,19 +4,61 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '@/lib/axiosInstance'; // Import axios instance
 import ReviewItem from './ReviewItem';
+import WriteReviewButton from './WriteReviewButton';
+import ReviewForm from './ReviewForm';
 import Pagination from '@/components/ui/Pagination'; // Import pagination
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'; // Import hooks
+import { FiLoader, FiAlertCircle, FiMessageSquare } from 'react-icons/fi';
+import { useAuthStore } from '@/store/authStore';
+import { toast } from 'react-toastify';
+
+// Component hiển thị khi đang tải dữ liệu
+const LoadingState = () => (
+  <div className="flex justify-center items-center py-8">
+    <FiLoader className="animate-spin text-orange-500 mr-2" size={20} />
+    <span className="text-gray-600 dark:text-gray-300">Đang tải đánh giá...</span>
+  </div>
+);
+
+// Component hiển thị khi không có đánh giá
+const EmptyReviews = () => (
+  <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <FiMessageSquare className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
+    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">Chưa có đánh giá</h3>
+    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+      Hãy là người đầu tiên đánh giá sản phẩm này và chia sẻ trải nghiệm của bạn với những khách hàng khác.
+    </p>
+  </div>
+);
+
+// Component hiển thị khi có lỗi
+const ErrorState = ({ message, onRetry }) => (
+  <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <FiAlertCircle className="mx-auto h-12 w-12 text-red-500 mb-3" />
+    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">Không thể tải đánh giá</h3>
+    <p className="text-gray-500 dark:text-gray-400 mb-4">{message}</p>
+    <button
+      onClick={onRetry}
+      className="px-4 py-2 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white rounded-md transition-colors duration-200"
+    >
+      Thử lại
+    </button>
+  </div>
+);
 
 const ReviewList = ({ productId }) => {
   const [reviews, setReviews] = useState([]);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 0,
-    totalElements: 0,
-    size: 5, // Số lượng review mỗi trang
-  });
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = 5; // Số lượng đánh giá trên mỗi trang
+
+  const { isAuthenticated, user } = useAuthStore();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -27,133 +69,172 @@ const ReviewList = ({ productId }) => {
     const pageQuery = searchParams.get('reviewPage'); // Dùng param khác 'page' để tránh xung đột
     const page = parseInt(pageQuery, 10);
     if (!isNaN(page) && page > 0) {
-      setPagination(prev => ({ ...prev, currentPage: page }));
+      setCurrentPage(page);
     } else {
-      setPagination(prev => ({ ...prev, currentPage: 1 })); // Mặc định trang 1
+      setCurrentPage(1); // Mặc định trang 1
     }
   }, [searchParams]);
 
-
-  // Hàm fetch reviews
-  const fetchReviews = useCallback(async (pageToFetch) => {
+  // Lấy danh sách đánh giá
+  const fetchReviews = useCallback(async (page = 1) => {
     if (!productId) return;
+
     setIsLoading(true);
     setError(null);
-    console.log(`Fetching reviews for product ${productId}, page ${pageToFetch}`);
 
     try {
-      const params = {
-        page: pageToFetch - 1, // API dùng 0-based index
-        size: pagination.size,
-        sort: 'createdAt,desc', // Sắp xếp mới nhất trước
-      };
-      const response = await axiosInstance.get(`/products/${productId}/reviews`, { params });
-      setReviews(response.data.content || []);
-      setPagination(prev => ({
-        ...prev,
-        totalPages: response.data.totalPages || 0,
-        totalElements: response.data.totalElements || 0,
-        currentPage: pageToFetch // Cập nhật lại trang hiện tại sau khi fetch
+      const response = await axiosInstance.get(`/products/${productId}/reviews`, {
+        params: {
+          page: page - 1, // Backend sử dụng 0-based page index 
+          size: pageSize,
+          sort: 'createdAt,desc' // Sort theo thời gian mới nhất
+        }
+      });
+
+      const { content, totalElements, totalPages: totPages, number } = response.data;
+
+      // Thêm thông tin đã mua hàng vào mỗi review
+      const reviewsWithPurchaseInfo = content.map(review => ({
+        ...review,
+        isPurchased: true, // Giả sử tất cả đánh giá đều từ khách hàng đã mua hàng
       }));
-    } catch (err) {
-      console.error('Failed to fetch reviews:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Could not load reviews.';
-      // Không nên set lỗi 404 ở đây vì sản phẩm có thể tồn tại nhưng chưa có review
-      if (err.response?.status !== 404) {
-        setError(errorMessage);
-      } else {
-        setReviews([]); // Xóa reviews nếu sản phẩm 404 (dù không nên xảy ra nếu product detail đã load)
-        setPagination(prev => ({ ...prev, totalPages: 0, totalElements: 0 }));
+
+      setReviews(reviewsWithPurchaseInfo);
+      setTotalReviews(totalElements);
+      setTotalPages(totPages);
+      setCurrentPage(number + 1); // Convert lại về 1-based index
+
+      // Tính rating trung bình
+      if (content && content.length > 0) {
+        const totalRating = content.reduce((sum, review) => sum + review.rating, 0);
+        setAverageRating((totalRating / content.length).toFixed(1));
       }
+    } catch (err) {
+      console.error('Error fetching reviews:', err);
+      setError(err.response?.data?.message || 'Không thể tải đánh giá. Vui lòng thử lại sau.');
     } finally {
       setIsLoading(false);
     }
-  }, [productId, pagination.size]); // Dependencies
+  }, [productId]);
 
-  // useEffect để fetch data khi trang hoặc productId thay đổi
+  // Fetch reviews khi component mount hoặc productId thay đổi
   useEffect(() => {
-    fetchReviews(pagination.currentPage);
-  }, [pagination.currentPage, fetchReviews]); // Chạy lại khi trang thay đổi
+    fetchReviews(1); // Lấy trang đầu tiên
+  }, [fetchReviews]);
 
+  // Xử lý đánh giá mới được tạo hoặc cập nhật
+  const handleReviewSubmitted = useCallback((newReview) => {
+    setShowReviewForm(false);
+    setEditingReview(null);
+    // Refresh review list sau khi đã thêm/cập nhật review
+    fetchReviews(1);
+  }, [fetchReviews]);
 
-  // Hàm xử lý khi chuyển trang trong Pagination component
-  // Cần cập nhật URL để Server Component ở trang cha có thể nhận biết
-  const handlePageChange = (newPage) => {
-    console.log(`ReviewList: Changing to page ${newPage}`);
-    // Chỉ cần cập nhật state currentPage của component này
-    // useEffect ở trên sẽ tự động fetch lại dữ liệu
-    setPagination(prev => ({ ...prev, currentPage: newPage }));
+  // Xử lý chỉnh sửa đánh giá
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setShowReviewForm(true);
   };
 
+  // Xử lý xóa đánh giá
+  const handleDeleteReview = async (reviewId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) return;
 
-  // --- Render Logic ---
-  if (isLoading) {
-    return <div className="text-center py-5">Loading reviews...</div>;
+    try {
+      await axiosInstance.delete(`/products/${productId}/reviews/${reviewId}`);
+      toast.success('Đã xóa đánh giá thành công');
+      fetchReviews(1); // Refresh list sau khi xóa
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      toast.error(err.response?.data?.message || 'Không thể xóa đánh giá. Vui lòng thử lại sau.');
+    }
+  };
+
+  // Xử lý thay đổi trang
+  const handlePageChange = (newPage) => {
+    fetchReviews(newPage);
+  };
+
+  // Kiểm tra xem người dùng hiện tại đã đánh giá sản phẩm này chưa
+  const hasUserReviewed = reviews.some(review => review.userId === user?.id);
+
+  // Render dựa trên state
+  if (isLoading && !reviews.length) {
+    return <LoadingState />;
   }
 
   if (error) {
-    return <div className="text-center py-5 text-red-600">Error: {error}</div>;
-  }
-
-  if (reviews.length === 0) {
-    return <div className="text-center py-5 text-gray-500 dark:text-dark-text-secondary">Be the first to review this product!</div>;
+    return <ErrorState message={error} onRetry={() => fetchReviews(currentPage)} />;
   }
 
   return (
-    <div className="space-y-4">
-      {reviews.map((review) => (
-        <ReviewItem key={review.reviewId} review={review} />
-      ))}
+    <div className="space-y-6 mt-2">
+      {/* Tiêu đề và thống kê */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <FiMessageSquare className="mr-2" /> Đánh giá từ khách hàng
+            <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full text-sm">
+              {totalReviews}
+            </span>
+          </h2>
+          {totalReviews > 0 && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Đánh giá trung bình: {averageRating} / 5
+            </p>
+          )}
+        </div>
 
-      {/* Phân trang cho reviews */}
-      {pagination.totalPages > 1 && (
-        <div className="mt-6 flex justify-center">
-          {/* Truyền hàm xử lý riêng cho pagination review */}
-          <Pagination
-            currentPage={pagination.currentPage}
-            totalPages={pagination.totalPages}
-            onPageChange={handlePageChange} // Truyền hàm xử lý riêng
+        {/* Nút viết đánh giá - chỉ hiển thị nếu user đã login và chưa đánh giá */}
+        {isAuthenticated && !hasUserReviewed && !showReviewForm && (
+          <WriteReviewButton onClick={() => setShowReviewForm(true)} />
+        )}
+      </div>
+
+      {/* Form đánh giá (hiển thị khi click vào nút viết đánh giá) */}
+      {showReviewForm && (
+        <div className="mb-6">
+          <ReviewForm
+            productId={productId}
+            existingReview={editingReview}
+            onSuccess={handleReviewSubmitted}
+            onCancel={() => {
+              setShowReviewForm(false);
+              setEditingReview(null);
+            }}
+            checkIfUserPurchased={true}
           />
+        </div>
+      )}
+
+      {/* Danh sách đánh giá */}
+      {reviews.length === 0 && !isLoading ? (
+        <EmptyReviews />
+      ) : (
+        <div className="space-y-4">
+          {reviews.map((review) => (
+            <ReviewItem
+              key={review.reviewId}
+              review={review}
+              onEdit={handleEditReview}
+              onDelete={handleDeleteReview}
+            />
+          ))}
+
+          {/* Phân trang */}
+          {totalPages > 1 && (
+            <div className="pt-4 flex justify-center">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
-
-// Sửa lại component Pagination để nhận onPageChange (hoặc tạo PaginationReview riêng)
-const PaginationReview = ({ currentPage, totalPages, onPageChange }) => {
-  // ... (logic tạo pageNumbers tương tự Pagination cũ) ...
-  const pageNumbers = [];
-  const maxPagesToShow = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-  let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-  if (endPage - startPage + 1 < maxPagesToShow) { startPage = Math.max(1, endPage - maxPagesToShow + 1); }
-  for (let i = startPage; i <= endPage; i++) { pageNumbers.push(i); }
-
-
-  return (
-    <nav aria-label="Review page navigation">
-      <ul className="inline-flex items-center -space-x-px">
-        {/* Nút Previous */}
-        <li>
-          <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} /* ... styling ... */ >Previous</button>
-        </li>
-        {/* ... (Các nút số trang, dùng button onClick) ... */}
-        {pageNumbers.map((pageNumber) => (
-          <li key={pageNumber}>
-            <button onClick={() => onPageChange(pageNumber)} className={`px-3 py-1 border ... ${currentPage === pageNumber ? 'bg-orange-100 ...' : '...'}`}>
-              {pageNumber}
-            </button>
-          </li>
-        ))}
-        {/* Nút Next */}
-        <li>
-          <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} /* ... styling ... */>Next</button>
-        </li>
-      </ul>
-    </nav>
-  );
-};
-
 
 export default ReviewList;

@@ -15,7 +15,7 @@ const AddToWishlistButton = ({ productId }) => {
   const incrementWishlistCount = useWishlistStore((state) => state.incrementItemCount);
   const handleAddToWishlist = async () => {
     if (!isAuthenticated) {
-      toast.warn('Please login to add items to your wishlist.');
+      toast.warn('Vui lòng đăng nhập để thêm sản phẩm vào danh sách yêu thích.');
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
       return;
     }
@@ -26,19 +26,19 @@ const AddToWishlistButton = ({ productId }) => {
       // Gọi API POST đến endpoint mới
       const response = await axiosInstance.post(`/wishlist/products/${productId}`);
 
-      console.log('Add to wishlist response:', response.data); 
-      toast.success('Product added to wishlist!');
+      console.log('Add to wishlist response:', response.data);
+      toast.success('Đã thêm sản phẩm vào danh sách yêu thích!');
       incrementWishlistCount();
 
     } catch (error) {
       // console.error('Failed to add to wishlist:', error.response?.data || error.message);
-       // Xử lý lỗi trùng lặp
-       if (error.response?.status === 409) { // 409 Conflict
-           toast.info('Product is already in your wishlist.');
-       } else {
-            const errorMessage = error.response?.data?.message || error.response?.data || 'Could not add product to wishlist.';
-            toast.error(`Error: ${errorMessage}`);
-       }
+      // Xử lý lỗi trùng lặp
+      if (error.response?.status === 409) { // 409 Conflict
+        toast.info('Sản phẩm đã có trong danh sách yêu thích của bạn.');
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể thêm sản phẩm vào danh sách yêu thích.';
+        toast.error(`Lỗi: ${errorMessage}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -49,16 +49,16 @@ const AddToWishlistButton = ({ productId }) => {
       onClick={handleAddToWishlist}
       disabled={isLoading} // Disable khi đang loading
       className="w-full sm:w-auto px-4 py-3 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait"
-      title="Add to Wishlist"
-      aria-label="Add to Wishlist"
+      title="Thêm vào danh sách yêu thích"
+      aria-label="Thêm vào danh sách yêu thích"
     >
       {isLoading ? (
-          <FiLoader className="animate-spin" size={18}/>
+        <FiLoader className="animate-spin" size={18} />
       ) : (
-          <FiHeart size={18} /> 
+        <FiHeart size={18} />
       )}
       <span className="hidden sm:inline">
-          {isLoading ? 'Adding...' : 'Add to Wishlist'}
+        {isLoading ? 'Đang thêm...' : 'Thêm vào danh sách yêu thích'}
       </span>
     </button>
   );
