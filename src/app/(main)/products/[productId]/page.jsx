@@ -157,7 +157,7 @@ export default async function ProductDetailPage({ params }) {
         {/* Product Image */}
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
           <ProductImage
-            src='/sample_books.jpg'
+            src={product.imageUrl}
             alt={product.title}
             title={product.title}
             className="w-full h-auto object-contain"
@@ -326,10 +326,7 @@ export default async function ProductDetailPage({ params }) {
       {/* Reviews */}
       <div className="mt-12 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
-            <FiStar className="mr-2 text-orange-500 dark:text-orange-400" />
-            Đánh giá từ khách hàng
-          </h2>
+
         </div>
 
         <div className="bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-700">

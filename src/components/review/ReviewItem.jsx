@@ -21,10 +21,10 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
     : '';
 
   return (
-    <div className="flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
-      {/* Header với thông tin người dùng và ngày */}
-      <div className="flex items-center mb-3">
-        <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-gray-700 flex items-center justify-center text-orange-500 dark:text-orange-300 mr-3 overflow-hidden">
+    <div className="flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg p-5 bg-white dark:bg-gray-800 shadow-sm">
+      {/* Header with user info and date */}
+      <div className="flex items-center mb-4">
+        <div className="h-10 w-10 rounded-full bg-orange-100 dark:bg-gray-700 flex items-center justify-center text-orange-500 dark:text-orange-300 mr-4 overflow-hidden">
           {review.userAvatar ? (
             <Image
               src={review.userAvatar}
@@ -54,35 +54,35 @@ const ReviewItem = ({ review, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {/* Các nút thao tác (chỉ hiển thị với review của người đang đăng nhập) */}
+       
         {isOwnReview && (
-          <div className="flex space-x-2">
+          <div className="flex space-x-3 ml-2">
             <button
               onClick={() => onEdit(review)}
-              className="p-1.5 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 text-gray-500 hover:text-blue-500 dark:text-gray-400 dark:hover:text-blue-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="Chỉnh sửa đánh giá"
             >
-              <FiEdit2 size={16} />
+              <FiEdit2 size={18} />
             </button>
             <button
               onClick={() => onDelete(review.reviewId)}
-              className="p-1.5 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="Xóa đánh giá"
             >
-              <FiTrash2 size={16} />
+              <FiTrash2 size={18} />
             </button>
           </div>
         )}
       </div>
 
       {/* Rating stars */}
-      <div className="mb-2">
+      <div className="mb-3">
         <RatingInput initialValue={review.rating} readOnly={true} size="sm" />
       </div>
 
-      {/* Nội dung đánh giá */}
+      {/* Review content */}
       {review.comment && (
-        <div className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line">
+        <div className="text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line mt-1 px-1">
           {review.comment}
         </div>
       )}

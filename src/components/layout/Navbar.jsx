@@ -1,9 +1,10 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
-import { useRouter } from 'next/navigation';
-import { FiShoppingCart, FiUser, FiLogOut, FiLogIn, FiUserPlus, FiHeart, FiSun, FiMoon, FiMenu, FiX, FiSearch, FiHome, FiBook, FiPackage, FiList, FiSettings } from 'react-icons/fi';
+import { useRouter, usePathname } from 'next/navigation';
+import { FiShoppingCart, FiUser, FiLogOut, FiLogIn, FiUserPlus, FiHeart, FiSun, FiMoon, FiMenu, FiX, FiSearch, FiHome, FiBook, FiPackage, FiList, FiSettings, FiChevronDown } from 'react-icons/fi';
+import { LiaAtomSolid } from 'react-icons/lia';
 import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
 import { useCartStore } from '@/store/cartStore';
@@ -23,11 +24,9 @@ const formatImageUrl = (url) => {
 
   // Xử lý URL đầy đủ từ backend (http://localhost:8080/...)
   if (url.includes('localhost:8080') && url.includes('/avatars/')) {
-    // Trả về URL đầy đủ đến backend - không dùng api-proxy nữa
     return url;
   }
 
-  // Xử lý URL tương đối từ backend (/api/uploads/...)
   if (url.includes('/uploads/avatars/')) {
     // Chuyển đổi thành URL đầy đủ đến backend
     return `http://localhost:8080${url.startsWith('/api') ? '' : '/api'}${url}?t=${new Date().getTime()}`;
@@ -47,18 +46,15 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   console.log("Navbar received toggleTheme:", typeof toggleTheme);
   console.log("Navbar received theme:", theme);
 
-  // Fallback cho toggleTheme trong trường hợp không được truyền vào
+  // Simplified handleToggleTheme to directly use the provided function
   const handleToggleTheme = () => {
     if (typeof toggleTheme === 'function') {
       console.log("Calling provided toggleTheme function");
+      console.log("Current theme before toggle:", theme);
+      console.log("Dark class before toggle:", document.documentElement.classList.contains('dark'));
       toggleTheme();
     } else {
-      console.warn("toggleTheme is not a function, using fallback");
-      // Fallback: toggle class trên document
-      document.documentElement.classList.toggle('dark');
-      // Lưu giá trị vào localStorage
-      const newTheme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-      localStorage.setItem('theme', newTheme);
+      console.error("Theme toggle function not provided to Navbar component");
     }
   };
 
@@ -75,8 +71,27 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
 
   const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get('/api/categories');
+        setCategories(response.data);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      } finally {
+        setIsLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleLogout = async () => {
     console.log('Navbar: Khởi tạo đăng xuất...');
@@ -97,7 +112,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       setMobileMenuOpen(false);
     }
@@ -122,8 +137,8 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center">
-            <FiBook className="mr-2" />
-            AtomicBooks
+            <LiaAtomSolid className="mr-2" />
+            AtomikBooks
           </Link>
 
           {/* Desktop Navigation */}
@@ -152,10 +167,50 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
                 <FiBook className="mr-1" />
                 <span>Sách</span>
               </Link>
-              <Link href="/categories" className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 flex items-center">
-                <FiList className="mr-1" />
-                <span>Danh mục</span>
-              </Link>
+
+              {/* Thay thế Link bằng div có dropdown */}
+              <div className="relative group">
+                <button
+                  className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 flex items-center"
+                  onMouseEnter={() => setShowCategoryDropdown(true)}
+                  onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                >
+                  <FiList className="mr-1" />
+                  <span>Danh mục</span>
+                  <FiChevronDown className="ml-1" size={14} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showCategoryDropdown && (
+                  <div
+                    className="absolute left-1/2 -translate-x-1/2 mt-1 w-[36rem] bg-white dark:bg-gray-800 shadow-xl rounded-md border border-gray-200 dark:border-gray-600 py-2 z-50"
+                    onMouseLeave={() => setShowCategoryDropdown(false)}
+                  >
+                    <div className="absolute h-2 w-full top-[-8px]"></div>
+                    <div className="grid grid-cols-4 gap-x-4 gap-y-1 p-4">
+                      {categories.slice(0, 20).map((category) => (
+                        <Link
+                          key={category.id}
+                          href={`/products?categoryId=${category.id}`}
+                          className="text-base text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 py-1.5 truncate"
+                          onClick={() => setShowCategoryDropdown(false)}
+                        >
+                          {category.name}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-gray-600 mt-1 pt-1.5">
+                      <Link
+                        href="/products"
+                        className="block px-4 py-2.5 text-base font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
+                        onClick={() => setShowCategoryDropdown(false)}
+                      >
+                        Xem tất cả thể loại →
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -186,9 +241,9 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
                 {theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
                 <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 left-1/2 -translate-x-1/2 -bottom-1"></div>
               </div>
-              <div className="relative">
+              <div className="relative transition-transform duration-300">
                 {theme === 'dark' ? (
-                  <FiSun size={20} className="text-yellow-400 animate-pulse theme-icon" />
+                  <FiSun size={20} className="text-yellow-400 theme-icon" />
                 ) : (
                   <FiMoon size={20} className="text-indigo-600 theme-icon" />
                 )}
@@ -316,13 +371,50 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
             >
               <FiBook className="inline mr-2" /> Sách
             </Link>
-            <Link
-              href="/categories"
-              className="block py-2 text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <FiList className="inline mr-2" /> Danh mục
-            </Link>
+
+            {/* Mobile Categories Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                className="flex w-full justify-between items-center py-2 text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
+              >
+                <span><FiList className="inline mr-2" /> Danh mục</span>
+                <FiChevronDown className={`transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Mobile Categories Dropdown Menu */}
+              {showCategoryDropdown && (
+                <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 rounded-md mt-1 border border-gray-200 dark:border-gray-600">
+                  <div className="grid grid-cols-3 gap-x-4 gap-y-1">
+                    {categories.slice(0, 20).map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/products?categoryId=${category.id}`}
+                        className="text-base text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 py-1.5 truncate"
+                        onClick={() => {
+                          setShowCategoryDropdown(false);
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-200 dark:border-gray-600 mt-1.5 pt-1.5">
+                    <Link
+                      href="/products"
+                      className="block py-2.5 text-base font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
+                      onClick={() => {
+                        setShowCategoryDropdown(false);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Xem tất cả thể loại →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Theme Toggle in Mobile Menu */}
             <button
@@ -333,7 +425,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
               }}
               className="flex items-center w-full py-3 px-2 text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 transition-all bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg my-2"
             >
-              <div className="inline mr-3 relative bg-gray-100 dark:bg-gray-700 p-2 rounded-full">
+              <div className="inline mr-3 relative bg-gray-100 dark:bg-gray-700 p-2 rounded-full transition-all duration-300">
                 {theme === 'dark' ? (
                   <FiSun size={18} className="text-yellow-400 theme-icon" />
                 ) : (
@@ -363,7 +455,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
               </div>
             )}
 
-            {/* Mobile User Links */}
+            {/* Mobile User Link */}
             {isAuthenticated && (
               <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="pb-2 font-medium text-gray-800 dark:text-gray-200 flex items-center">
@@ -407,7 +499,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
               </div>
             )}
 
-            {/* Admin Link in Mobile Menu - Only for admins */}
+            {/* Admin Link ở Mobile Menu  */}
             {isAuthenticated && isAdmin && (
               <Link
                 href="/admin/dashboard"

@@ -6,7 +6,7 @@ import ProductCard from '@/components/ui/ProductCard';
 import Pagination from '@/components/ui/Pagination'; // Import Pagination đã sửa
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
-const ProductListClient = ({ initialProductPage }) => {
+const ProductListClient = ({ initialProductPage, hideTitle = false }) => {
   // Lấy dữ liệu ban đầu từ props (do Server Component fetch)
   const products = initialProductPage?.content || [];
   const totalPages = initialProductPage?.totalPages || 0;
@@ -40,8 +40,8 @@ const ProductListClient = ({ initialProductPage }) => {
         </div>
       ) : (
         // Hiển thị khi không có sản phẩm
-        <div className="text-center py-10 text-gray-500 dark:text-dark-text-secondary">
-          <p>No products found matching your criteria.</p>
+        <div className="text-center py-10 text-gray-500 dark:text-gray-400">
+          <p>Không tìm thấy sản phẩm phù hợp với tiêu chí của bạn.</p>
         </div>
       )}
 

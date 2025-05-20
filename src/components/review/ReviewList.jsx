@@ -1,14 +1,14 @@
-// src/components/review/ReviewList.jsx
-'use client'; // Cần client component để fetch data và xử lý state
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import axiosInstance from '@/lib/axiosInstance'; // Import axios instance
+import axiosInstance from '@/lib/axiosInstance';
 import ReviewItem from './ReviewItem';
 import WriteReviewButton from './WriteReviewButton';
 import ReviewForm from './ReviewForm';
-import Pagination from '@/components/ui/Pagination'; // Import pagination
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'; // Import hooks
-import { FiLoader, FiAlertCircle, FiMessageSquare } from 'react-icons/fi';
+import Pagination from '@/components/ui/Pagination';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { FiLoader, FiAlertCircle, FiMessageSquare  } from 'react-icons/fi';
+import { BsChatLeft } from "react-icons/bs";
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
 
@@ -56,7 +56,7 @@ const ReviewList = ({ productId }) => {
   const [editingReview, setEditingReview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 5; // Số lượng đánh giá trên mỗi trang
+  const pageSize = 5; 
 
   const { isAuthenticated, user } = useAuthStore();
 
@@ -172,12 +172,17 @@ const ReviewList = ({ productId }) => {
       {/* Tiêu đề và thống kê */}
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
-            <FiMessageSquare className="mr-2" /> Đánh giá từ khách hàng
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+            <BsChatLeft  className="mr-2 text-orange-500 dark:text-orange-400" />
+            Đánh giá từ khách hàng
             <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full text-sm">
               {totalReviews}
             </span>
           </h2>
+          {/* <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+            <FiMessageSquare className="mr-2" /> Đánh giá từ khách hàng
+            
+          </h2> */}
           {totalReviews > 0 && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Đánh giá trung bình: {averageRating} / 5
@@ -187,7 +192,9 @@ const ReviewList = ({ productId }) => {
 
         {/* Nút viết đánh giá - chỉ hiển thị nếu user đã login và chưa đánh giá */}
         {isAuthenticated && !hasUserReviewed && !showReviewForm && (
-          <WriteReviewButton onClick={() => setShowReviewForm(true)} />
+          <div className="mt-4 md:mt-0 md:ml-4">
+            <WriteReviewButton onClick={() => setShowReviewForm(true)} />
+          </div>
         )}
       </div>
 

@@ -17,7 +17,7 @@ const ReviewForm = ({
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hasPurchased, setHasPurchased] = useState(true); // Mặc định true nếu không cần kiểm tra
+    const [hasPurchased, setHasPurchased] = useState(true); 
     const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
     const [errors, setErrors] = useState({});
 

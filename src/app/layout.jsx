@@ -63,13 +63,17 @@ export default function RootLayout({ children }) {
   useEffect(() => {
     if (!mounted) return;
 
-    // Lấy theme từ localStorage hoặc ưu tiên hệ thống
+    // Lấy theme từ localStorage 
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     if (savedTheme) {
       setTheme(savedTheme);
-      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     } else if (prefersDark) {
       setTheme('dark');
       document.documentElement.classList.add('dark');
@@ -78,7 +82,7 @@ export default function RootLayout({ children }) {
 
   // Hàm chuyển đổi theme
   const toggleTheme = () => {
-    console.log("Layout toggleTheme called"); // Debug
+    console.log("Layout toggleTheme called"); 
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
 
@@ -89,15 +93,20 @@ export default function RootLayout({ children }) {
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // Debug to confirm the theme change
+    console.log("Theme changed to:", newTheme);
+    console.log("Dark class present:", document.documentElement.classList.contains('dark'));
   };
 
   return (
-    <html lang="vi" suppressHydrationWarning className={theme}>
+    <html lang="vi" suppressHydrationWarning className={theme === 'dark' ? 'dark' : ''}>
       <head>
         <title>AtomicBooks - Hiệu Sách Trực Tuyến</title>
         <meta name="description" content="AtomicBooks - Hiệu sách trực tuyến với kho sách phong phú và đa dạng." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="alternate icon" href="/favicon.ico" type="image/x-icon" />
       </head>
       <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
         {/* *** THÊM ToastContainer GẦN BODY HOẶC TRONG PROVIDER KHÁC *** */}
