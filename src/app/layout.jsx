@@ -10,7 +10,8 @@ import { useAuthStore } from '@/store/authStore';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS
 import { FiLoader } from 'react-icons/fi';
-
+import ChatBubble from '@/components/chat/ChatBubble';
+import ChatWindow from '@/components/chat/ChatWindow';
 const inter = Inter({ subsets: ['latin'] });
 
 // Tách phần loading thành component riêng
@@ -82,7 +83,7 @@ export default function RootLayout({ children }) {
 
   // Hàm chuyển đổi theme
   const toggleTheme = () => {
-    console.log("Layout toggleTheme called"); 
+    console.log("Layout toggleTheme called");
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
 
@@ -98,7 +99,7 @@ export default function RootLayout({ children }) {
     console.log("Theme changed to:", newTheme);
     console.log("Dark class present:", document.documentElement.classList.contains('dark'));
   };
-
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   return (
     <html lang="vi" suppressHydrationWarning className={theme === 'dark' ? 'dark' : ''}>
       <head>
@@ -136,6 +137,13 @@ export default function RootLayout({ children }) {
               {children}
             </main>
             <Footer />
+            {/* Add Chat Components - Conditionally render if user is authenticated */}
+            {isAuthenticated && (
+              <>
+                <ChatBubble />
+                <ChatWindow />
+              </>
+            )}
           </>
         )}
       </body>
