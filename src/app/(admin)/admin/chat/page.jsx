@@ -2,6 +2,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/store/chatStore';
+import { useAuthStore } from '@/store/authStore';
 import ConversationListItem from '@/components/chat/admin/ConversationListItem';
 import AdminChatWindow from '@/components/chat/admin/AdminChatWindow';
 import { FiSearch, FiInbox } from 'react-icons/fi';
@@ -11,30 +12,20 @@ export default function AdminChatPage() {
     adminConversations,
     adminActiveConversationId,
     setAdminActiveConversation,
-    receiveUserMessageInAdmin, // For simulating incoming messages
+    initializeAdminChat,
   } = useChatStore();
+  const { user: currentUser, isAuthenticated } = useAuthStore();
 
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Simulate receiving a new message for admin
+  // Initialize admin chat when component mounts
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (adminConversations.length > 0) {
-        const randomConv = adminConversations[Math.floor(Math.random() * adminConversations.length)];
-        receiveUserMessageInAdmin(
-          randomConv.userId,
-          randomConv.userName,
-          randomConv.userAvatar,
-          `Tin nhắn mới từ ${randomConv.userName}!`
-        );
-      }
-    }, 15000); // New message every 15 seconds
-    return () => clearTimeout(timer);
-  }, [receiveUserMessageInAdmin, adminConversations]);
-
+    if (isAuthenticated && currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN')) {
+      initializeAdminChat(currentUser);
+    }
+  }, [isAuthenticated, currentUser, initializeAdminChat]);
 
   const filteredConversations = adminConversations.filter(conv =>
-    conv.userName.toLowerCase().includes(searchTerm.toLowerCase())
+    conv.customerName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (

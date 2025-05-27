@@ -2,18 +2,21 @@
 'use client';
 import React, { useEffect, useRef } from 'react';
 import { FiInfo, FiPaperclip } from 'react-icons/fi';
-import { useChatStore, ADMIN_USER_ID } from '@/store/chatStore';
+import { useChatStore } from '@/store/chatStore';
+import { useAuthStore } from '@/store/authStore';
 import MessageItem from '../MessageItem'; // Re-use
 import ChatInput from '../ChatInput';   // Re-use
 import Image from 'next/image';
 import { FiMessageSquare } from 'react-icons/fi';
+
 const AdminChatWindow = () => {
   const {
     adminActiveConversationId,
     adminConversations,
     adminMessages,
-    addMessageToAdminConversation,
+    sendAdminMessage,
   } = useChatStore();
+  const { user: currentUser } = useAuthStore();
   const messagesEndRef = useRef(null);
   const chatBodyRef = useRef(null);
 
@@ -32,12 +35,9 @@ const AdminChatWindow = () => {
     }
   };
 
-  const handleSendMessage = (messageData) => {
+  const handleSendMessage = async (messageData) => {
     if (!adminActiveConversationId) return;
-    addMessageToAdminConversation(adminActiveConversationId, messageData);
-    // Here, you would also send the message via WebSocket to the specific user.
-    // For placeholder:
-    console.log(`Admin sent to ${activeConversation?.userName}:`, messageData.content);
+    await sendAdminMessage(adminActiveConversationId, messageData.content);
   };
 
   if (!activeConversation) {
@@ -79,12 +79,22 @@ const AdminChatWindow = () => {
         <button className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600">
           <FiInfo size={20} />
         </button>
-      </div>
-
-      {/* Message Area */}
+      </div>      {/* Message Area */}
       <div ref={chatBodyRef} className="flex-grow p-4 space-y-3 overflow-y-auto bg-gray-50 dark:bg-gray-700/50">
         {messages.map((msg) => (
-          <MessageItem key={msg.id} message={msg} currentUserId={ADMIN_USER_ID} />
+          <MessageItem 
+            key={msg.id} 
+            message={{
+              id: msg.id,
+              senderId: msg.senderId,
+              senderName: msg.senderName,
+              senderAvatar: msg.senderAvatar,
+              content: msg.content,
+              timestamp: msg.createdAt,
+              type: msg.messageType,
+            }} 
+            currentUserId={currentUser?.id} 
+          />
         ))}
         <div ref={messagesEndRef} />
       </div>
