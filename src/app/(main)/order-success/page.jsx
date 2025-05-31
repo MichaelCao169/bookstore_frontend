@@ -18,7 +18,7 @@ function OrderSuccessContent() {
                 Đặt hàng thành công!
             </h1>
             <p className="text-gray-600 dark:text-dark-text-secondary mb-4 max-w-md">
-                Cảm ơn bạn đã mua hàng tại AtomicBooks. Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến bạn.
+                Cảm ơn bạn đã mua hàng tại AtomikBooks. Đơn hàng của bạn đang được xử lý và sẽ sớm được giao đến bạn.
             </p>
             {orderId && ( // Chỉ hiển thị nếu có orderId
                 <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-8">

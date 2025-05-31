@@ -21,14 +21,16 @@ const ConversationListItem = ({ conversation, isActive, onSelectConversation }) 
           : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'
         }
       `}
-    >      <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3 flex-shrink-0">
-        <Image
-          src={conversation.customerAvatar || placeholderAvatar}
-          alt={conversation.customerName || 'User Avatar'}
-          fill
-          className="object-cover"
-          onError={handleImageError}
-        />
+    >      <div className="relative w-10 h-10 mr-3 flex-shrink-0">
+        <div className="w-10 h-10 rounded-full overflow-hidden">
+          <Image
+            src={conversation.customerAvatar || placeholderAvatar}
+            alt={conversation.customerName || 'User Avatar'}
+            fill
+            className="object-cover rounded-full"
+            onError={handleImageError}
+          />
+        </div>
         {conversation.isCustomerOnline && (
           <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-800"></span>
         )}

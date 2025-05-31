@@ -79,7 +79,7 @@ export async function generateMetadata({ params }) {
 
   try {
     const product = await getProductDetails(productId);
-    if (!product) return { title: 'Không tìm thấy sản phẩm - AtomicBooks' };
+    if (!product) return { title: 'Không tìm thấy sản phẩm - AtomikBooks' };
     return {
       title: `${product.title} - ${product.author} - AtomicBooks`,
       description: product.description?.substring(0, 160) || `Chi tiết về ${product.title}`,

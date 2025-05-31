@@ -1,15 +1,11 @@
 // src/store/chatStore.js
 import { create } from 'zustand';
 import axios from 'axios';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { useAuthStore } from './authStore';
+import webSocketManager from '@/lib/websocketManager';
 
 // --- API Base URL ---
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
-
-// --- WebSocket Connection ---
-let stompClient = null;
 
 // --- Admin Info ---
 export const ADMIN_EMAIL = 'admin@atomik.com';
@@ -27,77 +23,66 @@ export const useChatStore = create((set, get) => ({
   adminConversations: [], // List of conversations admin has
   adminActiveConversationId: null, // ID of the conversation admin is currently viewing
   adminMessages: {}, // Object: { conversationId: [messages] }
-
+  
   // Common
   isConnecting: false, // WebSocket connection status
   isConnected: false, // WebSocket connection status
   currentUser: null, // Current logged in user
+
   // --- WebSocket Connection ---
-  connectWebSocket: (token) => {
-    if (stompClient && stompClient.connected) {
-      return; // Already connected
-    }
-
-    set({ isConnecting: true });    // Create a new STOMP client with SockJS
-    stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-      connectHeaders: {
-        Authorization: `Bearer ${token}`
-      },
-      debug: function (str) {
-        console.log('STOMP: ' + str);
-      },
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-    });    stompClient.onConnect = () => {
-      console.log('Connected to WebSocket');
-      set({ isConnected: true, isConnecting: false });
-      
+  connectWebSocket: async (token) => {
+    try {
       const user = get().currentUser;
-      if (user) {
-        if (user.roles && user.roles.includes('ROLE_CUSTOMER')) {
-          // Subscribe to customer messages
-          stompClient.subscribe(`/topic/customer/${user.id}/messages`, (message) => {
-            const messageData = JSON.parse(message.body);
-            get().receiveMessage(messageData);
-          });
-        } else if (user.roles && user.roles.includes('ROLE_ADMIN')) {
-          // Subscribe to admin messages
-          stompClient.subscribe('/topic/admin/messages', (message) => {
-            const messageData = JSON.parse(message.body);
-            get().receiveAdminMessage(messageData);
-          });
-        }
+      if (!user) {
+        console.warn('WebSocket: No current user set');
+        return;
       }
-    };
 
-    stompClient.onStompError = (frame) => {
-      console.error('WebSocket connection error:', frame.headers['message']);
-      console.error('Additional details:', frame.body);
-      set({ isConnected: false, isConnecting: false });
-    };
+      // Setup status change listener to sync connection status
+      webSocketManager.addStatusChangeListener((status) => {
+        set({
+          isConnecting: status.isConnecting,
+          isConnected: status.isConnected
+        });
+      });
 
-    stompClient.onWebSocketError = (error) => {
-      console.error('WebSocket error:', error);
-      set({ isConnected: false, isConnecting: false });
-    };
+      // Setup message listeners
+      webSocketManager.addMessageListener('customer', (messageData) => {
+        get().receiveMessage(messageData);
+      });
 
-    stompClient.activate();
-  },
-  disconnectWebSocket: () => {
-    if (stompClient) {
-      stompClient.deactivate();
-      stompClient = null;
+      webSocketManager.addMessageListener('admin', (messageData) => {
+        get().receiveAdminMessage(messageData);
+      });
+
+      // Connect using WebSocketManager
+      await webSocketManager.connect(token, user);
+    } catch (error) {
+      console.error('WebSocket: Connection failed:', error);
+      set({ isConnecting: false, isConnected: false });
     }
+  },
+
+  disconnectWebSocket: () => {
+    console.log('WebSocket: Disconnecting...');
+    
+    // Remove message listeners
+    webSocketManager.removeMessageListener('customer', get().receiveMessage);
+    webSocketManager.removeMessageListener('admin', get().receiveAdminMessage);
+    
+    // Disconnect
+    webSocketManager.disconnect();
+    
     set({ isConnected: false, isConnecting: false });
   },
 
   setCurrentUser: (user) => {
     set({ currentUser: user });
   },
+
   // --- User Actions ---
   toggleChat: () => set((state) => ({ isChatOpen: !state.isChatOpen })),
+
   // Load user conversation
   loadUserConversation: async () => {
     try {
@@ -115,14 +100,18 @@ export const useChatStore = create((set, get) => ({
       console.error('Error loading user conversation:', error);
     }
   },
+
   // Send message from customer
   sendUserMessage: async (content) => {
     try {
       const token = useAuthStore.getState().accessToken;
+      
       const response = await axios.post(`${API_BASE_URL}/chat/customer/send`, 
         { content, messageType: 'TEXT' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      console.log('Sent user message, response:', response.data);
 
       // Add message to local state immediately
       set((state) => ({
@@ -140,29 +129,73 @@ export const useChatStore = create((set, get) => ({
         }));
       }
 
+      return response.data;
     } catch (error) {
       console.error('Error sending message:', error);
+      return null;
     }
   },
 
   // Receive message (from WebSocket)
   receiveMessage: (message) => {
+    console.log('WebSocket: Received customer message:', message);
+    console.log('WebSocket: Current user conversation ID:', get().userConversation?.id);
+    console.log('WebSocket: Message conversation ID:', message.conversationId);
+    console.log('WebSocket: Message isFromAdmin:', message.isFromAdmin);
+    
     set((state) => {
+      // Check if we have a conversation
+      if (!state.userConversation) {
+        console.log('WebSocket: No user conversation found, loading conversation first...');
+        // Try to load user conversation if we don't have one
+        setTimeout(() => get().loadUserConversation(), 500);
+        return state;
+      }
+      
       // If message is for the current conversation
-      if (state.userConversation && message.conversationId === state.userConversation.id) {
+      if (message.conversationId === state.userConversation.id) {
+        console.log('WebSocket: Adding message to user conversation:', message.conversationId);
+        
+        // Check if message already exists to prevent duplicates
+        const messageExists = state.userMessages.some(msg => msg.id === message.id);
+        if (messageExists) {
+          console.log('WebSocket: Message already exists, skipping duplicate:', message.id);
+          return state;
+        }
+        
+        // Construct a properly formatted message object
+        const formattedMessage = {
+          ...message,
+          id: message.id || `temp-${Date.now()}`,
+          senderId: message.senderId,
+          senderName: message.senderName,
+          senderAvatar: message.senderAvatar,
+          content: message.content,
+          createdAt: message.createdAt || new Date().toISOString(),
+          messageType: message.messageType || 'TEXT'
+        };
+        
+        console.log('WebSocket: Formatted user message:', formattedMessage);
+        
         return {
-          userMessages: [...state.userMessages, message],
+          userMessages: [...state.userMessages, formattedMessage],
           userUnreadCount: message.isFromAdmin ? state.userUnreadCount + 1 : state.userUnreadCount,
           userConversation: {
             ...state.userConversation,
             lastMessageContent: message.content,
-            lastMessageTimestamp: message.createdAt
+            lastMessageTimestamp: message.createdAt || new Date().toISOString()
           }
         };
+      } else {
+        console.log('WebSocket: Message not for current conversation:', {
+          messageConvId: message.conversationId,
+          currentConvId: state.userConversation.id
+        });
+        return state;
       }
-      return state;
     });
   },
+
   // Mark messages as read by customer
   markUserMessagesAsRead: async () => {
     try {
@@ -180,8 +213,9 @@ export const useChatStore = create((set, get) => ({
       console.error('Error marking messages as read:', error);
     }
   },
+
   // --- Admin Actions ---
-    // Load admin conversations
+  // Load admin conversations
   loadAdminConversations: async () => {
     try {
       const token = useAuthStore.getState().accessToken;
@@ -198,24 +232,22 @@ export const useChatStore = create((set, get) => ({
   // Set active conversation for admin
   setAdminActiveConversation: async (conversationId) => {
     set({ adminActiveConversationId: conversationId });
-      // Load messages for this conversation if not already loaded
-    const state = get();
-    if (!state.adminMessages[conversationId]) {
-      try {
-        const token = useAuthStore.getState().accessToken;
-        const response = await axios.get(`${API_BASE_URL}/chat/admin/conversation/${conversationId}/messages`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        set((state) => ({
-          adminMessages: {
-            ...state.adminMessages,
-            [conversationId]: response.data.reverse() // Reverse to show chronological order
-          }
-        }));
-      } catch (error) {
-        console.error('Error loading conversation messages:', error);
-      }
+    
+    // Always refresh messages for this conversation to ensure we have latest
+    try {
+      const token = useAuthStore.getState().accessToken;
+      const response = await axios.get(`${API_BASE_URL}/chat/admin/conversation/${conversationId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      set((state) => ({
+        adminMessages: {
+          ...state.adminMessages,
+          [conversationId]: response.data.reverse() // Reverse to show chronological order
+        }
+      }));
+    } catch (error) {
+      console.error('Error loading conversation messages:', error);
     }
     
     // Mark as read
@@ -235,14 +267,18 @@ export const useChatStore = create((set, get) => ({
       console.error('Error marking admin messages as read:', error);
     }
   },
+
   // Send message from admin
   sendAdminMessage: async (conversationId, content) => {
     try {
       const token = useAuthStore.getState().accessToken;
+      
       const response = await axios.post(`${API_BASE_URL}/chat/admin/conversation/${conversationId}/send`,
         { content, messageType: 'TEXT' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      console.log('Sent admin message, response:', response.data);
 
       // Add message to local state
       set((state) => {
@@ -264,37 +300,73 @@ export const useChatStore = create((set, get) => ({
         )
       }));
 
+      return response.data;
     } catch (error) {
       console.error('Error sending admin message:', error);
+      return null;
     }
   },
 
   // Receive message in admin (from WebSocket)
   receiveAdminMessage: (message) => {
+    console.log('WebSocket: Received admin message:', message);
+    console.log('WebSocket: Current admin active conversation:', get().adminActiveConversationId);
+    console.log('WebSocket: Message conversation ID:', message.conversationId);
+    
     set(state => {
+      // Ensure we have a properly formatted message
+      const formattedMessage = {
+        ...message,
+        id: message.id || `temp-${Date.now()}`,
+        senderId: message.senderId,
+        senderName: message.senderName,
+        senderAvatar: message.senderAvatar,
+        content: message.content,
+        createdAt: message.createdAt || new Date().toISOString(),
+        messageType: message.messageType || 'TEXT'
+      };
+      
+      console.log('WebSocket: Formatted admin message:', formattedMessage);
+      
       // Update conversation list
       let updatedConversations = [...state.adminConversations];
       const existingConvIndex = updatedConversations.findIndex(conv => conv.id === message.conversationId);
       
       if (existingConvIndex >= 0) {
         // Update existing conversation
+        console.log('WebSocket: Updating existing conversation:', message.conversationId);
         updatedConversations[existingConvIndex] = {
           ...updatedConversations[existingConvIndex],
           lastMessageContent: message.content,
-          lastMessageTimestamp: message.createdAt,
+          lastMessageTimestamp: message.createdAt || new Date().toISOString(),
           unreadCountAdmin: state.adminActiveConversationId === message.conversationId 
             ? 0 
             : (updatedConversations[existingConvIndex].unreadCountAdmin || 0) + 1
         };
+      } else {
+        // If conversation doesn't exist in list, need to reload conversations
+        console.log('WebSocket: New conversation detected, refreshing conversation list');
+        setTimeout(() => get().loadAdminConversations(), 1000);
       }
 
-      // Add message to conversation messages if conversation is loaded
+      // Add message to conversation messages - ALWAYS add it, create array if needed
       let updatedMessages = { ...state.adminMessages };
-      if (updatedMessages[message.conversationId]) {
-        updatedMessages[message.conversationId] = [
-          ...updatedMessages[message.conversationId],
-          message
-        ];
+      if (!updatedMessages[message.conversationId]) {
+        // If conversation messages not loaded, initialize with this message
+        console.log('WebSocket: Initializing messages for new conversation:', message.conversationId);
+        updatedMessages[message.conversationId] = [formattedMessage];
+      } else {
+        // Check for duplicate message before adding
+        const messageExists = updatedMessages[message.conversationId].some(msg => msg.id === message.id);
+        if (!messageExists) {
+          console.log('WebSocket: Adding message to admin conversation:', message.conversationId);
+          updatedMessages[message.conversationId] = [
+            ...updatedMessages[message.conversationId],
+            formattedMessage
+          ];
+        } else {
+          console.log('WebSocket: Message already exists, skipping duplicate:', message.id);
+        }
       }
 
       return {
@@ -303,41 +375,51 @@ export const useChatStore = create((set, get) => ({
       };
     });
   },
+
   // --- Common Actions ---
   setConnecting: (status) => set({ isConnecting: status }),
   setConnected: (status) => set({ isConnected: status }),
+
   // Initialize chat for user
   initializeUserChat: async (user) => {
+    console.log('WebSocket: Initializing user chat for:', user.email);
     set({ currentUser: user });
+    
+    // Load user conversation first
+    if (user.roles && user.roles.includes('ROLE_CUSTOMER')) {
+      await get().loadUserConversation();
+    }
     
     // Connect WebSocket
     const token = useAuthStore.getState().accessToken;
     if (token) {
-      get().connectWebSocket(token);
-    }
-      // Load user conversation
-    if (user.roles && user.roles.includes('ROLE_CUSTOMER')) {
-      await get().loadUserConversation();
+      console.log('WebSocket: Starting user chat connection');
+      await get().connectWebSocket(token);
     }
   },
 
   // Initialize chat for admin
   initializeAdminChat: async (user) => {
+    console.log('WebSocket: Initializing admin chat for:', user.email);
     set({ currentUser: user });
+    
+    // Always load admin conversations first
+    if (user.roles && user.roles.includes('ROLE_ADMIN')) {
+      await get().loadAdminConversations();
+    }
     
     // Connect WebSocket
     const token = useAuthStore.getState().accessToken;
     if (token) {
-      get().connectWebSocket(token);
-    }
-      // Load admin conversations
-    if (user.roles && user.roles.includes('ROLE_ADMIN')) {
-      await get().loadAdminConversations();
+      console.log('WebSocket: Starting admin chat connection');
+      await get().connectWebSocket(token);
     }
   },
 
   // Clean up when user logs out
   cleanup: () => {
+    console.log('WebSocket: Cleaning up chat store');
+    
     get().disconnectWebSocket();
     set({
       isChatOpen: false,

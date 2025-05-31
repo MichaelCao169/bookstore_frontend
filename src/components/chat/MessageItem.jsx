@@ -6,8 +6,45 @@ import { FiFileText, FiDownload } from 'react-icons/fi';
 import { useAuthStore } from '@/store/authStore'; // To identify current user
 
 const MessageItem = ({ message, currentUserId }) => {
-  const isMyMessage = message.senderId === currentUserId;
+  // Convert both to numbers for proper comparison
+  const senderId = Number(message.senderId);
+  const userId = Number(currentUserId);
+  const isMyMessage = senderId === userId;
   const placeholderAvatar = '/default-avatar.png';
+
+  // Enhanced debug logging for alignment issues
+  console.log('MessageItem Debug:', {
+    messageId: message.id,
+    senderId: message.senderId,
+    senderIdNum: senderId,
+    currentUserId: currentUserId,
+    currentUserIdNum: userId,
+    isMyMessage: isMyMessage,
+    senderName: message.senderName,
+    content: message.content?.substring(0, 30) + '...',
+    isFromAdmin: message.isFromAdmin
+  });
+
+  // Additional verification: if we know this is from admin and current user is admin, it should be my message
+  // if we know this is from customer and current user is not admin, it should be my message
+  let finalIsMyMessage = isMyMessage;
+
+  // Use isFromAdmin field if available for more accurate alignment
+  if (typeof message.isFromAdmin === 'boolean') {
+    // If current user is admin and message is from admin -> my message
+    // If current user is not admin and message is not from admin -> my message
+    const currentUserIsAdmin = message.currentUserIsAdmin; // We might need to pass this
+    if (currentUserIsAdmin !== undefined) {
+      finalIsMyMessage = (currentUserIsAdmin && message.isFromAdmin) || (!currentUserIsAdmin && !message.isFromAdmin);
+    }
+  }
+
+  console.log('MessageItem Final Alignment:', {
+    messageId: message.id,
+    originalIsMyMessage: isMyMessage,
+    finalIsMyMessage: finalIsMyMessage,
+    willShowOnRight: finalIsMyMessage
+  });
 
   const handleImageError = (e) => {
     if (e.target.src !== placeholderAvatar) {
@@ -23,8 +60,8 @@ const MessageItem = ({ message, currentUserId }) => {
           target="_blank"
           rel="noopener noreferrer"
           className={`flex items-center p-2 rounded-md transition-colors ${isMyMessage
-              ? 'bg-orange-100 dark:bg-orange-700 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-600'
-              : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
+            ? 'bg-orange-100 dark:bg-orange-700 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-600'
+            : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
             }`}
         >
           <FiFileText className="w-5 h-5 mr-2 flex-shrink-0" />
@@ -36,10 +73,9 @@ const MessageItem = ({ message, currentUserId }) => {
     // Default to text if type is not file or fileUrl is missing
     return <p className="whitespace-pre-wrap break-words">{message.content}</p>;
   };
-
   return (
-    <div className={`flex items-end mb-3 ${isMyMessage ? 'justify-end' : ''}`}>
-      {!isMyMessage && (
+    <div className={`flex items-end mb-3 ${finalIsMyMessage ? 'justify-end' : ''}`}>
+      {!finalIsMyMessage && (
         <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
           <Image
             src={message.senderAvatar || placeholderAvatar}
@@ -52,22 +88,22 @@ const MessageItem = ({ message, currentUserId }) => {
         </div>
       )}
       <div
-        className={`max-w-[70%] p-3 rounded-xl shadow-sm ${isMyMessage
-            ? 'bg-orange-500 text-white rounded-br-none'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'
+        className={`max-w-[70%] p-3 rounded-xl shadow-sm ${finalIsMyMessage
+          ? 'bg-orange-500 text-white rounded-br-none'
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'
           }`}
       >
-        {!isMyMessage && (
+        {!finalIsMyMessage && (
           <p className="text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">
             {message.senderName}
           </p>
         )}
         {renderContent()}
-        <p className={`text-xs mt-1 ${isMyMessage ? 'text-orange-100 dark:text-orange-300' : 'text-gray-500 dark:text-gray-400'} text-right`}>
+        <p className={`text-xs mt-1 ${finalIsMyMessage ? 'text-orange-100 dark:text-orange-300' : 'text-gray-500 dark:text-gray-400'} text-right`}>
           {format(new Date(message.timestamp), 'HH:mm')}
         </p>
       </div>
-      {isMyMessage && (
+      {finalIsMyMessage && (
         <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
           <Image
             src={message.senderAvatar || placeholderAvatar}

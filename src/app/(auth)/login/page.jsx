@@ -135,7 +135,14 @@ const LoginPage = () => {
     try {
       // Call login API
       const response = await authApi.post('/auth/login', { email, password });
-      const { accessToken, ...userData } = response.data;
+      const { accessToken, userId, ...restUserData } = response.data;
+
+      // Map userId to id for frontend consistency
+      const userData = {
+        ...restUserData,
+        id: userId, // Map backend's userId to frontend's expected id field
+        userId: userId // Keep both for backward compatibility
+      };
 
       // Success notification
       toast.success('Đăng nhập thành công!', {
@@ -181,7 +188,7 @@ const LoginPage = () => {
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-white dark:bg-gray-900">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h1 className="text-center text-4xl font-bold text-orange-600">AtomicBooks</h1>
+        <h1 className="text-center text-4xl font-bold text-orange-600">AtomikBooks</h1>
         <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
           Đăng nhập vào tài khoản
         </h2>

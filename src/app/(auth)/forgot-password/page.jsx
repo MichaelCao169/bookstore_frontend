@@ -83,7 +83,7 @@ const ForgotPasswordPage = () => {
     return (
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-white dark:bg-gray-900">
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <h1 className="text-center text-4xl font-bold text-orange-600">AtomicBooks</h1>
+                <h1 className="text-center text-4xl font-bold text-orange-600">AtomikBooks</h1>
                 <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
                     Quên mật khẩu
                 </h2>

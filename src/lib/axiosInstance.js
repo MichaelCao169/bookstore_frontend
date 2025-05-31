@@ -182,7 +182,17 @@ axiosInstance.interceptors.response.use(
 
         // Call the refresh endpoint
         const response = await axiosInstance.post('/api/auth/refresh');
-        const newToken = response.data.accessToken;
+        const { accessToken: newToken, userId, ...restUserData } = response.data;
+        
+        // Map userId to id for frontend consistency if user data is returned
+        if (userId) {
+          const updatedUserData = {
+            ...restUserData,
+            id: userId,
+            userId: userId
+          };
+          useAuthStore.getState().updateUser(updatedUserData);
+        }
         
         // Update token in store
         useAuthStore.getState().setAccessToken(newToken);

@@ -103,7 +103,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="vi" suppressHydrationWarning className={theme === 'dark' ? 'dark' : ''}>
       <head>
-        <title>AtomicBooks - Hiệu Sách Trực Tuyến</title>
+        <title>AtomikBooks - Hiệu Sách Trực Tuyến</title>
         <meta name="description" content="AtomicBooks - Hiệu sách trực tuyến với kho sách phong phú và đa dạng." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
