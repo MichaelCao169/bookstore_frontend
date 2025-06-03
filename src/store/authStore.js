@@ -35,10 +35,15 @@ export const useAuthStore = create(
       login: (userData, token) => {
         console.log("Authentication store: Logging in user", userData.email);
         
-        // Ensure userData has avatarUrl or use default
-        if (!userData.avatarUrl || typeof userData.avatarUrl !== 'string') {
+        // Handle avatar/avatarUrl mapping - ensure both properties exist
+        if (userData.avatar && !userData.avatarUrl) {
+          userData.avatarUrl = userData.avatar;
+        } else if (userData.avatarUrl && !userData.avatar) {
+          userData.avatar = userData.avatarUrl;
+        } else if (!userData.avatarUrl && !userData.avatar) {
           console.log("Setting default avatar URL for user");
           userData.avatarUrl = '/default-avatar.png';
+          userData.avatar = '/default-avatar.png';
         }
         
         // Update auth state
@@ -51,8 +56,23 @@ export const useAuthStore = create(
       },
       
       // Logout action
-      logout: () => {
+      logout: async () => {
         console.log("Authentication store: Logging out user");
+        
+        try {
+          // Call backend logout to clear refresh token cookie
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            credentials: 'include', // Include cookies
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (error) {
+          console.error("Error during logout:", error);
+          // Continue with local logout even if backend call fails
+        }
+        
         set({
           accessToken: null,
           user: null,
@@ -63,14 +83,24 @@ export const useAuthStore = create(
       
       // Update user information
       updateUser: (userData) => {
-        console.log("Authentication store: Updating user information");
+        console.log("Authentication store: Updating user information", userData);
         
-        // Ensure userData has avatarUrl or use existing/default
-        if (!userData.avatarUrl || typeof userData.avatarUrl !== 'string') {
-          userData.avatarUrl = get().user?.avatarUrl || '/default-avatar.png';
+        // Handle avatar/avatarUrl mapping - use both for compatibility
+        const currentUser = get().user;
+        if (userData.avatar && !userData.avatarUrl) {
+          userData.avatarUrl = userData.avatar;
+        }
+        if (userData.avatarUrl && !userData.avatar) {
+          userData.avatar = userData.avatarUrl;
         }
         
-        set({ user: { ...get().user, ...userData } });
+        // Ensure userData has avatarUrl or use existing/default
+        if (!userData.avatarUrl && !userData.avatar) {
+          userData.avatarUrl = currentUser?.avatarUrl || currentUser?.avatar || '/default-avatar.png';
+          userData.avatar = userData.avatarUrl;
+        }
+        
+        set({ user: { ...currentUser, ...userData } });
       },
       
       // Update token

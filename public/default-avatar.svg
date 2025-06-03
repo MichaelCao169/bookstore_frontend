@@ -1,0 +1,44 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Modern gradient background -->
+    <linearGradient id="modernGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Soft shadow -->
+    <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+    
+    <!-- Inner glow -->
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main circle with gradient -->
+  <circle cx="100" cy="100" r="95" fill="url(#modernGradient)" filter="url(#softShadow)"/>
+  
+  <!-- Inner highlight ring -->
+  <circle cx="100" cy="100" r="88" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+  
+  <!-- User icon - head (larger and more refined) -->
+  <circle cx="100" cy="75" r="25" fill="#ffffff" opacity="0.95"/>
+  
+  <!-- User icon - body (more modern shape) -->
+  <ellipse cx="100" cy="145" rx="45" ry="35" fill="#ffffff" opacity="0.95"/>
+  
+  <!-- Shoulder curves for more realistic silhouette -->
+  <path d="M 70 120 Q 85 110 100 110 Q 115 110 130 120 L 125 140 Q 100 130 75 140 Z" 
+        fill="#ffffff" opacity="0.95"/>
+  
+  <!-- Subtle inner shadow on the icon -->
+  <circle cx="100" cy="75" r="25" fill="none" stroke="#000000" stroke-width="1" opacity="0.1"/>
+  <ellipse cx="100" cy="145" rx="45" ry="35" fill="none" stroke="#000000" stroke-width="1" opacity="0.1"/>
+</svg>

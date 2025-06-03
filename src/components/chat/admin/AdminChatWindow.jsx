@@ -38,7 +38,7 @@ const AdminChatWindow = () => {
     }
   }; const handleSendMessage = async (messageData) => {
     if (!adminActiveConversationId) return;
-    await sendAdminMessage(adminActiveConversationId, messageData.content);
+    await sendAdminMessage(adminActiveConversationId, messageData);
   };
 
   if (!activeConversation) {
@@ -91,22 +91,26 @@ const AdminChatWindow = () => {
             senderName: msg.senderName,
             isFromAdmin: msg.isFromAdmin,
             content: msg.content?.substring(0, 20) + '...'
-          }); return (
-            <MessageItem
-              key={msg.id}
-              message={{
-                id: msg.id,
-                senderId: msg.senderId,
-                senderName: msg.senderName,
-                senderAvatar: msg.senderAvatar,
-                content: msg.content,
-                timestamp: msg.createdAt,
-                type: msg.messageType,
-                isFromAdmin: msg.isFromAdmin,
-                currentUserIsAdmin: currentUser?.roles?.includes('ROLE_ADMIN'),
-              }}
-              currentUserId={currentUser?.id || currentUser?.userId}
-            />
+          }); return (<MessageItem
+            key={msg.id}
+            message={{
+              id: msg.id,
+              senderId: msg.senderId,
+              senderName: msg.senderName,
+              senderAvatar: msg.senderAvatar,
+              content: msg.content,
+              timestamp: msg.createdAt,
+              type: msg.messageType || msg.type,
+              isFromAdmin: msg.isFromAdmin,
+              currentUserIsAdmin: currentUser?.roles?.includes('ROLE_ADMIN'),
+              // File-related properties
+              fileName: msg.fileName,
+              fileUrl: msg.fileUrl,
+              fileSize: msg.fileSize,
+              contentType: msg.contentType,
+            }}
+            currentUserId={currentUser?.id || currentUser?.userId}
+          />
           );
         })}
         <div ref={messagesEndRef} />

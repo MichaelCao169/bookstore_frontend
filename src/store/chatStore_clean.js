@@ -100,31 +100,14 @@ export const useChatStore = create((set, get) => ({
       console.error('Error loading user conversation:', error);
     }
   },
+
   // Send message from customer
-  sendUserMessage: async (messageData) => {
+  sendUserMessage: async (content) => {
     try {
       const token = useAuthStore.getState().accessToken;
       
-      // Prepare request based on message type
-      let requestBody;
-      if (messageData.type === 'file') {
-        requestBody = {
-          content: messageData.content,
-          messageType: 'FILE',
-          fileName: messageData.fileName,
-          fileUrl: messageData.fileUrl,
-          fileSize: parseInt(messageData.fileSize),
-          contentType: messageData.contentType
-        };
-      } else {
-        requestBody = {
-          content: messageData.content || messageData,
-          messageType: 'TEXT'
-        };
-      }
-
       const response = await axios.post(`${API_BASE_URL}/chat/customer/send`, 
-        requestBody,
+        { content, messageType: 'TEXT' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -140,7 +123,7 @@ export const useChatStore = create((set, get) => ({
         set((state) => ({
           userConversation: {
             ...state.userConversation,
-            lastMessageContent: requestBody.content,
+            lastMessageContent: content,
             lastMessageTimestamp: response.data.createdAt
           }
         }));
@@ -284,32 +267,14 @@ export const useChatStore = create((set, get) => ({
       console.error('Error marking admin messages as read:', error);
     }
   },
+
   // Send message from admin
-  sendAdminMessage: async (conversationId, messageData) => {
+  sendAdminMessage: async (conversationId, content) => {
     try {
       const token = useAuthStore.getState().accessToken;
       
-      // Prepare request based on message type
-      let requestBody;
-      if (typeof messageData === 'object' && messageData.type === 'file') {
-        requestBody = {
-          content: messageData.content,
-          messageType: 'FILE',
-          fileName: messageData.fileName,
-          fileUrl: messageData.fileUrl,
-          fileSize: parseInt(messageData.fileSize),
-          contentType: messageData.contentType
-        };
-      } else {
-        // Backward compatibility - if messageData is just a string
-        requestBody = {
-          content: typeof messageData === 'string' ? messageData : messageData.content,
-          messageType: 'TEXT'
-        };
-      }
-      
       const response = await axios.post(`${API_BASE_URL}/chat/admin/conversation/${conversationId}/send`,
-        requestBody,
+        { content, messageType: 'TEXT' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -330,7 +295,7 @@ export const useChatStore = create((set, get) => ({
       set(state => ({
         adminConversations: state.adminConversations.map(conv =>
           conv.id === conversationId 
-            ? { ...conv, lastMessageContent: requestBody.content, lastMessageTimestamp: response.data.createdAt }
+            ? { ...conv, lastMessageContent: content, lastMessageTimestamp: response.data.createdAt }
             : conv
         )
       }));

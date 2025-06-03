@@ -6,6 +6,7 @@ import DashboardCard from '@/components/layout/DashboardCard';
 import { FiShoppingBag, FiPackage, FiUsers, FiDollarSign, FiActivity, FiStar, FiTrendingUp, FiAlertCircle, FiLoader } from 'react-icons/fi';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState({
@@ -211,7 +212,7 @@ export default function AdminDashboard() {
         return (
             <div className="flex justify-center items-center h-full py-24">
                 <div className="text-center">
-                    <FiLoader size={40} className="animate-spin text-orange-500 mx-auto mb-4" />
+                    <BrandSpinner size="lg" className="mx-auto mb-4" />
                     <p className="text-gray-600 dark:text-gray-400">Đang tải dữ liệu...</p>
                 </div>
             </div>
@@ -377,4 +378,4 @@ export default function AdminDashboard() {
             </div>
         </div>
     );
-} 
+}

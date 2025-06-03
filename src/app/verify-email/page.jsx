@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
 import { FiCheckCircle, FiAlertCircle, FiLoader, FiMail, FiArrowRight } from 'react-icons/fi';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 export default function VerifyEmail() {
     const [verifying, setVerifying] = useState(true);
@@ -71,54 +72,56 @@ export default function VerifyEmail() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-                    {verifying ? (
-                        <div className="text-center py-8">
-                            <FiLoader className="animate-spin h-12 w-12 text-orange-500 mx-auto mb-4" />
-                            <p className="text-lg text-gray-700 dark:text-gray-300">Đang xác thực email của bạn...</p>
+                <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">                    {verifying ? (
+                    <div className="text-center py-8">
+                        <BrandSpinner
+                            size="text-5xl"
+                            text="Đang xác thực email của bạn..."
+                            textColor="text-lg text-gray-700 dark:text-gray-300"
+                        />
+                    </div>
+                ) : success ? (
+                    <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-6">
+                            <FiCheckCircle className="h-10 w-10 text-green-600" />
                         </div>
-                    ) : success ? (
-                        <div className="text-center py-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 mb-6">
-                                <FiCheckCircle className="h-10 w-10 text-green-600" />
-                            </div>
-                            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Xác thực thành công!</h3>
-                            <p className="text-gray-600 dark:text-gray-300 mb-6">
-                                Tài khoản của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                                Đang chuyển hướng đến trang đăng nhập...
-                            </p>
+                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Xác thực thành công!</h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            Tài khoản của bạn đã được xác thực thành công. Bây giờ bạn có thể đăng nhập.
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                            Đang chuyển hướng đến trang đăng nhập...
+                        </p>
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center font-medium text-orange-600 hover:text-orange-500 dark:text-orange-400 dark:hover:text-orange-300"
+                        >
+                            Đến trang đăng nhập <FiArrowRight className="ml-1" />
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="text-center py-8">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-6">
+                            <FiAlertCircle className="h-10 w-10 text-red-600" />
+                        </div>
+                        <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Xác thực thất bại</h3>
+                        <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
+                        <div className="mt-4 space-y-4">
                             <Link
                                 href="/login"
-                                className="inline-flex items-center font-medium text-orange-600 hover:text-orange-500 dark:text-orange-400 dark:hover:text-orange-300"
+                                className="block w-full text-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                             >
-                                Đến trang đăng nhập <FiArrowRight className="ml-1" />
+                                Đến trang đăng nhập
+                            </Link>
+                            <Link
+                                href="/"
+                                className="block w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                            >
+                                Về trang chủ
                             </Link>
                         </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-6">
-                                <FiAlertCircle className="h-10 w-10 text-red-600" />
-                            </div>
-                            <h3 className="text-xl font-medium text-gray-900 dark:text-white mb-2">Xác thực thất bại</h3>
-                            <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
-                            <div className="mt-4 space-y-4">
-                                <Link
-                                    href="/login"
-                                    className="block w-full text-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                                >
-                                    Đến trang đăng nhập
-                                </Link>
-                                <Link
-                                    href="/"
-                                    className="block w-full text-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                                >
-                                    Về trang chủ
-                                </Link>
-                            </div>
-                        </div>
-                    )}
+                    </div>
+                )}
                 </div>
             </div>
         </div>

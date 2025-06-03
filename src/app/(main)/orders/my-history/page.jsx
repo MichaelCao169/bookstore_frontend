@@ -9,18 +9,16 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
 import { FiPackage, FiLoader, FiAlertCircle, FiCalendar, FiTag, FiDollarSign, FiInfo, FiUser, FiMapPin, FiCreditCard, FiTruck, FiShoppingBag, FiClock, FiCheckCircle, FiXCircle, FiArrowRight, FiRefreshCw } from 'react-icons/fi'; // Icons
 import Pagination from '@/components/ui/Pagination'; // Import Pagination
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Components Loading/Error (Có thể dùng chung)
 const LoadingSpinner = () => (
   <div className="flex flex-col justify-center items-center py-16">
-    <div className="relative w-20 h-20">
-      <div className="absolute inset-0 rounded-full border-t-4 border-orange-500 animate-spin"></div>
-      <div className="absolute inset-2 rounded-full border-2 border-gray-100 dark:border-gray-700"></div>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <FiLoader className="text-orange-500 text-2xl animate-pulse" />
-      </div>
-    </div>
-    <p className="mt-4 text-gray-600 dark:text-gray-300">Đang tải lịch sử đơn hàng...</p>
+    <BrandSpinner
+      size="text-5xl"
+      text="Đang tải lịch sử đơn hàng..."
+      textColor="text-gray-600 dark:text-gray-300"
+    />
   </div>
 );
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '@/lib/axiosInstance';
 import { FiFolder, FiEdit2, FiTrash2, FiPlus, FiSave, FiX, FiLoader, FiAlertCircle, FiInfo } from 'react-icons/fi';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 export default function CategoriesManagement() {
     const [categories, setCategories] = useState([]);
@@ -123,10 +124,9 @@ export default function CategoriesManagement() {
                         <FiFolder className="mr-2 text-orange-500" /> Tất cả Danh mục
                     </h2>
 
-                    {loading ? (
-                        <div className="text-center py-4 text-gray-600 dark:text-gray-300 flex justify-center items-center">
-                            <FiLoader className="animate-spin mr-2" /> Đang tải danh mục...
-                        </div>
+                    {loading ? (<div className="text-center py-4 text-gray-600 dark:text-gray-300 flex justify-center items-center">
+                        <BrandSpinner size="sm" className="mr-2" /> Đang tải danh mục...
+                    </div>
                     ) : error ? (
                         <div className="text-center py-4 text-red-600 dark:text-red-400 flex justify-center items-center">
                             <FiAlertCircle className="mr-2" /> {error}
@@ -287,4 +287,4 @@ export default function CategoriesManagement() {
             </div>
         </div>
     );
-} 
+}

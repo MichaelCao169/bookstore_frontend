@@ -12,16 +12,17 @@ import 'react-toastify/dist/ReactToastify.css'; // Import CSS
 import { FiLoader } from 'react-icons/fi';
 import ChatBubble from '@/components/chat/ChatBubble';
 import ChatWindow from '@/components/chat/ChatWindow';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 const inter = Inter({ subsets: ['latin'] });
 
 // Tách phần loading thành component riêng
 function LoadingState() {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="text-center">
-        <FiLoader className="animate-spin h-10 w-10 mx-auto text-orange-500 mb-4" />
-        <div className="text-xl font-semibold text-gray-800 dark:text-gray-200">Đang tải AtomicBooks...</div>
-      </div>
+      <BrandSpinner
+        size="text-6xl"
+        text="Đang tải AtomicBooks..."
+      />
     </div>
   );
 }

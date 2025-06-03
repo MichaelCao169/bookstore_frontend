@@ -1,6 +1,7 @@
 // src/components/order/OrderHelpers.jsx
 import React from 'react';
 import { FiInfo, FiLoader, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiDollarSign } from 'react-icons/fi'; // Thêm các icons cần thiết
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // --- Order Status Badge Component ---
 export const OrderStatusBadge = ({ status }) => {
@@ -15,7 +16,7 @@ export const OrderStatusBadge = ({ status }) => {
             bgColor = 'bg-yellow-50 dark:bg-yellow-900/30';
             textColor = 'text-yellow-700 dark:text-yellow-400';
             dotColor = 'bg-yellow-500';
-            icon = <FiLoader size={12} className="hidden sm:inline animate-spin" />;
+            icon = <BrandSpinner size="xs" className="hidden sm:inline" />;
             break;
         case 'PENDING_PAYMENT':
             bgColor = 'bg-orange-50 dark:bg-orange-900/30';

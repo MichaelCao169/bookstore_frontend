@@ -2,8 +2,10 @@
 'use client';
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { FiFileText, FiDownload } from 'react-icons/fi';
+import { FiFileText, FiDownload, FiFile, FiImage } from 'react-icons/fi';
 import { useAuthStore } from '@/store/authStore'; // To identify current user
+import UserAvatar from '@/components/ui/UserAvatar';
+import { formatFileSize, getFileType } from '@/services/fileUploadService';
 
 const MessageItem = ({ message, currentUserId }) => {
   // Convert both to numbers for proper comparison
@@ -51,41 +53,80 @@ const MessageItem = ({ message, currentUserId }) => {
       e.target.src = placeholderAvatar;
     }
   };
+  const renderFileIcon = (fileName, contentType) => {
+    const fileType = getFileType(fileName);
+    const iconProps = { className: "w-5 h-5 mr-2 flex-shrink-0" };
+
+    switch (fileType) {
+      case 'image':
+        return <FiImage {...iconProps} />;
+      case 'document':
+      case 'excel':
+        return <FiFileText {...iconProps} />;
+      default:
+        return <FiFile {...iconProps} />;
+    }
+  };
 
   const renderContent = () => {
     if (message.type === 'file' && message.fileUrl) {
+      const fileType = getFileType(message.fileName || '');
+      const isImage = fileType === 'image';
+
       return (
-        <a
-          href={message.fileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`flex items-center p-2 rounded-md transition-colors ${isMyMessage
-            ? 'bg-orange-100 dark:bg-orange-700 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-600'
-            : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500'
-            }`}
-        >
-          <FiFileText className="w-5 h-5 mr-2 flex-shrink-0" />
-          <span className="truncate flex-grow">{message.fileName || 'Tải file đính kèm'}</span>
-          <FiDownload className="w-4 h-4 ml-2 flex-shrink-0" />
-        </a>
+        <div className="space-y-2">
+          {isImage && (
+            <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-600 max-w-xs">
+              <Image
+                src={message.fileUrl}
+                alt={message.fileName || 'Hình ảnh'}
+                width={300}
+                height={200}
+                className="object-cover w-full h-auto max-h-48"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          <a
+            href={message.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center p-3 rounded-lg transition-colors border ${isMyMessage
+              ? 'bg-orange-100 dark:bg-orange-700 border-orange-200 dark:border-orange-600 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-600'
+              : 'bg-white dark:bg-gray-600 border-gray-200 dark:border-gray-500 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500'
+              }`}
+          >
+            {renderFileIcon(message.fileName, message.contentType)}
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">
+                {message.fileName || 'File đính kèm'}
+              </div>
+              {message.fileSize && (
+                <div className="text-xs opacity-75">
+                  {formatFileSize(parseInt(message.fileSize))}
+                </div>
+              )}
+            </div>
+            <FiDownload className="w-4 h-4 ml-2 flex-shrink-0 opacity-75" />
+          </a>
+        </div>
       );
     }
     // Default to text if type is not file or fileUrl is missing
     return <p className="whitespace-pre-wrap break-words">{message.content}</p>;
   };
+
   return (
     <div className={`flex items-end mb-3 ${finalIsMyMessage ? 'justify-end' : ''}`}>
       {!finalIsMyMessage && (
-        <div className="w-8 h-8 rounded-full overflow-hidden mr-2 flex-shrink-0">
-          <Image
-            src={message.senderAvatar || placeholderAvatar}
-            alt={message.senderName || 'Avatar'}
-            width={32}
-            height={32}
-            className="object-cover"
-            onError={handleImageError}
-          />
-        </div>
+        <UserAvatar
+          name={message.senderName || 'User'}
+          avatarUrl={message.senderAvatar}
+          size="sm"
+          className="mr-2 flex-shrink-0"
+        />
       )}
       <div
         className={`max-w-[70%] p-3 rounded-xl shadow-sm ${finalIsMyMessage
@@ -104,16 +145,12 @@ const MessageItem = ({ message, currentUserId }) => {
         </p>
       </div>
       {finalIsMyMessage && (
-        <div className="w-8 h-8 rounded-full overflow-hidden ml-2 flex-shrink-0">
-          <Image
-            src={message.senderAvatar || placeholderAvatar}
-            alt={message.senderName || 'Avatar'}
-            width={32}
-            height={32}
-            className="object-cover"
-            onError={handleImageError}
-          />
-        </div>
+        <UserAvatar
+          name={message.senderName || 'User'}
+          avatarUrl={message.senderAvatar}
+          size="sm"
+          className="ml-2 flex-shrink-0"
+        />
       )}
     </div>
   );

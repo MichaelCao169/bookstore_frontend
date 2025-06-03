@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'; // Import để kiểm tra n�
 import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
 import { FiUserPlus, FiLoader, FiUser, FiMail, FiLock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 const RegisterPage = () => {
   // State cho form inputs
@@ -406,18 +407,17 @@ const RegisterPage = () => {
               type="submit"
               disabled={isLoading}
               className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <FiLoader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                  Đang tạo tài khoản...
-                </>
-              ) : (
-                <>
-                  <FiUserPlus className="mr-2 h-5 w-5" />
-                  Đăng ký
-                </>
-              )}
+            >              {isLoading ? (
+              <>
+                <BrandSpinner size="sm" className="-ml-1 mr-3" color="white" />
+                Đang tạo tài khoản...
+              </>
+            ) : (
+              <>
+                <FiUserPlus className="mr-2 h-5 w-5" />
+                Đăng ký
+              </>
+            )}
             </button>
           </div>
         </form>

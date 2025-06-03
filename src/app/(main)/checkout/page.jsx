@@ -9,11 +9,12 @@ import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
 import { FiShoppingCart, FiMapPin, FiPhone, FiUser, FiCreditCard, FiLoader, FiAlertCircle, FiCheckCircle, FiSave } from 'react-icons/fi';
 import { formatCurrency } from '@/components/order/OrderHelpers'; // Import hàm format tiền tệ
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Components Loading/Error
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center py-10">
-        <FiLoader className="animate-spin text-orange-500 text-4xl" />
+        <BrandSpinner size="text-4xl" />
     </div>
 );
 
@@ -375,10 +376,9 @@ const CheckoutPage = () => {
                         <button
                             onClick={handlePlaceOrder}
                             disabled={isPlacingOrder}
-                            className="mt-6 w-full bg-orange-600 text-white px-6 py-3 rounded font-semibold hover:bg-orange-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"
-                        >
+                            className="mt-6 w-full bg-orange-600 text-white px-6 py-3 rounded font-semibold hover:bg-orange-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center"                        >
                             {isPlacingOrder ? (
-                                <FiLoader className="animate-spin mr-2" />
+                                <BrandSpinner size="sm" className="mr-2" />
                             ) : (
                                 <FiCheckCircle className="mr-2" />
                             )}

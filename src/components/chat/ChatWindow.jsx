@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import MessageItem from './MessageItem';
 import ChatInput from './ChatInput';
 import Image from 'next/image';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 const ChatWindow = () => {
   const {
@@ -72,7 +73,7 @@ const ChatWindow = () => {
     }
 
     await sendUserMessage(messageData.content);
-  };  if (!isChatOpen) return null;
+  }; if (!isChatOpen) return null;
 
   return (
     <>
@@ -108,7 +109,7 @@ const ChatWindow = () => {
         <div ref={chatBodyRef} className="flex-grow p-4 space-y-3 overflow-y-auto bg-gray-50 dark:bg-gray-700/50">
           {isConnecting && (
             <div className="flex justify-center items-center h-full">
-              <FiLoader className="animate-spin text-orange-500 text-2xl" />
+              <BrandSpinner size="text-2xl" />
             </div>
           )}
           {!isConnected && !isConnecting && userMessages.length === 0 && (
@@ -138,9 +139,14 @@ const ChatWindow = () => {
                     senderAvatar: msg.senderAvatar,
                     content: msg.content,
                     timestamp: msg.createdAt,
-                    type: msg.messageType,
+                    type: msg.messageType || msg.type,
                     isFromAdmin: msg.isFromAdmin,
                     currentUserIsAdmin: currentUser?.roles?.includes('ROLE_ADMIN'),
+                    // File-related properties
+                    fileName: msg.fileName,
+                    fileUrl: msg.fileUrl,
+                    fileSize: msg.fileSize,
+                    contentType: msg.contentType,
                   }}
                   currentUserId={currentUser?.id || currentUser?.userId}
                 />

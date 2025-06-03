@@ -9,6 +9,7 @@ import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
+import UserAvatar from '@/components/ui/UserAvatar';
 import Image from 'next/image';
 
 // Hàm formatImageUrl để xử lý URL avatar
@@ -38,7 +39,9 @@ const formatImageUrl = (url) => {
 
 // Hàm kiểm tra có hiển thị avatar hay không
 const shouldRenderAvatar = (user) => {
-  return user && typeof user === 'object' && user.avatarUrl && typeof user.avatarUrl === 'string';
+  if (!user || typeof user !== 'object') return false;
+  const avatarUrl = user.avatarUrl || user.avatar;
+  return avatarUrl && typeof avatarUrl === 'string' && !avatarUrl.includes('default-avatar');
 };
 
 const Navbar = ({ theme = 'light', toggleTheme }) => {
@@ -280,19 +283,13 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
                   onMouseEnter={() => setShowDropdown(true)}
                   className="flex items-center text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 focus:outline-none"
                 >
-                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
-                    <img
-                      src={shouldRenderAvatar(user) ? formatImageUrl(user.avatarUrl) : '/default-avatar.png'}
-                      alt={`Profile picture of ${user?.name || 'user'}`}
-                      className="object-cover w-full h-full"
-                      onError={(e) => {
-                        // Chuyển về ảnh mặc định nếu có lỗi
-                        console.log('Navbar avatar error:', e.target.src);
-                        e.target.src = '/default-avatar.png';
-                      }}
-                    />
-                  </div>
-                  <span className="ml-2 hidden md:inline">{user.name}</span>
+                  <UserAvatar
+                    name={user?.name || user?.displayName || `${user?.firstName} ${user?.lastName}`.trim() || 'User'}
+                    avatarUrl={shouldRenderAvatar(user) ? formatImageUrl(user.avatarUrl || user.avatar) : null}
+                    size="sm"
+                    className="border-2 border-gray-200 dark:border-gray-700"
+                  />
+                  <span className="ml-2 hidden md:inline">{user?.name || user?.displayName || `${user?.firstName} ${user?.lastName}`.trim() || 'User'}</span>
                 </button>
 
                 {showDropdown && (
@@ -459,18 +456,12 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
             {isAuthenticated && (
               <div className="space-y-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <div className="pb-2 font-medium text-gray-800 dark:text-gray-200 flex items-center">
-                  <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700 mr-2">
-                    <img
-                      src={shouldRenderAvatar(user) ? formatImageUrl(user.avatarUrl) : '/default-avatar.png'}
-                      alt={`Profile picture of ${user?.name || 'user'}`}
-                      className="object-cover w-full h-full"
-                      onError={(e) => {
-                        // Chuyển về ảnh mặc định nếu có lỗi
-                        console.log('Navbar avatar error:', e.target.src);
-                        e.target.src = '/default-avatar.png';
-                      }}
-                    />
-                  </div>
+                  <UserAvatar
+                    name={user?.name || 'User'}
+                    avatarUrl={shouldRenderAvatar(user) ? formatImageUrl(user.avatarUrl) : null}
+                    size="sm"
+                    className="border-2 border-gray-200 dark:border-gray-700 mr-2"
+                  />
                   Xin chào, {user.name}
                 </div>
                 <Link
