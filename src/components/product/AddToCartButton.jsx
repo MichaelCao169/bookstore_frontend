@@ -8,6 +8,8 @@ import { useAuthStore } from '@/store/authStore'; // Import để kiểm tra aut
 import { useRouter } from 'next/navigation'; // Import để redirect
 import { toast } from 'react-toastify'; // Import toast
 import { useCartStore } from '@/store/cartStore';
+import BrandSpinner from '@/components/ui/BrandSpinner';
+
 const AddToCartButton = ({ productId, stockQuantity }) => {
   const [isLoading, setIsLoading] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // Lấy trạng thái đăng nhập
@@ -63,12 +65,11 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
           : 'bg-orange-500 hover:bg-orange-600'
         }`}
       aria-label={isDisabled ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
-    >
-      {isLoading ? (
-        <FiLoader className="animate-spin mr-2" size={18} /> // Icon loading
-      ) : (
-        <FiShoppingCart className="inline mr-2" size={18} />
-      )}
+    >      {isLoading ? (
+      <BrandSpinner size="sm" className="mr-2" /> // Icon loading
+    ) : (
+      <FiShoppingCart className="inline mr-2" size={18} />
+    )}
       {isDisabled ? 'Hết hàng' : isLoading ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
     </button>
   );

@@ -90,8 +90,7 @@ const HeroSection = () => {
                                     )
                                 }`}
                         >
-                            {/* Background with gradient overlay */}
-                            <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgColor} opacity-80 z-10`}></div>
+                            
 
                             {/* Background image */}
                             <div className="absolute inset-0">
@@ -104,18 +103,7 @@ const HeroSection = () => {
                                 />
                             </div>
 
-                            {/* Content */}
-                            <div className="relative z-30 flex h-full">
-                                <div className="container mx-auto px-4 md:px-8 flex items-center">
-                                    <div className={`max-w-lg text-white transition-all duration-700 delay-200 ${index === currentSlide ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-                                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">{slide.title}</h1>
-                                        <p className="text-lg md:text-xl opacity-90 mb-8">{slide.description}</p>
-                                        <Link href={slide.buttonLink} className="inline-block px-6 py-3 bg-white text-gray-900 font-medium hover:bg-gray-100 transition-colors duration-200 shadow-lg">
-                                            {slide.buttonText}
-                                        </Link>
-                                    </div>
-                                </div>
-                            </div>
+                            
                         </div>
                     ))}
                 </div>

@@ -7,6 +7,7 @@ import { use } from 'react';
 import { FiUser, FiMail, FiCalendar, FiLoader, FiArrowLeft, FiShoppingBag, FiDollarSign, FiEye, FiTag } from 'react-icons/fi';
 import Image from 'next/image';
 import Link from 'next/link';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 export default function UserDetail({ params }) {
     const unwrappedParams = use(params);
@@ -198,35 +199,15 @@ export default function UserDetail({ params }) {
 
         // Trả về ảnh mặc định nếu không có avatar
         return '/default-avatar.png';
-    };
-
-    // Render user avatar
+    };    // Render user avatar
     const renderUserAvatar = () => {
-        if (!avatarError) {
-            const avatarUrl = getProfileImageUrl();
-
-            return (
-                <div className="w-20 h-20 rounded-full overflow-hidden relative bg-gray-100">
-                    <Image
-                        src={avatarUrl}
-                        alt={user.name || 'User avatar'}
-                        width={80}
-                        height={80}
-                        className="object-cover"
-                        onError={(e) => {
-                            console.log('Avatar load error:', e);
-                            setAvatarError(true);
-                        }}
-                    />
-                </div>
-            );
-        }
-
-        // Fallback to initial letter avatar
         return (
-            <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center text-orange-600 dark:text-orange-400 text-3xl font-bold">
-                {user?.name?.charAt(0) || 'U'}
-            </div>
+            <UserAvatar
+                name={user?.name || 'User'}
+                avatarUrl={!avatarError ? getProfileImageUrl() : null}
+                size="xl"
+                className="w-20 h-20"
+            />
         );
     };
 

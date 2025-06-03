@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'; // Import auth store
 import { FiLogIn, FiMail, FiLock, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import axios from 'axios'; // Import axios trực tiếp
+import axiosInstance from '@/lib/axiosInstance'; // Import axiosInstance for profile API call
 
 // Tạo instance axios riêng (không dùng axiosInstance có interceptors để tránh reload)
 const authApi = axios.create({
@@ -22,20 +23,45 @@ const errorMessages = {
   'User account is disabled': 'Tài khoản đã bị vô hiệu hóa',
   'User account is locked': 'Tài khoản tạm thời bị khóa',
   'User email is not verified': 'Email chưa được xác thực, vui lòng kiểm tra hộp thư của bạn',
-  'Bad credentials': 'Thông tin đăng nhập không chính xác',
+  'Bad credentials': 'Email hoặc mật khẩu không đúng',
   'Your account has been locked due to too many failed login attempts': 'Tài khoản đã bị tạm khóa do đăng nhập sai nhiều lần',
-  'Network Error': 'Lỗi kết nối mạng, vui lòng kiểm tra lại kết nối của bạn'
+  'Network Error': 'Lỗi kết nối mạng, vui lòng kiểm tra lại kết nối của bạn',
+  'Tài khoản cần được xác minh. Vui lòng kiểm tra email của bạn.': 'Tài khoản cần được xác minh. Vui lòng kiểm tra email của bạn.',
+  'Email hoặc mật khẩu không đúng': 'Email hoặc mật khẩu không đúng',
+  'Tài khoản đã bị tạm khóa do đăng nhập sai nhiều lần': 'Tài khoản đã bị tạm khóa do đăng nhập sai nhiều lần',
+  'Đã xảy ra lỗi hệ thống. Vui lòng liên hệ hỗ trợ.': 'Đã xảy ra lỗi hệ thống. Vui lòng liên hệ hỗ trợ.',
+  'Request failed with status code 401': 'Email hoặc mật khẩu không đúng',
+  'Request failed with status code 500': 'Lỗi hệ thống, vui lòng thử lại sau',
+  'Request failed with status code 503': 'Dịch vụ tạm thời không khả dụng, vui lòng thử lại sau'
 };
 
 // Hàm dịch thông báo lỗi từ tiếng Anh sang tiếng Việt
 const translateErrorMessage = (message) => {
   if (!message) return 'Đã xảy ra lỗi không xác định';
 
+  // Nếu message đã là tiếng Việt thì trả về nguyên bản
+  if (message.includes('Tài khoản') || message.includes('Email hoặc mật khẩu') ||
+    message.includes('Lỗi hệ thống') || message.includes('đăng nhập') ||
+    message.includes('xác minh')) {
+    return message;
+  }
+
   // Tìm trong map các thông báo lỗi đã biết
   for (const [englishMsg, vietnameseMsg] of Object.entries(errorMessages)) {
     if (message.includes(englishMsg)) {
       return vietnameseMsg;
     }
+  }
+
+  // Xử lý các lỗi HTTP status code
+  if (message.includes('status code 401') || message.includes('401')) {
+    return 'Email hoặc mật khẩu không đúng';
+  }
+  if (message.includes('status code 500') || message.includes('500')) {
+    return 'Lỗi hệ thống, vui lòng thử lại sau';
+  }
+  if (message.includes('status code 503') || message.includes('503')) {
+    return 'Dịch vụ tạm thời không khả dụng, vui lòng thử lại sau';
   }
 
   // Thay thế các cụm từ tiếng Anh phổ biến
@@ -61,7 +87,6 @@ const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // State cho lỗi và trạng thái loading của form submit
-  const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   // State cho việc hiển thị mật khẩu
@@ -71,6 +96,7 @@ const LoginPage = () => {
 
   // Lấy state và actions từ Zustand store
   const loginAction = useAuthStore((state) => state.login);
+  const updateUser = useAuthStore((state) => state.updateUser);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAuthLoading = useAuthStore((state) => state.isLoading);
 
@@ -123,7 +149,6 @@ const LoginPage = () => {
   // Xử lý sự kiện submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
 
     // Validate form
     if (!validateForm()) {
@@ -135,7 +160,35 @@ const LoginPage = () => {
     try {
       // Call login API
       const response = await authApi.post('/auth/login', { email, password });
-      const { accessToken, ...userData } = response.data;
+      const { accessToken, userId, verified, message, ...restUserData } = response.data;
+
+      // Check if login was successful
+      if (!verified) {
+        // Login failed - handle as error
+        const errorMessage = message || 'Email hoặc mật khẩu không đúng';
+        const translatedError = translateErrorMessage(errorMessage);
+        toast.error(translatedError, {
+          position: "top-center",
+          autoClose: 4000
+        });
+        return;
+      }
+
+      // Check if we have access token (successful login)
+      if (!accessToken) {
+        toast.error('Lỗi xác thực. Vui lòng thử lại.', {
+          position: "top-center",
+          autoClose: 4000
+        });
+        return;
+      }
+
+      // Map userId to id for frontend consistency
+      const userData = {
+        ...restUserData,
+        id: userId, // Map backend's userId to frontend's expected id field
+        userId: userId // Keep both for backward compatibility
+      };
 
       // Success notification
       toast.success('Đăng nhập thành công!', {
@@ -146,15 +199,66 @@ const LoginPage = () => {
       // Store authentication data
       loginAction(userData, accessToken);
 
+      // Fetch complete profile data including address after successful login
+      try {
+        const profileResponse = await axiosInstance.get('/profile', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        });
+
+        // Update user data with complete profile including defaultAddress
+        const completeUserData = {
+          ...userData,
+          ...profileResponse.data,
+          id: userId, // Ensure ID consistency
+          userId: userId
+        };
+
+        // Update store with complete user data
+        updateUser(completeUserData);
+        console.log('Profile data loaded after login:', completeUserData);
+      } catch (profileError) {
+        console.warn('Failed to load profile data after login:', profileError);
+        // Continue with basic user data if profile fetch fails
+      }
+
       // Set redirect flag to show loading state while navigation happens
       setShouldRedirect(true);
     } catch (error) {
       // Handle error
-      const errorMessage = error.response?.data?.message || error.message;
-      setError(translateErrorMessage(errorMessage));
-      toast.error('Đăng nhập thất bại!', {
+      let errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.';
+
+      if (error.response) {
+        // Server responded with error status
+        if (error.response.data) {
+          if (typeof error.response.data === 'string') {
+            errorMessage = error.response.data;
+          } else if (error.response.data.message) {
+            errorMessage = error.response.data.message;
+          }
+        } else {
+          // No response data, use status code
+          if (error.response.status === 401) {
+            errorMessage = 'Email hoặc mật khẩu không đúng';
+          } else if (error.response.status === 500) {
+            errorMessage = 'Lỗi hệ thống, vui lòng thử lại sau';
+          } else if (error.response.status === 503) {
+            errorMessage = 'Dịch vụ tạm thời không khả dụng, vui lòng thử lại sau';
+          }
+        }
+      } else if (error.request) {
+        // Request made but no response received
+        errorMessage = 'Lỗi kết nối mạng, vui lòng kiểm tra lại kết nối của bạn';
+      } else {
+        // Something else happened
+        errorMessage = error.message || 'Đã xảy ra lỗi không xác định';
+      }
+
+      const translatedError = translateErrorMessage(errorMessage);
+      toast.error(translatedError, {
         position: "top-center",
-        autoClose: 3000
+        autoClose: 4000
       });
     } finally {
       setIsSubmitting(false);
@@ -181,7 +285,7 @@ const LoginPage = () => {
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-white dark:bg-gray-900">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h1 className="text-center text-4xl font-bold text-orange-600">AtomicBooks</h1>
+        <h1 className="text-center text-4xl font-bold text-orange-600">AtomikBooks</h1>
         <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
           Đăng nhập vào tài khoản
         </h2>
@@ -279,22 +383,12 @@ const LoginPage = () => {
             )}
           </div>
 
-          {/* Show form errors */}
-          {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/30 p-4">
-              <div className="flex">
-                <FiAlertCircle className="h-5 w-5 text-red-400 mr-2 flex-shrink-0" />
-                <p className="text-sm text-red-700 dark:text-red-400 font-medium">{error}</p>
-              </div>
-            </div>
-          )}
-
           {/* Submit button */}
           <div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

@@ -10,17 +10,19 @@ import { useAuthStore } from '@/store/authStore';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Import CSS
 import { FiLoader } from 'react-icons/fi';
-
+import ChatBubble from '@/components/chat/ChatBubble';
+import ChatWindow from '@/components/chat/ChatWindow';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 const inter = Inter({ subsets: ['latin'] });
 
 // Tách phần loading thành component riêng
 function LoadingState() {
   return (
     <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="text-center">
-        <FiLoader className="animate-spin h-10 w-10 mx-auto text-orange-500 mb-4" />
-        <div className="text-xl font-semibold text-gray-800 dark:text-gray-200">Đang tải AtomicBooks...</div>
-      </div>
+      <BrandSpinner
+        size="text-6xl"
+        text="Đang tải AtomicBooks..."
+      />
     </div>
   );
 }
@@ -82,7 +84,7 @@ export default function RootLayout({ children }) {
 
   // Hàm chuyển đổi theme
   const toggleTheme = () => {
-    console.log("Layout toggleTheme called"); 
+    console.log("Layout toggleTheme called");
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
 
@@ -98,11 +100,11 @@ export default function RootLayout({ children }) {
     console.log("Theme changed to:", newTheme);
     console.log("Dark class present:", document.documentElement.classList.contains('dark'));
   };
-
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   return (
     <html lang="vi" suppressHydrationWarning className={theme === 'dark' ? 'dark' : ''}>
       <head>
-        <title>AtomicBooks - Hiệu Sách Trực Tuyến</title>
+        <title>AtomikBooks - Hiệu Sách Trực Tuyến</title>
         <meta name="description" content="AtomicBooks - Hiệu sách trực tuyến với kho sách phong phú và đa dạng." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -136,6 +138,13 @@ export default function RootLayout({ children }) {
               {children}
             </main>
             <Footer />
+            {/* Add Chat Components - Conditionally render if user is authenticated */}
+            {isAuthenticated && (
+              <>
+                <ChatBubble />
+                <ChatWindow />
+              </>
+            )}
           </>
         )}
       </body>

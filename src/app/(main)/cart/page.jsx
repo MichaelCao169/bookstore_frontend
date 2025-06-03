@@ -10,16 +10,18 @@ import { useAuthStore } from '@/store/authStore'; // Kiểm tra auth nếu cần
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify'; // Để hiển thị thông báo
 import { useCartStore } from '@/store/cartStore';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 const placeholderImage = '/sample_books.jpg';
 
 // Component để hiển thị loading hoặc lỗi
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center py-16">
-    <div className="text-center">
-      <FiLoader className="animate-spin text-orange-500 text-4xl mx-auto mb-4" />
-      <p className="text-gray-600 dark:text-gray-300">Đang tải giỏ hàng...</p>
-    </div>
+    <BrandSpinner
+      size="text-4xl"
+      text="Đang tải giỏ hàng..."
+      textColor="text-gray-600 dark:text-gray-300"
+    />
   </div>
 );
 
@@ -151,11 +153,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
           >
             <FiPlus size={16} />
           </button>
-        </div>
-
-        {/* Hiển thị spinner khi đang cập nhật */}
+        </div>        {/* Hiển thị spinner khi đang cập nhật */}
         {updatingItemId === item.cartItemId && (
-          <FiLoader className="animate-spin text-orange-500 ml-2" />
+          <BrandSpinner size="sm" className="ml-2" />
         )}
       </div>
 
@@ -168,10 +168,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
           onClick={() => onRemoveItem(item.cartItemId, item.productTitle)}
           disabled={updatingItemId === item.cartItemId || removingItemId !== null}
           className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm flex items-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed p-1"
-          title="Xóa sản phẩm"
-        >
+          title="Xóa sản phẩm"        >
           {removingItemId === item.cartItemId ? (
-            <FiLoader className="animate-spin w-4 h-4 mr-1" />
+            <BrandSpinner size="xs" className="mr-1" />
           ) : (
             <FiTrash2 className="mr-1" />
           )}

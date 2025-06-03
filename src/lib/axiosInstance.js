@@ -76,7 +76,7 @@ axiosInstance.interceptors.request.use(
     
     // Normal auth flow - only add token for non-refresh endpoints
     const token = useAuthStore.getState().accessToken;
-    if (token && config.url) {
+    if (token && config.url && !config._skipAuthCheck) {
       console.log(`Adding auth token to request: ${config.url}`);
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -180,9 +180,23 @@ axiosInstance.interceptors.response.use(
           throw new Error('No user logged in');
         }
 
-        // Call the refresh endpoint
-        const response = await axiosInstance.post('/api/auth/refresh');
-        const newToken = response.data.accessToken;
+        // Call the refresh endpoint (no auth header needed, uses cookie)
+        const refreshResponse = await axiosInstance.post('/auth/refresh', {}, {
+          withCredentials: true, // Important: Send cookies with request
+          _skipAuthCheck: true   // Skip auth token for this request
+        });
+        
+        const { accessToken: newToken, userId, ...restUserData } = refreshResponse.data;
+        
+        // Map userId to id for frontend consistency if user data is returned
+        if (userId) {
+          const updatedUserData = {
+            ...restUserData,
+            id: userId,
+            userId: userId
+          };
+          useAuthStore.getState().updateUser(updatedUserData);
+        }
         
         // Update token in store
         useAuthStore.getState().setAccessToken(newToken);

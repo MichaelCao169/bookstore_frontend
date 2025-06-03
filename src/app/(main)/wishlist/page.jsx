@@ -12,14 +12,16 @@ import { FiHeart, FiTrash2, FiLoader, FiAlertCircle, FiArrowLeft, FiGrid } from 
 import { BsCartPlus } from 'react-icons/bs';
 import ProductCard from '@/components/ui/ProductCard'; // Tái sử dụng ProductCard
 import Image from 'next/image';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Component hiển thị loading
 const LoadingSpinner = () => (
   <div className="flex justify-center items-center py-16">
-    <div className="text-center">
-      <FiLoader className="animate-spin text-orange-500 text-4xl mx-auto mb-4" />
-      <p className="text-gray-600 dark:text-gray-300">Đang tải danh sách yêu thích...</p>
-    </div>
+    <BrandSpinner
+      size="text-4xl"
+      text="Đang tải danh sách yêu thích..."
+      textColor="text-gray-600 dark:text-gray-300"
+    />
   </div>
 );
 
@@ -273,9 +275,8 @@ const WishlistPage = () => {
                       ? 'bg-gray-400 cursor-wait text-white'
                       : 'bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white'
                       }`}
-                    title="Xóa khỏi danh sách yêu thích"
-                  >
-                    {removingItemId === product.id ? <FiLoader className="animate-spin w-4 h-4" /> : <FiTrash2 size={16} />}
+                    title="Xóa khỏi danh sách yêu thích"                  >
+                    {removingItemId === product.id ? <BrandSpinner size="xs" /> : <FiTrash2 size={16} />}
                   </button>
                 </div>
               </div>
@@ -358,10 +359,9 @@ const WishlistPage = () => {
                     onClick={() => handleRemoveFromWishlist(product.id, product.title)}
                     disabled={removingItemId === product.id}
                     className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm flex items-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Xóa khỏi danh sách yêu thích"
-                  >
+                    title="Xóa khỏi danh sách yêu thích"                  >
                     {removingItemId === product.id ? (
-                      <FiLoader className="animate-spin w-4 h-4 mr-1" />
+                      <BrandSpinner size="xs" className="mr-1" />
                     ) : (
                       <FiTrash2 className="mr-1" />
                     )}

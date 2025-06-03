@@ -8,6 +8,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { useWishlistStore } from '@/store/wishlistStore';
+import BrandSpinner from '@/components/ui/BrandSpinner';
+
 const AddToWishlistButton = ({ productId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -51,12 +53,11 @@ const AddToWishlistButton = ({ productId }) => {
       className="w-full sm:w-auto px-4 py-3 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait"
       title="Thêm vào danh sách yêu thích"
       aria-label="Thêm vào danh sách yêu thích"
-    >
-      {isLoading ? (
-        <FiLoader className="animate-spin" size={18} />
-      ) : (
-        <FiHeart size={18} />
-      )}
+    >      {isLoading ? (
+      <BrandSpinner size="sm" />
+    ) : (
+      <FiHeart size={18} />
+    )}
       <span className="hidden sm:inline">
         {isLoading ? 'Đang thêm...' : 'Thêm vào danh sách yêu thích'}
       </span>

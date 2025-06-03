@@ -6,6 +6,7 @@ import RatingInput from './RatingInput';
 import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
 import { useAuthStore } from '@/store/authStore';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 const ReviewForm = ({
     productId,
@@ -17,7 +18,7 @@ const ReviewForm = ({
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [hasPurchased, setHasPurchased] = useState(true); 
+    const [hasPurchased, setHasPurchased] = useState(true);
     const [isCheckingPurchase, setIsCheckingPurchase] = useState(false);
     const [errors, setErrors] = useState({});
 
@@ -131,13 +132,15 @@ const ReviewForm = ({
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    if (isCheckingPurchase) {
+    }; if (isCheckingPurchase) {
         return (
             <div className="p-4 flex justify-center">
-                <FiLoader className="animate-spin text-orange-500 text-xl" />
-                <span className="ml-2 text-gray-600 dark:text-gray-300">Đang kiểm tra...</span>
+                <BrandSpinner
+                    size="text-xl"
+                    text="Đang kiểm tra..."
+                    textSize="text-sm"
+                    textColor="text-gray-600 dark:text-gray-300"
+                />
             </div>
         );
     }
@@ -213,27 +216,26 @@ const ReviewForm = ({
                 <button
                     type="submit"
                     className={`px-4 py-2 rounded-md shadow-sm text-sm font-medium text-white flex items-center ${isSubmitting
-                            ? 'bg-orange-400 dark:bg-orange-600 cursor-not-allowed'
-                            : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-offset-gray-800'
+                        ? 'bg-orange-400 dark:bg-orange-600 cursor-not-allowed'
+                        : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-offset-gray-800'
                         }`}
                     disabled={isSubmitting}
-                >
-                    {isSubmitting ? (
-                        <>
-                            <FiLoader className="animate-spin mr-1.5" />
-                            Đang gửi...
-                        </>
-                    ) : isEditMode ? (
-                        <>
-                            <FiCheck className="mr-1.5" />
-                            Cập nhật
-                        </>
-                    ) : (
-                        <>
-                            <FiSend className="mr-1.5" />
-                            Gửi đánh giá
-                        </>
-                    )}
+                >                    {isSubmitting ? (
+                    <>
+                        <BrandSpinner size="sm" className="mr-1.5" />
+                        Đang gửi...
+                    </>
+                ) : isEditMode ? (
+                    <>
+                        <FiCheck className="mr-1.5" />
+                        Cập nhật
+                    </>
+                ) : (
+                    <>
+                        <FiSend className="mr-1.5" />
+                        Gửi đánh giá
+                    </>
+                )}
                 </button>
             </div>
         </form>

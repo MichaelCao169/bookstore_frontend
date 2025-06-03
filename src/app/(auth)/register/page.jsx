@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore'; // Import để kiểm tra n�
 import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
 import { FiUserPlus, FiLoader, FiUser, FiMail, FiLock, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 const RegisterPage = () => {
   // State cho form inputs
@@ -215,7 +216,7 @@ const RegisterPage = () => {
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-white dark:bg-gray-900">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="text-center text-4xl font-bold text-orange-600">AtomicBooks</h1>
+        <h1 className="text-center text-4xl font-bold text-orange-600">AtomikBooks</h1>
         <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
           Tạo tài khoản mới
         </h2>
@@ -406,18 +407,17 @@ const RegisterPage = () => {
               type="submit"
               disabled={isLoading}
               className="flex w-full justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-orange-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <FiLoader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                  Đang tạo tài khoản...
-                </>
-              ) : (
-                <>
-                  <FiUserPlus className="mr-2 h-5 w-5" />
-                  Đăng ký
-                </>
-              )}
+            >              {isLoading ? (
+              <>
+                <BrandSpinner size="sm" className="-ml-1 mr-3" color="white" />
+                Đang tạo tài khoản...
+              </>
+            ) : (
+              <>
+                <FiUserPlus className="mr-2 h-5 w-5" />
+                Đăng ký
+              </>
+            )}
             </button>
           </div>
         </form>

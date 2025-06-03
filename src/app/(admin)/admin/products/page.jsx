@@ -5,6 +5,7 @@ import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
 import { FiPlusCircle, FiSearch, FiEdit2, FiTrash2, FiLoader, FiInfo } from 'react-icons/fi';
 import { formatCurrency } from '@/components/order/OrderHelpers';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Hàm rút gọn UUID để hiển thị
 const truncateUUID = (uuid, visibleChars = 8) => {
@@ -112,7 +113,7 @@ export default function ProductsManagement() {
 
                 {loading ? (
                     <div className="text-center py-4 text-gray-600 dark:text-gray-300 flex justify-center items-center">
-                        <FiLoader className="animate-spin mr-2" /> Đang tải sản phẩm...
+                        <BrandSpinner size="sm" className="mr-2" /> Đang tải sản phẩm...
                     </div>
                 ) : error ? (
                     <div className="text-center py-4 text-red-600 dark:text-red-400">{error}</div>
@@ -236,4 +237,4 @@ export default function ProductsManagement() {
             </div>
         </div>
     );
-} 
+}

@@ -11,6 +11,7 @@ import { useWishlistStore } from '@/store/wishlistStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import axiosInstance from '@/lib/axiosInstance';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 const placeholderImage = '/sample_books.jpg';
 
@@ -199,14 +200,13 @@ const ProductCard = ({ product }) => {
               : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 opacity-0 group-hover:opacity-100'
             }`}
           title={addedToWishlist ? 'Đã thêm vào yêu thích' : 'Thêm vào yêu thích'}
-        >
-          {isAddingToWishlist ? (
-            <FiLoader size={18} className="animate-spin" />
-          ) : addedToWishlist ? (
-            <FiCheck size={18} />
-          ) : (
-            <FiHeart size={18} />
-          )}
+        >          {isAddingToWishlist ? (
+          <BrandSpinner size="sm" />
+        ) : addedToWishlist ? (
+          <FiCheck size={18} />
+        ) : (
+          <FiHeart size={18} />
+        )}
         </button>
       </div>
 
@@ -262,12 +262,11 @@ const ProductCard = ({ product }) => {
             : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 opacity-0 group-hover:opacity-100'
           }`}
         title={product.stockQuantity <= 0 ? 'Sản phẩm đã hết hàng' : 'Thêm vào giỏ hàng'}
-      >
-        {isAddingToCart ? (
-          <FiLoader size={18} className="animate-spin" />
-        ) : (
-          <BsCartPlus size={18} />
-        )}
+      >        {isAddingToCart ? (
+        <BrandSpinner size="sm" />
+      ) : (
+        <BsCartPlus size={18} />
+      )}
       </button>
     </Link>
   );

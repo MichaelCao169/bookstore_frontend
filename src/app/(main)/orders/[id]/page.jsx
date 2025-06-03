@@ -9,12 +9,16 @@ import { OrderStatusBadge, formatCurrency, formatDate, formatDateTime } from '@/
 import axiosInstance from '@/lib/axiosInstance';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Loading component
 const LoadingSpinner = () => (
     <div className="flex justify-center items-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-        <span className="ml-3 text-gray-600 dark:text-gray-300">Đang tải thông tin đơn hàng...</span>
+        <BrandSpinner
+            size="text-5xl"
+            text="Đang tải thông tin đơn hàng..."
+            textColor="text-gray-600 dark:text-gray-300"
+        />
     </div>
 );
 
@@ -180,18 +184,17 @@ export default function OrderDetailPage() {
                                 onClick={handleCancelOrder}
                                 disabled={isCancelling}
                                 className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {isCancelling ? (
-                                    <>
-                                        <FiLoader className="animate-spin mr-2" />
-                                        Đang hủy...
-                                    </>
-                                ) : (
-                                    <>
-                                        <FiXCircle className="mr-2" />
-                                        Hủy đơn hàng
-                                    </>
-                                )}
+                            >                                {isCancelling ? (
+                                <>
+                                    <BrandSpinner size="sm" className="mr-2" />
+                                    Đang hủy...
+                                </>
+                            ) : (
+                                <>
+                                    <FiXCircle className="mr-2" />
+                                    Hủy đơn hàng
+                                </>
+                            )}
                             </button>
                         )}
                     </div>

@@ -7,15 +7,16 @@ import WriteReviewButton from './WriteReviewButton';
 import ReviewForm from './ReviewForm';
 import Pagination from '@/components/ui/Pagination';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-import { FiLoader, FiAlertCircle, FiMessageSquare  } from 'react-icons/fi';
+import { FiLoader, FiAlertCircle, FiMessageSquare } from 'react-icons/fi';
 import { BsChatLeft } from "react-icons/bs";
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Component hiển thị khi đang tải dữ liệu
 const LoadingState = () => (
   <div className="flex justify-center items-center py-8">
-    <FiLoader className="animate-spin text-orange-500 mr-2" size={20} />
+    <BrandSpinner size="sm" className="mr-2" />
     <span className="text-gray-600 dark:text-gray-300">Đang tải đánh giá...</span>
   </div>
 );
@@ -56,7 +57,7 @@ const ReviewList = ({ productId }) => {
   const [editingReview, setEditingReview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const pageSize = 5; 
+  const pageSize = 5;
 
   const { isAuthenticated, user } = useAuthStore();
 
@@ -173,7 +174,7 @@ const ReviewList = ({ productId }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
-            <BsChatLeft  className="mr-2 text-orange-500 dark:text-orange-400" />
+            <BsChatLeft className="mr-2 text-orange-500 dark:text-orange-400" />
             Đánh giá từ khách hàng
             <span className="ml-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full text-sm">
               {totalReviews}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
 import { FiUsers, FiSearch, FiEdit, FiEye, FiCheck, FiX, FiLoader } from 'react-icons/fi';
+import BrandSpinner from '@/components/ui/BrandSpinner';
 
 export default function UsersManagement() {
     const [users, setUsers] = useState([]);
@@ -102,7 +103,7 @@ export default function UsersManagement() {
 
                 {loading ? (
                     <div className="text-center py-4 text-gray-600 dark:text-gray-400 flex justify-center items-center">
-                        <FiLoader className="animate-spin mr-2" />
+                        <BrandSpinner size="sm" className="mr-2" />
                         Đang tải người dùng...
                     </div>
                 ) : error ? (
@@ -258,4 +259,4 @@ export default function UsersManagement() {
             </div>
         </div>
     );
-} 
+}
