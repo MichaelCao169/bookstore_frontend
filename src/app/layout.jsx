@@ -6,13 +6,17 @@ import './globals.css';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { useAuthStore } from '@/store/authStore';
-// *** IMPORT Toastify ***
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import CSS
+import 'react-toastify/dist/ReactToastify.css';
 import { FiLoader } from 'react-icons/fi';
 import ChatBubble from '@/components/chat/ChatBubble';
 import ChatWindow from '@/components/chat/ChatWindow';
 import BrandSpinner from '@/components/ui/BrandSpinner';
+
+// --- [BƯỚC 1: THÊM CÁC IMPORT MỚI] ---
+import AiChatBubble from '@/components/chat/AiChatBubble';
+import AiChatWindow from '@/components/chat/AiChatWindow';
+
 const inter = Inter({ subsets: ['latin'] });
 
 // Tách phần loading thành component riêng
@@ -32,31 +36,25 @@ export default function RootLayout({ children }) {
   const isLoading = useAuthStore((state) => state.isLoading);
   const [theme, setTheme] = useState('light');
 
+  // --- [PHẦN NÀY GIỮ NGUYÊN] ---
   // Xử lý mounting để tránh hydration mismatch
   useEffect(() => {
     setMounted(true);
-
-    // Đồng thời kiểm tra auth state ngay khi mounted
     if (typeof window !== 'undefined') {
       useAuthStore.getState().checkAuthState();
-
-      // Đảm bảo finishLoading sau một khoảng thời gian ngắn
       setTimeout(() => {
         useAuthStore.getState().finishLoading();
       }, 300);
     }
   }, []);
 
-  // Thêm một useEffect mới để đảm bảo isLoading sẽ kết thúc
-  // ngay cả khi xảy ra lỗi xác thực
+  // Safety timeout
   useEffect(() => {
     if (mounted && isLoading) {
-      // Safety timeout để đảm bảo không bị kẹt ở trạng thái loading
       const safetyTimer = setTimeout(() => {
         console.log("Safety timeout: forcing isLoading to false");
         useAuthStore.getState().finishLoading();
       }, 2000);
-
       return () => clearTimeout(safetyTimer);
     }
   }, [mounted, isLoading]);
@@ -64,11 +62,8 @@ export default function RootLayout({ children }) {
   // Xử lý dark mode
   useEffect(() => {
     if (!mounted) return;
-
-    // Lấy theme từ localStorage 
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
     if (savedTheme) {
       setTheme(savedTheme);
       if (savedTheme === 'dark') {
@@ -84,23 +79,22 @@ export default function RootLayout({ children }) {
 
   // Hàm chuyển đổi theme
   const toggleTheme = () => {
-    console.log("Layout toggleTheme called");
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-
-    // Lưu vào localStorage và cập nhật class
     localStorage.setItem('theme', newTheme);
     if (newTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-
-    // Debug to confirm the theme change
-    console.log("Theme changed to:", newTheme);
-    console.log("Dark class present:", document.documentElement.classList.contains('dark'));
   };
+  
+  // --- [BƯỚC 2: SỬA LẠI CÁCH LẤY STATE] ---
+  // Lấy từng state một để tránh lỗi infinite loop
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN');
+
   return (
     <html lang="vi" suppressHydrationWarning className={theme === 'dark' ? 'dark' : ''}>
       <head>
@@ -111,10 +105,9 @@ export default function RootLayout({ children }) {
         <link rel="alternate icon" href="/favicon.ico" type="image/x-icon" />
       </head>
       <body className={`${inter.className} min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300`}>
-        {/* *** THÊM ToastContainer GẦN BODY HOẶC TRONG PROVIDER KHÁC *** */}
         <ToastContainer
-          position="top-right" // Vị trí hiển thị
-          autoClose={3000} // Tự động đóng sau 3 giây
+          position="top-right"
+          autoClose={3000}
           hideProgressBar={false}
           newestOnTop={false}
           closeOnClick
@@ -122,14 +115,10 @@ export default function RootLayout({ children }) {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme={theme} // Hoặc 'dark', 'colored'
-        // transition: Bounce, // Hiệu ứng (cần import nếu dùng)
+          theme={theme}
         />
 
-        {/* Chỉ render nội dung khi đã mounted để tránh hydration mismatch */}
-        {!mounted ? (
-          <LoadingState />
-        ) : isLoading ? (
+        {!mounted || isLoading ? (
           <LoadingState />
         ) : (
           <>
@@ -138,11 +127,22 @@ export default function RootLayout({ children }) {
               {children}
             </main>
             <Footer />
-            {/* Add Chat Components - Conditionally render if user is authenticated */}
-            {isAuthenticated && (
+
+            {/* --- [BƯỚC 3: THÊM LOGIC HIỂN THỊ CHAT] --- */}
+
+            {/* Chat với Admin (hiển thị cho customer) */}
+            {isAuthenticated && !isAdmin && (
               <>
                 <ChatBubble />
                 <ChatWindow />
+              </>
+            )}
+
+            {/* Chat với AI (hiển thị cho tất cả user đã đăng nhập) */}
+            {isAuthenticated && (
+              <>
+                <AiChatBubble />
+                <AiChatWindow />
               </>
             )}
           </>
