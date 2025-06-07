@@ -10,14 +10,16 @@ import { toast } from 'react-toastify'; // Import toast
 import { useCartStore } from '@/store/cartStore';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 
-const AddToCartButton = ({ productId, stockQuantity }) => {
+const AddToCartButton = ({ productId, quantity, isInStock, className }) => {
   const [isLoading, setIsLoading] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // Lấy trạng thái đăng nhập
   const router = useRouter();
-  const fetchCartCount = useCartStore((state) => state.fetchCartCount);
-  const handleAddToCart = async () => {
+  const fetchCartCount = useCartStore((state) => state.fetchCartCount); const handleAddToCart = async () => {
+    console.log('AddToCartButton: Attempting to add to cart...', { productId, isAuthenticated, isInStock });
+
     // 1. Kiểm tra đăng nhập
     if (!isAuthenticated) {
+      console.log('AddToCartButton: User not authenticated');
       toast.warn('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.');
       // Redirect đến trang login, nhớ kèm theo URL hiện tại để quay lại
       router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
@@ -25,12 +27,14 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
     }
 
     // 2. Kiểm tra tồn kho (mặc dù nút đã disable, kiểm tra lại cho chắc)
-    if (stockQuantity <= 0) {
+    if (!isInStock || (quantity !== undefined && quantity <= 0)) {
+      console.log('AddToCartButton: Product out of stock');
       toast.error('Sản phẩm này đã hết hàng.');
       return;
     }
 
     setIsLoading(true); // Bắt đầu loading
+    console.log('AddToCartButton: Starting API call...');
 
     try {
       // 3. Gọi API thêm vào giỏ hàng
@@ -52,20 +56,19 @@ const AddToCartButton = ({ productId, stockQuantity }) => {
     }
   };
 
-  const isDisabled = stockQuantity <= 0;
-
+  const isDisabled = !isInStock || (quantity !== undefined && quantity <= 0);
   return (
     <button
       disabled={isDisabled || isLoading} // Disable cả khi đang loading
       onClick={handleAddToCart}
-      className={`w-full sm:w-auto flex-grow px-6 py-3 rounded font-semibold text-white transition-colors duration-200 flex items-center justify-center ${isDisabled
+      className={className || `w-full sm:w-auto flex-grow px-6 py-3 rounded font-semibold text-white transition-colors duration-200 flex items-center justify-center ${isDisabled
         ? 'bg-gray-400 cursor-not-allowed'
         : isLoading
           ? 'bg-orange-400 cursor-wait' // Màu nhạt hơn khi loading
           : 'bg-orange-500 hover:bg-orange-600'
         }`}
       aria-label={isDisabled ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
-    >      {isLoading ? (
+    >{isLoading ? (
       <BrandSpinner size="sm" className="mr-2" /> // Icon loading
     ) : (
       <FiShoppingCart className="inline mr-2" size={18} />

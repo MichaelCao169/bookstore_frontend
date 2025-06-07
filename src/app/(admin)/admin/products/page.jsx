@@ -144,45 +144,44 @@ export default function ProductsManagement() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    {products.length > 0 ? (
-                                        products.map((product) => (
-                                            <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                                    <div className="flex items-center">
-                                                        <span className="font-mono">{truncateUUID(product.id)}</span>
-                                                        <span className="group relative ml-1 cursor-pointer">
-                                                            <FiInfo className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" size={16} />
-                                                            <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 w-64 shadow-lg z-10">
-                                                                <div className="font-mono break-all">{product.id}</div>
-                                                                <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 left-2 -bottom-1"></div>
-                                                            </div>
-                                                        </span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{product.title}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{formatCurrency(product.price, 'VND', 'vi-VN')}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{product.stockQuantity}</td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                                    {product.categories && product.categories.length > 0
-                                                        ? product.categories.map(cat => cat.name).join(', ')
-                                                        : product.category?.name || 'N/A'}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                                                    <Link
-                                                        href={`/admin/products/edit/${product.id}`}
-                                                        className="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 inline-flex items-center"
-                                                    >
-                                                        <FiEdit2 className="mr-1" /> Sửa
-                                                    </Link>
-                                                    <button
-                                                        onClick={() => handleDelete(product.id)}
-                                                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 inline-flex items-center ml-3"
-                                                    >
-                                                        <FiTrash2 className="mr-1" /> Xóa
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
+                                    {products.length > 0 ? (products.map((product) => (
+                                        <tr key={product.productId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                                <div className="flex items-center">
+                                                    <span className="font-mono">{truncateUUID(product.productId)}</span>
+                                                    <span className="group relative ml-1 cursor-pointer">
+                                                        <FiInfo className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" size={16} />
+                                                        <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 w-64 shadow-lg z-10">
+                                                            <div className="font-mono break-all">{product.productId}</div>
+                                                            <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 left-2 -bottom-1"></div>
+                                                        </div>
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{product.title}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{formatCurrency(product.currentPrice, 'VND', 'vi-VN')}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{product.quantity}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                                {product.categories && product.categories.length > 0
+                                                    ? product.categories.map(cat => cat.name).join(', ')
+                                                    : product.category?.name || 'N/A'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                                                <Link
+                                                    href={`/admin/products/edit/${product.productId}`}
+                                                    className="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 inline-flex items-center"
+                                                >
+                                                    <FiEdit2 className="mr-1" /> Sửa
+                                                </Link>
+                                                <button
+                                                    onClick={() => handleDelete(product.productId)}
+                                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 inline-flex items-center ml-3"
+                                                >
+                                                    <FiTrash2 className="mr-1" /> Xóa
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
                                     ) : (
                                         <tr>
                                             <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">

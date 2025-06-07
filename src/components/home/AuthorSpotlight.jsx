@@ -6,34 +6,33 @@ import Image from 'next/image';
 import { FiArrowRight, FiBookOpen } from 'react-icons/fi';
 
 
-const featuredAuthor = 
-    {
-        id: 'cal-newport',
-        name: 'Cal Newport',
-        bio: 'Cal Newport là một tác giả, giáo sư khoa học máy tính tại Đại học Georgetown và là diễn giả nổi tiếng về năng suất và công việc trí óc sâu sắc. Ông nổi bật với các tác phẩm như "Làm Việc Sâu" và "Chủ Nghĩa Tối Giản Kỹ Thuật Số", tập trung vào cách tối ưu hóa hiệu suất và sống một cuộc sống có chủ đích trong thời đại công nghệ số.',
-        image: '/images/author.jpg',
-        books: [
-            {
-                id: 'book1',
-                title: 'Làm Việc Sâu: Quy Tắc Thành Công Trong Thế Giới Đầy Xao Nhãng',
-                cover: '/images/book1.jpg',
-                price: 195000,
-            },
-            {
-                id: 'book2',
-                title: 'Chủ Nghĩa Tối Giản Kỹ Thuật Số: Lựa Chọn Cuộc Sống Tập Trung Trong Thế Giới Ồn Ào',
-                cover: '/images/book2.jpg',
-                price: 180000,
-            },
-            {
-                id: 'book3',
-                title: 'Giỏi Đến Mức Họ Không Thể Phớt Lờ Bạn',
-                cover: '/images/book3.jpg',
-                price: 175000,
-            }
-        ]
-    }
-    
+const featuredAuthor =
+{
+    id: 'cal-newport',
+    name: 'Cal Newport',
+    bio: 'Cal Newport là một tác giả, giáo sư khoa học máy tính tại Đại học Georgetown và là diễn giả nổi tiếng về năng suất và công việc trí óc sâu sắc. Ông nổi bật với các tác phẩm như "Làm Việc Sâu" và "Chủ Nghĩa Tối Giản Kỹ Thuật Số", tập trung vào cách tối ưu hóa hiệu suất và sống một cuộc sống có chủ đích trong thời đại công nghệ số.',
+    image: '/images/author.jpg', books: [
+        {
+            productId: 'book1',
+            title: 'Làm Việc Sâu: Quy Tắc Thành Công Trong Thế Giới Đầy Xao Nhãng',
+            cover: '/images/book1.jpg',
+            currentPrice: 195000,
+        },
+        {
+            productId: 'book2',
+            title: 'Chủ Nghĩa Tối Giản Kỹ Thuật Số: Lựa Chọn Cuộc Sống Tập Trung Trong Thế Giới Ồn Ào',
+            cover: '/images/book2.jpg',
+            currentPrice: 180000,
+        },
+        {
+            productId: 'book3',
+            title: 'Giỏi Đến Mức Họ Không Thể Phớt Lờ Bạn',
+            cover: '/images/book3.jpg',
+            currentPrice: 175000,
+        }
+    ]
+}
+
 
 const AuthorSpotlight = () => {
     // Use placeholder images if needed
@@ -88,35 +87,32 @@ const AuthorSpotlight = () => {
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {featuredAuthor.books.map(book => (
-                            <Link
-                                key={book.id}
-                                href={`/products/${book.id}`}
-                                className="group flex bg-gray-50 dark:bg-gray-700/50 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
-                            >
-                                {/* Book cover */}
-                                <div className="w-1/3 relative h-32">
-                                    <Image
-                                        src={getImageSrc(book.cover)}
-                                        alt={book.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">                        {featuredAuthor.books.map(book => (
+                        <Link
+                            key={book.productId}
+                            href={`/products/${book.productId}`}
+                            className="group flex bg-gray-50 dark:bg-gray-700/50 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+                        >
+                            {/* Book cover */}
+                            <div className="w-1/3 relative h-32">
+                                <Image
+                                    src={getImageSrc(book.cover)}
+                                    alt={book.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
 
-                                {/* Book info */}
-                                <div className="w-2/3 p-3">
-                                    <h4 className="font-medium text-gray-800 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200 line-clamp-2">
-                                        {book.title}
-                                    </h4>
-
-                                    <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-2">
-                                        {book.price?.toLocaleString('vi-VN')} ₫
-                                    </p>
-                                </div>
-                            </Link>
-                        ))}
+                            {/* Book info */}
+                            <div className="w-2/3 p-3">
+                                <h4 className="font-medium text-gray-800 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200 line-clamp-2">
+                                    {book.title}
+                                </h4>                                    <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-2">
+                                    {book.currentPrice?.toLocaleString('vi-VN')} ₫
+                                </p>
+                            </div>
+                        </Link>
+                    ))}
                     </div>
                 </div>
             </div>

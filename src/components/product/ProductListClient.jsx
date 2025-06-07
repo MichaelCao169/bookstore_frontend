@@ -29,13 +29,11 @@ const ProductListClient = ({ initialProductPage, hideTitle = false }) => {
   return (
     <div>
       {/* TODO: Thêm bộ lọc sản phẩm ở đây (Filter cũng nên là Client Component) */}
-      {/* <ProductFilter /> */}
-
-      {products.length > 0 ? (
+      {/* <ProductFilter /> */}      {products.length > 0 ? (
         // Hiển thị lưới sản phẩm
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.productId} product={product} />
           ))}
         </div>
       ) : (

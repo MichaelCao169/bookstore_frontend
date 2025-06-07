@@ -75,16 +75,22 @@ const ReviewList = ({ productId }) => {
       setCurrentPage(1); // Mặc định trang 1
     }
   }, [searchParams]);
-
   // Lấy danh sách đánh giá
   const fetchReviews = useCallback(async (page = 1) => {
-    if (!productId) return;
+    if (!productId) {
+      console.warn('ReviewList: No productId provided');
+      return;
+    }
 
+    console.log('ReviewList: Fetching reviews for productId:', productId, 'page:', page);
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await axiosInstance.get(`/products/${productId}/reviews`, {
+      const url = `/products/${productId}/reviews`;
+      console.log('ReviewList: Making request to URL:', url);
+
+      const response = await axiosInstance.get(url, {
         params: {
           page: page - 1, // Backend sử dụng 0-based page index 
           size: pageSize,
@@ -92,6 +98,7 @@ const ReviewList = ({ productId }) => {
         }
       });
 
+      console.log('ReviewList: Received response:', response.data);
       const { content, totalElements, totalPages: totPages, number } = response.data;
 
       // Thêm thông tin đã mua hàng vào mỗi review
@@ -111,8 +118,19 @@ const ReviewList = ({ productId }) => {
         setAverageRating((totalRating / content.length).toFixed(1));
       }
     } catch (err) {
-      console.error('Error fetching reviews:', err);
-      setError(err.response?.data?.message || 'Không thể tải đánh giá. Vui lòng thử lại sau.');
+      console.error('ReviewList: Error fetching reviews:', err);
+      console.error('ReviewList: Error response:', err.response);
+      console.error('ReviewList: ProductId used:', productId);
+
+      let errorMessage = 'Không thể tải đánh giá. Vui lòng thử lại sau.';
+
+      if (err.response?.status === 404) {
+        errorMessage = 'Sản phẩm không tồn tại hoặc chưa có đánh giá nào.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

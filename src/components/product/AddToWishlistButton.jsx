@@ -50,7 +50,7 @@ const AddToWishlistButton = ({ productId }) => {
     <button
       onClick={handleAddToWishlist}
       disabled={isLoading} // Disable khi đang loading
-      className="w-full sm:w-auto px-4 py-3 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait"
+      className="w-full sm:w-auto px-4 py-3 rounded border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait"
       title="Thêm vào danh sách yêu thích"
       aria-label="Thêm vào danh sách yêu thích"
     >      {isLoading ? (

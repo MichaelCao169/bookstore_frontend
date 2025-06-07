@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
+import RichTextEditor from '@/components/ui/RichTextEditor';
 import { use } from 'react';
-import { FiSave, FiX, FiArrowLeft, FiBookOpen, FiGrid, FiPackage, FiBarChart2, FiLink, FiUser, FiCalendar, FiInfo, FiLoader, FiAlertCircle, FiTag, FiPlus, FiImage, FiHash, FiBookmark, FiDollarSign } from 'react-icons/fi';
+import { FiSave, FiX, FiArrowLeft, FiBookOpen, FiGrid, FiPackage, FiBarChart2, FiLink, FiUser, FiInfo, FiLoader, FiAlertCircle, FiTag, FiPlus, FiImage, FiBookmark, FiDollarSign, FiFileText } from 'react-icons/fi';
 
 export default function EditProduct({ params }) {
     const unwrappedParams = use(params);
@@ -12,17 +13,16 @@ export default function EditProduct({ params }) {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [loadingProduct, setLoadingProduct] = useState(true);
-    const [categories, setCategories] = useState([]);
-    const [formData, setFormData] = useState({
+    const [categories, setCategories] = useState([]); const [formData, setFormData] = useState({
         title: '',
         description: '',
-        price: '',
-        stockQuantity: '',
-        imageUrl: '',
-        isbn: '',
+        currentPrice: '',
+        originalPrice: '',
+        quantity: '',
+        coverLink: '',
         author: '',
         publisher: '',
-        publicationYear: '',
+        pages: '',
         categoryId: '',
         categoryIds: [],
     });
@@ -40,22 +40,20 @@ export default function EditProduct({ params }) {
 
                 // Fetch categories
                 const categoriesResponse = await axiosInstance.get('/api/categories');
-                setCategories(categoriesResponse.data);
-
-                // Set image preview
-                setPreviewImage(product.imageUrl || '');
+                setCategories(categoriesResponse.data);                // Set image preview
+                setPreviewImage(product.coverLink || '');
 
                 // Set form data from product
                 setFormData({
                     title: product.title || '',
                     description: product.description || '',
-                    price: product.price?.toString() || '',
-                    stockQuantity: product.stockQuantity?.toString() || '',
-                    imageUrl: product.imageUrl || '',
-                    isbn: product.isbn || '',
+                    currentPrice: product.currentPrice?.toString() || '',
+                    originalPrice: product.originalPrice?.toString() || '',
+                    quantity: product.quantity?.toString() || '',
+                    coverLink: product.coverLink || '',
                     author: product.author || '',
                     publisher: product.publisher || '',
-                    publicationYear: product.publicationYear?.toString() || '',
+                    pages: product.pages?.toString() || '',
                     categoryId: product.category?.id?.toString() || '',
                     // Get category IDs from product.categories if it exists
                     categoryIds: product.categories ? product.categories.map(cat => cat.id) :
@@ -70,14 +68,12 @@ export default function EditProduct({ params }) {
         };
 
         fetchData();
-    }, [productId]);
-
-    const handleChange = (e) => {
+    }, [productId]); const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
 
-        // Update image preview if imageUrl changes
-        if (name === 'imageUrl') {
+        // Update image preview if coverLink changes
+        if (name === 'coverLink') {
             setPreviewImage(value);
         }
 
@@ -131,39 +127,42 @@ export default function EditProduct({ params }) {
     const getCategoryName = (categoryId) => {
         const category = categories.find(cat => cat.id === categoryId);
         return category ? category.name : '';
-    };
-
-    const validate = () => {
+    }; const validate = () => {
         const newErrors = {};
         if (!formData.title) newErrors.title = 'Tiêu đề là bắt buộc';
-        if (!formData.description) newErrors.description = 'Mô tả là bắt buộc';
-        if (!formData.price) newErrors.price = 'Giá là bắt buộc';
-        else if (isNaN(formData.price) || Number(formData.price) <= 0)
-            newErrors.price = 'Giá phải là số dương';
-        if (!formData.stockQuantity) newErrors.stockQuantity = 'Số lượng tồn kho là bắt buộc';
-        else if (isNaN(formData.stockQuantity) || Number(formData.stockQuantity) < 0)
-            newErrors.stockQuantity = 'Số lượng tồn kho phải là số không âm';
+
+        // Kiểm tra mô tả sản phẩm (rich text HTML content)
+        if (!formData.description || formData.description.trim() === '' || formData.description === '<p></p>') {
+            newErrors.description = 'Mô tả là bắt buộc';
+        }
+
+        if (!formData.currentPrice) newErrors.currentPrice = 'Giá hiện tại là bắt buộc';
+        else if (isNaN(formData.currentPrice) || Number(formData.currentPrice) <= 0)
+            newErrors.currentPrice = 'Giá hiện tại phải là số dương';
+        if (formData.originalPrice && (isNaN(formData.originalPrice) || Number(formData.originalPrice) <= 0))
+            newErrors.originalPrice = 'Giá gốc phải là số dương';
+        if (!formData.quantity) newErrors.quantity = 'Số lượng tồn kho là bắt buộc';
+        else if (isNaN(formData.quantity) || Number(formData.quantity) < 0)
+            newErrors.quantity = 'Số lượng tồn kho phải là số không âm';
         if (formData.categoryIds.length === 0) newErrors.categoryIds = 'Vui lòng chọn ít nhất một danh mục';
         if (!formData.author) newErrors.author = 'Tên tác giả là bắt buộc';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    };
-
-    const handleSubmit = async (e) => {
+    }; const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!validate()) return;
 
         try {
-            setLoading(true);
-
-            // Convert string values to numbers where appropriate
+            setLoading(true);            // Convert string values to numbers where appropriate
             const productData = {
                 ...formData,
-                price: Number(formData.price),
-                stockQuantity: Number(formData.stockQuantity),
-                publicationYear: formData.publicationYear ? Number(formData.publicationYear) : null,
+                currentPrice: Number(formData.currentPrice),
+                originalPrice: formData.originalPrice ? Number(formData.originalPrice) : null,
+                quantity: Number(formData.quantity),
+                pages: formData.pages ? Number(formData.pages) : null,
+                publisher: formData.publisher || '',
                 categoryId: Number(formData.categoryId),
                 categoryIds: formData.categoryIds,
             };
@@ -215,10 +214,9 @@ export default function EditProduct({ params }) {
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                                    <FiBookmark className="mr-1 text-orange-500 dark:text-orange-400" /> Tên sản phẩm *
-                                </label>
+                            <div className="space-y-1">                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                                <FiBookmark className="mr-1 text-orange-500 dark:text-orange-400" /> Tên sản phẩm *
+                            </label>
                                 <input
                                     type="text"
                                     name="title"
@@ -235,10 +233,8 @@ export default function EditProduct({ params }) {
                                         <FiAlertCircle className="mr-1" /> {errors.title}
                                     </p>
                                 )}
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                            </div>                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                                     <FiUser className="mr-1 text-orange-500 dark:text-orange-400" /> Tác giả *
                                 </label>
                                 <input
@@ -259,55 +255,82 @@ export default function EditProduct({ params }) {
                                 )}
                             </div>
 
+                            {/* Publisher */}
                             <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                                    <FiDollarSign className="mr-1 text-orange-500 dark:text-orange-400" /> Giá (VNĐ) *
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                                    <FiUser className="mr-1 text-orange-500 dark:text-orange-400" /> Nhà xuất bản
+                                </label>
+                                <input
+                                    type="text"
+                                    name="publisher"
+                                    value={formData.publisher}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Tên nhà xuất bản"
+                                />
+                            </div>
+
+                            {/* Pages */}
+                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                                    <FiBookOpen className="mr-1 text-orange-500 dark:text-orange-400" /> Số trang
+                                </label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    name="pages"
+                                    value={formData.pages}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    placeholder="Số trang của sách"
+                                />
+                            </div>                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                                    <FiDollarSign className="mr-1 text-orange-500 dark:text-orange-400" /> Giá hiện tại (VNĐ) *
                                 </label>
                                 <input
                                     type="number"
                                     step="any"
                                     min="0"
-                                    name="price"
-                                    value={formData.price}
+                                    name="currentPrice"
+                                    value={formData.currentPrice}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.price
+                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.currentPrice
                                         ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400'
                                         : 'border-gray-300 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400'
                                         }`}
                                     placeholder="Ví dụ: 169150.50"
                                 />
-                                {errors.price && (
+                                {errors.currentPrice && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
-                                        <FiAlertCircle className="mr-1" /> {errors.price}
+                                        <FiAlertCircle className="mr-1" /> {errors.currentPrice}
                                     </p>
                                 )}
-                            </div>
-
+                            </div>                            {/* Original Price */}
                             <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                                    <FiPackage className="mr-1 text-orange-500 dark:text-orange-400" /> Số lượng tồn kho *
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                                    <FiTag className="mr-1 text-orange-500 dark:text-orange-400" /> Giá gốc (VNĐ)
                                 </label>
                                 <input
                                     type="number"
+                                    step="any"
                                     min="0"
-                                    name="stockQuantity"
-                                    value={formData.stockQuantity}
+                                    name="originalPrice"
+                                    value={formData.originalPrice}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.stockQuantity
+                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.originalPrice
                                         ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400'
                                         : 'border-gray-300 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400'
                                         }`}
-                                    placeholder="0"
+                                    placeholder="Ví dụ: 200000.00"
                                 />
-                                {errors.stockQuantity && (
+                                {errors.originalPrice && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
-                                        <FiAlertCircle className="mr-1" /> {errors.stockQuantity}
+                                        <FiAlertCircle className="mr-1" /> {errors.originalPrice}
                                     </p>
                                 )}
-                            </div>
-
-                            <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                            </div>                            <div className="space-y-1">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                                     <FiGrid className="mr-1 text-orange-500 dark:text-orange-400" /> Danh mục *
                                 </label>
 
@@ -358,43 +381,21 @@ export default function EditProduct({ params }) {
                                             >
                                                 {category.name}
                                             </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none text-gray-500 dark:text-gray-400">
-                                        <FiPlus size={16} />
-                                    </div>
+                                        ))}                                    </select>
                                 </div>
 
                                 {errors.categoryIds && (
                                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                         <FiAlertCircle className="mr-1" /> {errors.categoryIds}
                                     </p>
-                                )}
-                            </div>
-
+                                )}                            </div>                            {/* Image Preview */}
                             <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                                    <FiHash className="mr-1 text-orange-500 dark:text-orange-400" /> Mã ISBN
-                                </label>
-                                <input
-                                    type="text"
-                                    name="isbn"
-                                    value={formData.isbn}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                                    placeholder="Mã ISBN"
-                                />
-                            </div>
-
-                            {/* Image Preview */}
-                            <div className="space-y-1">
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
                                     <FiImage className="mr-1 text-orange-500 dark:text-orange-400" /> URL Hình ảnh
                                 </label>
                                 <input
-                                    type="text"
-                                    name="imageUrl"
-                                    value={formData.imageUrl}
+                                    type="text" name="coverLink"
+                                    value={formData.coverLink}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                     placeholder="https://example.com/image.jpg"
@@ -418,28 +419,26 @@ export default function EditProduct({ params }) {
                                             <div className="text-gray-400 dark:text-gray-500 text-center p-4">
                                                 <FiImage size={24} className="mx-auto mb-2" />
                                                 <div>Không có ảnh</div>
-                                            </div>
-                                        )}
-                                    </div>
+                                            </div>)}                                </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                                <FiInfo className="mr-1 text-orange-500 dark:text-orange-400" /> Mô tả sản phẩm *
-                            </label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                rows="4"
-                                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${errors.description
-                                    ? 'border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400'
-                                    : 'border-gray-300 dark:border-gray-600 focus:ring-orange-500 dark:focus:ring-orange-400'
-                                    }`}
-                                placeholder="Nhập mô tả sản phẩm"
-                            ></textarea>
+                        </div><div>                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
+                            <FiInfo className="mr-1 text-orange-500 dark:text-orange-400" /> Mô tả sản phẩm *
+                        </label>
+                            <div className={`${errors.description ? 'border border-red-500 dark:border-red-400 rounded-md' : ''}`}>
+                                <RichTextEditor
+                                    content={formData.description}
+                                    onChange={(html) => {
+                                        setFormData({ ...formData, description: html });
+                                        if (errors.description) {
+                                            setErrors({ ...errors, description: null });
+                                        }
+                                    }}
+                                    placeholder="Nhập mô tả sản phẩm..."
+                                    editable={true}
+                                    className={errors.description ? 'border-red-500 dark:border-red-400' : ''}
+                                />
+                            </div>
                             {errors.description && (
                                 <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                                     <FiAlertCircle className="mr-1" /> {errors.description}

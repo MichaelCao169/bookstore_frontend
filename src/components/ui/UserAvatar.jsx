@@ -22,12 +22,9 @@ export default function UserAvatar({
 
         const names = fullName.trim().split(' ').filter(name => name.length > 0);
         if (names.length === 0) return 'U';
-        if (names.length === 1) {
-            return names[0].charAt(0).toUpperCase();
-        }
 
-        // Lấy chữ cái đầu của tên và họ
-        return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+        // Chỉ lấy chữ cái đầu của tên đầu tiên
+        return names[0].charAt(0).toUpperCase();
     };
 
     // Tạo màu background từ tên

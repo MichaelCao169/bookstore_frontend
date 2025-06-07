@@ -18,9 +18,11 @@ async function getProducts(searchParams) {
     const minPrice = resolvedParams.minPrice || '';
     const maxPrice = resolvedParams.maxPrice || '';
     const author = resolvedParams.author || '';
-    const inStockOnly = resolvedParams.inStockOnly || '';
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const inStockOnly = resolvedParams.inStockOnly || ''; const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    console.log('API URL:', apiUrl);
+    console.log('Query params:', {
+        page, size, sort, keyword, categoryId, minPrice, maxPrice, author, inStockOnly
+    });
 
     try {
         const queryParams = new URLSearchParams({
@@ -35,7 +37,10 @@ async function getProducts(searchParams) {
             ...(inStockOnly === 'true' && { inStockOnly: 'true' }), // Chỉ thêm nếu là true
         }).toString();
 
-        const res = await fetch(`${apiUrl}/products?${queryParams}`, {
+        const fullUrl = `${apiUrl}/products?${queryParams}`;
+        console.log('Fetching from URL:', fullUrl);
+
+        const res = await fetch(fullUrl, {
             method: 'GET',
             next: { revalidate: 60 } // Optional: Revalidate cache mỗi 60 giây
         });

@@ -67,25 +67,23 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
   const handleImageError = () => {
     setImageError(true);
   };
-
   const handleQuantityChange = (newQuantity) => {
-    if (newQuantity >= 1 && newQuantity <= item.productStockQuantity) {
+    if (newQuantity >= 1 && newQuantity <= item.productQuantity) {
       onUpdateQuantity(item.cartItemId, newQuantity, item.quantity);
     }
   };
 
   return (
     <div className={`flex flex-col sm:flex-row items-center bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 ${updatingItemId === item.cartItemId || removingItemId === item.cartItemId ? 'opacity-60' : 'hover:shadow-md'
-      }`}>
-      {/* Ảnh sản phẩm */}
+      }`}>      {/* Ảnh sản phẩm */}
       <div className="w-28 h-36 flex-shrink-0 mb-4 sm:mb-0 sm:mr-6 relative bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
-        {imageError || !item.productImageUrl ? (
+        {imageError || !item.productCoverLink ? (
           <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
             <FiImage size={36} />
           </div>
         ) : (
           <Image
-            src={item.productImageUrl}
+            src={item.productCoverLink}
             alt={item.productTitle || 'Bìa sách'}
             fill
             style={{ objectFit: 'contain' }}
@@ -104,15 +102,13 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
 
         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {item.productAuthor ? `Tác giả: ${item.productAuthor}` : 'Tác giả: Chưa cập nhật'}
+        </p>        <p className="text-md font-medium text-orange-600 dark:text-orange-400 mt-2">
+          {item.productCurrentPrice?.toLocaleString('vi-VN')} ₫
         </p>
 
-        <p className="text-md font-medium text-orange-600 dark:text-orange-400 mt-2">
-          {item.productPrice?.toLocaleString('vi-VN')} ₫
-        </p>
-
-        {item.productStockQuantity < 5 && (
+        {item.productQuantity < 5 && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-            Chỉ còn {item.productStockQuantity} sản phẩm
+            Chỉ còn {item.productQuantity} sản phẩm
           </p>
         )}
       </div>
@@ -127,16 +123,14 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
             aria-label="Giảm số lượng"
           >
             <FiMinus size={16} />
-          </button>
-
-          <input
+          </button>          <input
             type="number"
             min="1"
-            max={item.productStockQuantity}
+            max={item.productQuantity}
             value={item.quantity}
             onChange={(e) => {
               const value = parseInt(e.target.value);
-              if (!isNaN(value) && value >= 1 && value <= item.productStockQuantity) {
+              if (!isNaN(value) && value >= 1 && value <= item.productQuantity) {
                 onUpdateQuantity(item.cartItemId, value, item.quantity);
               }
             }}
@@ -147,7 +141,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
 
           <button
             onClick={() => handleQuantityChange(item.quantity + 1)}
-            disabled={updatingItemId === item.cartItemId || item.quantity >= item.productStockQuantity}
+            disabled={updatingItemId === item.cartItemId || item.quantity >= item.productQuantity}
             className="p-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Tăng số lượng"
           >
@@ -160,10 +154,9 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
       </div>
 
       {/* Thành tiền và nút xóa */}
-      <div className="flex flex-col items-center sm:items-end">
-        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-          {(item.subtotal || (item.quantity * item.productPrice))?.toLocaleString('vi-VN')} ₫
-        </p>
+      <div className="flex flex-col items-center sm:items-end">        <p className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+        {(item.subtotal || (item.quantity * item.productCurrentPrice))?.toLocaleString('vi-VN')} ₫
+      </p>
         <button
           onClick={() => onRemoveItem(item.cartItemId, item.productTitle)}
           disabled={updatingItemId === item.cartItemId || removingItemId !== null}
@@ -425,11 +418,9 @@ const CartPage = () => {
                 <div className="flex justify-between font-bold text-lg text-gray-800 dark:text-gray-200 mb-6">
                   <span>Tổng cộng</span>
                   <span>{(cartData.totalPrice * 1.1)?.toLocaleString('vi-VN')} ₫</span>
-                </div>
-
-                <Link
+                </div>                <Link
                   href="/checkout"
-                  className="block w-full text-center bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md font-semibold transition-colors shadow-sm flex items-center justify-center"
+                  className="w-full text-center bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-md font-semibold transition-colors shadow-sm flex items-center justify-center"
                 >
                   Tiến hành thanh toán <FiChevronRight className="ml-1" />
                 </Link>

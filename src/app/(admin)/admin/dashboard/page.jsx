@@ -121,14 +121,12 @@ export default function AdminDashboard() {
                     const productsResponse = await axiosInstance.get('/api/products/top-selling', {
                         headers: token ? { Authorization: `Bearer ${token}` } : {}
                     });
-                    console.log("Kết quả API top products:", productsResponse.data);
-
-                    // Đảm bảo dữ liệu có định dạng nhất quán
+                    console.log("Kết quả API top products:", productsResponse.data);                    // Đảm bảo dữ liệu có định dạng nhất quán
                     const formattedProducts = productsResponse.data.map(product => ({
-                        id: product.id,
+                        productId: product.productId,
                         title: product.title,
                         author: product.author || 'Tác giả',
-                        price: product.price || 0,
+                        currentPrice: product.currentPrice || 0,
                         soldCount: product.soldCount || 0
                     }));
 
@@ -344,30 +342,28 @@ export default function AdminDashboard() {
                     </div>
 
                     {topProducts && topProducts.length > 0 ? (
-                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                            {topProducts.map((product, index) => (
-                                <div key={product.id} className="py-3 flex items-center space-x-3">
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index < 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                                        {index + 1}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <Link href={`/admin/products/edit/${product.id}`} className="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 font-medium truncate">
-                                            {product.title}
-                                        </Link>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                            {product.author}
-                                        </p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-gray-900 dark:text-white font-medium">
-                                            {formatCurrency(product.price)}
-                                        </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-end">
-                                            <FiStar className="text-yellow-400 mr-1" /> {product.soldCount || 0} đã bán
-                                        </p>
-                                    </div>
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">                            {topProducts.map((product, index) => (
+                            <div key={product.productId} className="py-3 flex items-center space-x-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index < 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
+                                    {index + 1}
                                 </div>
-                            ))}
+                                <div className="flex-1 min-w-0">
+                                    <Link href={`/admin/products/edit/${product.productId}`} className="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 font-medium truncate">
+                                        {product.title}
+                                    </Link>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                        {product.author}
+                                    </p>
+                                </div>                    <div className="text-right">
+                                    <p className="text-gray-900 dark:text-white font-medium">
+                                        {formatCurrency(product.currentPrice)}
+                                    </p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-end">
+                                        <FiStar className="text-yellow-400 mr-1" /> {product.soldCount || 0} đã bán
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                         </div>
                     ) : (
                         <div className="text-center py-8">

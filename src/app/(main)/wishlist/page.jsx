@@ -126,7 +126,7 @@ const WishlistPage = () => {
     try {
       await axiosInstance.delete(`/wishlist/products/${productId}`);
       toast.success(`Đã xóa "${productTitle}" khỏi danh sách yêu thích.`);
-      setWishlistItems(prevItems => prevItems.filter(item => item.id !== productId));
+      setWishlistItems(prevItems => prevItems.filter(item => item.productId !== productId));
       decrementWishlistCount();
     } catch (error) {
       console.error(`Lỗi khi xóa sản phẩm ${productId} khỏi danh sách yêu thích:`, error.response?.data || error.message);
@@ -263,113 +263,111 @@ const WishlistPage = () => {
         </div>
 
         {view === 'grid' ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {wishlistItems.map((product) => (
-              <div key={product.id} className={`relative group transition-opacity duration-300 ${removingItemId === product.id ? 'opacity-50 pointer-events-none' : ''}`}>
-                <ProductCard product={product} />
-                <div className="absolute top-2 left-2 flex space-x-2 z-20">
-                  <button
-                    onClick={() => handleRemoveFromWishlist(product.id, product.title)}
-                    disabled={removingItemId === product.id}
-                    className={`p-2 rounded-full shadow-md transition-colors z-10 opacity-0 group-hover:opacity-100 ${removingItemId === product.id
-                      ? 'bg-gray-400 cursor-wait text-white'
-                      : 'bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white'
-                      }`}
-                    title="Xóa khỏi danh sách yêu thích"                  >
-                    {removingItemId === product.id ? <BrandSpinner size="xs" /> : <FiTrash2 size={16} />}
-                  </button>
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">            {wishlistItems.map((product) => (
+            <div key={product.productId} className={`relative group transition-opacity duration-300 ${removingItemId === product.productId ? 'opacity-50 pointer-events-none' : ''}`}>
+              <ProductCard product={product} />
+              <div className="absolute top-2 left-2 flex space-x-2 z-20">
+                <button
+                  onClick={() => handleRemoveFromWishlist(product.productId, product.title)}
+                  disabled={removingItemId === product.productId}
+                  className={`p-2 rounded-full shadow-md transition-colors z-10 opacity-0 group-hover:opacity-100 ${removingItemId === product.productId
+                    ? 'bg-gray-400 cursor-wait text-white'
+                    : 'bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white'
+                    }`}
+                  title="Xóa khỏi danh sách yêu thích"                  >
+                  {removingItemId === product.productId ? <BrandSpinner size="xs" /> : <FiTrash2 size={16} />}
+                </button>
               </div>
-            ))}
+            </div>
+          ))}
           </div>
         ) : (
-          <div className="space-y-4">
-            {wishlistItems.map((product) => (
-              <div
-                key={product.id}
-                className={`flex flex-col sm:flex-row items-center bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 ${removingItemId === product.id ? 'opacity-60' : 'hover:shadow-md'
-                  }`}
-              >
-                {/* Ảnh sản phẩm */}
-                <div className="w-28 h-36 flex-shrink-0 mb-4 sm:mb-0 sm:mr-6 relative bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
-                  {!product.imageUrl ? (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
-                      </svg>
-                    </div>
-                  ) : (
-                    <Link href={`/products/${product.id}`}>
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.title || 'Bìa sách'}
-                        fill
-                        style={{ objectFit: 'contain' }}
-                        sizes="(max-width: 640px) 100px, 120px"
-                        priority={false}
-                        className="transition-transform duration-300 hover:scale-105"
-                      />
-                    </Link>
-                  )}
-                </div>
-
-                {/* Thông tin sản phẩm */}
-                <div className="flex-grow text-center sm:text-left mb-4 sm:mb-0">
-                  <Link
-                    href={`/products/${product.id}`}
-                    className="font-semibold text-lg text-gray-800 dark:text-gray-100 hover:text-orange-600 dark:hover:text-orange-400 line-clamp-2 transition-colors"
-                  >
-                    {product.title}
+          <div className="space-y-4">            {wishlistItems.map((product) => (
+            <div
+              key={product.productId}
+              className={`flex flex-col sm:flex-row items-center bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300 ${removingItemId === product.productId ? 'opacity-60' : 'hover:shadow-md'
+                }`}
+            >
+              {/* Ảnh sản phẩm */}
+              <div className="w-28 h-36 flex-shrink-0 mb-4 sm:mb-0 sm:mr-6 relative bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
+                {!product.coverLink ? (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                  </div>
+                ) : (
+                  <Link href={`/products/${product.productId}`}>
+                    <Image
+                      src={product.coverLink}
+                      alt={product.title || 'Bìa sách'}
+                      fill
+                      style={{ objectFit: 'contain' }}
+                      sizes="(max-width: 640px) 100px, 120px"
+                      priority={false}
+                      className="transition-transform duration-300 hover:scale-105"
+                    />
                   </Link>
-
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    {product.author ? `Tác giả: ${product.author}` : 'Tác giả: Chưa cập nhật'}
-                  </p>
-
-                  <p className="text-md font-medium text-orange-600 dark:text-orange-400 mt-2">
-                    {product.price?.toLocaleString('vi-VN')} ₫
-                  </p>
-
-                  {product.stockQuantity === 0 ? (
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">Hết hàng</p>
-                  ) : product.stockQuantity < 5 ? (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                      Chỉ còn {product.stockQuantity} sản phẩm
-                    </p>
-                  ) : null}
-                </div>
-
-                {/* Các nút thao tác */}
-                <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3">
-                  <button
-                    onClick={() => handleAddToCart(product.id, product.title)}
-                    disabled={product.stockQuantity === 0}
-                    className={`px-4 py-2 rounded-md flex items-center transition-colors ${product.stockQuantity === 0
-                      ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                      : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white'
-                      }`}
-                  >
-                    <BsCartPlus className="mr-2" size={16} />
-                    <span className="text-sm">Thêm vào giỏ</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleRemoveFromWishlist(product.id, product.title)}
-                    disabled={removingItemId === product.id}
-                    className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm flex items-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Xóa khỏi danh sách yêu thích"                  >
-                    {removingItemId === product.id ? (
-                      <BrandSpinner size="xs" className="mr-1" />
-                    ) : (
-                      <FiTrash2 className="mr-1" />
-                    )}
-                    {removingItemId === product.id ? 'Đang xóa...' : 'Xóa'}
-                  </button>
-                </div>
+                )}
               </div>
-            ))}
+
+              {/* Thông tin sản phẩm */}
+              <div className="flex-grow text-center sm:text-left mb-4 sm:mb-0">
+                <Link
+                  href={`/products/${product.productId}`}
+                  className="font-semibold text-lg text-gray-800 dark:text-gray-100 hover:text-orange-600 dark:hover:text-orange-400 line-clamp-2 transition-colors"
+                >
+                  {product.title}
+                </Link>
+
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  {product.author ? `Tác giả: ${product.author}` : 'Tác giả: Chưa cập nhật'}
+                </p>
+
+                <p className="text-md font-medium text-orange-600 dark:text-orange-400 mt-2">
+                  {product.currentPrice?.toLocaleString('vi-VN')} ₫
+                </p>
+
+                {product.quantity === 0 ? (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">Hết hàng</p>
+                ) : product.quantity < 5 ? (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                    Chỉ còn {product.quantity} sản phẩm
+                  </p>
+                ) : null}
+              </div>
+
+              {/* Các nút thao tác */}
+              <div className="flex flex-row sm:flex-col items-center sm:items-end gap-3">
+                <button
+                  onClick={() => handleAddToCart(product.productId, product.title)}
+                  disabled={product.quantity === 0}
+                  className={`px-4 py-2 rounded-md flex items-center transition-colors ${product.quantity === 0
+                    ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                    : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white'
+                    }`}
+                >
+                  <BsCartPlus className="mr-2" size={16} />
+                  <span className="text-sm">Thêm vào giỏ</span>
+                </button>
+
+                <button
+                  onClick={() => handleRemoveFromWishlist(product.productId, product.title)}
+                  disabled={removingItemId === product.productId}
+                  className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm flex items-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Xóa khỏi danh sách yêu thích"                  >
+                  {removingItemId === product.productId ? (
+                    <BrandSpinner size="xs" className="mr-1" />
+                  ) : (
+                    <FiTrash2 className="mr-1" />
+                  )}
+                  {removingItemId === product.productId ? 'Đang xóa...' : 'Xóa'}
+                </button>
+              </div>
+            </div>
+          ))}
           </div>
         )}
       </div>

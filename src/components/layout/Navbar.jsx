@@ -1,9 +1,9 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter, usePathname } from 'next/navigation';
-import { FiShoppingCart, FiUser, FiLogOut, FiLogIn, FiUserPlus, FiHeart, FiSun, FiMoon, FiMenu, FiX, FiSearch, FiHome, FiBook, FiPackage, FiList, FiSettings, FiChevronDown } from 'react-icons/fi';
+import { FiShoppingCart, FiUser, FiLogOut, FiLogIn, FiUserPlus, FiHeart, FiSun, FiMoon, FiMenu, FiX, FiSearch, FiBook, FiPackage, FiList, FiSettings, FiChevronDown } from 'react-icons/fi';
 import { LiaAtomSolid } from 'react-icons/lia';
 import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
@@ -70,17 +70,18 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
 
   // Kiểm tra nếu user có role admin
   const isAdmin = user?.roles?.some(role => role === 'ROLE_ADMIN');
-
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [categories, setCategories] = useState([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-
   const router = useRouter();
   const pathname = usePathname();
-
+  const searchRef = useRef(null);
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -94,6 +95,45 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
     };
 
     fetchCategories();
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    const searchTimeout = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const response = await axiosInstance.get('/api/products/search', {
+            params: {
+              keyword: searchQuery.trim(),
+              size: 5 // Limit to 5 results for dropdown
+            }
+          });
+          setSearchResults(response.data.content || []);
+          setShowSearchDropdown(true);
+        } catch (error) {
+          console.error('Error searching products:', error);
+          setSearchResults([]);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
+    }, 300); // 300ms debounce    return () => clearTimeout(searchTimeout);
+  }, [searchQuery]);
+
+  // Close search dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
@@ -111,14 +151,25 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
       router.push('/');
     }
   };
-
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
+      setShowSearchDropdown(false);
       setMobileMenuOpen(false);
     }
+  };
+
+  const handleSearchResultClick = (productId) => {
+    router.push(`/products/${productId}`);
+    setSearchQuery('');
+    setShowSearchDropdown(false);
+    setMobileMenuOpen(false);
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchQuery(e.target.value);
   };
 
   // Hiển thị skeleton khi đang tải dữ liệu
@@ -145,27 +196,75 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            {/* Search Form */}
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="Tìm kiếm sách..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 pr-10 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 w-[200px] transition-all duration-300 focus:w-[250px]"
-              />
-              <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                <FiSearch />
-              </button>
-            </form>
-
-            {/* Main Navigation Links */}
+          <div className="hidden md:flex items-center space-x-6">            {/* Search Form */}
+            <div ref={searchRef} className="relative">
+              <form onSubmit={handleSearch}>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm sách..."
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 pr-10 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 w-[320px] transition-all duration-300 focus:w-[380px]"
+                />
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                  {isSearching ? (
+                    <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                  ) : (
+                    <FiSearch />
+                  )}
+                </button>
+              </form>              {/* Search Dropdown */}
+              {showSearchDropdown && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-md border border-gray-200 dark:border-gray-600 py-2 z-50 max-h-80 overflow-y-auto">
+                  {searchResults.map((product) => (
+                    <div
+                      key={product.productId}
+                      onClick={() => handleSearchResultClick(product.productId)}
+                      className="flex items-center gap-4 px-4 py-4 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    >
+                      <div className="w-16 h-20 flex-shrink-0 relative rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        {product.coverLink ? (
+                          <Image
+                            src={product.coverLink}
+                            alt={product.title}
+                            fill
+                            style={{ objectFit: 'contain' }}
+                            sizes="64px"
+                            onError={(e) => { e.target.src = '/sample_books.jpg'; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <FiBook size={20} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug mb-1">
+                          {product.title}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Tác giả: {product.author}
+                        </p>
+                        <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.currentPrice)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {searchQuery.trim().length >= 2 && (
+                    <div className="border-t border-gray-200 dark:border-gray-600 mt-1 pt-1">
+                      <button
+                        onClick={() => handleSearch({ preventDefault: () => { } })}
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        Xem tất cả kết quả cho "{searchQuery}" →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>{/* Main Navigation Links */}
             <div className="flex space-x-4 items-center">
-              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 flex items-center">
-                <FiHome className="mr-1" />
-                <span>Trang chủ</span>
-              </Link>
               <Link href="/products" className="text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 flex items-center">
                 <FiBook className="mr-1" />
                 <span>Sách</span>
@@ -334,33 +433,77 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
               {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
           </div>
-        </div>
-
-        {/* Mobile Menu */}
+        </div>        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden pt-4 pb-3 border-t border-gray-200 dark:border-gray-700 mt-3 space-y-4">
             {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Tìm kiếm sách..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 pr-10 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-              />
-              <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                <FiSearch />
-              </button>
-            </form>
-
-            {/* Mobile Navigation Links */}
-            <Link
-              href="/"
-              className="block py-2 text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <FiHome className="inline mr-2" /> Trang chủ
-            </Link>
+            <div className="relative mb-4">
+              <form onSubmit={handleSearch}>
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm sách..."
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  className="bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 pr-10 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
+                />
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                  {isSearching ? (
+                    <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+                  ) : (
+                    <FiSearch />
+                  )}
+                </button>
+              </form>              {/* Mobile Search Dropdown */}
+              {showSearchDropdown && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 shadow-xl rounded-md border border-gray-200 dark:border-gray-600 py-2 z-50 max-h-60 overflow-y-auto">
+                  {searchResults.map((product) => (
+                    <div
+                      key={product.productId}
+                      onClick={() => handleSearchResultClick(product.productId)}
+                      className="flex items-center gap-3 px-4 py-4 hover:bg-orange-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    >
+                      <div className="w-14 h-18 flex-shrink-0 relative rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
+                        {product.coverLink ? (
+                          <Image
+                            src={product.coverLink}
+                            alt={product.title}
+                            fill
+                            style={{ objectFit: 'contain' }}
+                            sizes="56px"
+                            onError={(e) => { e.target.src = '/sample_books.jpg'; }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <FiBook size={18} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-gray-900 dark:text-gray-100 line-clamp-2 leading-snug mb-1">
+                          {product.title}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                          Tác giả: {product.author}
+                        </p>
+                        <p className="text-xs font-semibold text-orange-600 dark:text-orange-400">
+                          {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(product.currentPrice)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {searchQuery.trim().length >= 2 && (
+                    <div className="border-t border-gray-200 dark:border-gray-600 mt-1 pt-1">
+                      <button
+                        onClick={() => handleSearch({ preventDefault: () => { } })}
+                        className="w-full px-4 py-3 text-left text-sm font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        Xem tất cả kết quả cho "{searchQuery}" →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>{/* Mobile Navigation Links */}
             <Link
               href="/products"
               className="block py-2 text-gray-600 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400"

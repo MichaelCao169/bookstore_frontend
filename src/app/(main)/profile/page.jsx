@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaCamera, FaCheck, FaTimes, FaEdit, FaSave } from 'react-icons/fa';
 import { MdEmail, MdPhone, MdPerson, MdSecurity, MdAccountCircle } from 'react-icons/md';
 import { HiUpload, HiRefresh, HiInformationCircle } from 'react-icons/hi';
@@ -9,17 +10,16 @@ import { useAuthStore } from '@/store/authStore';
 import axiosInstance from '@/lib/axiosInstance';
 import { cities, getDistrictsByCity } from '@/data/vietnamLocations';
 import Link from 'next/link';
-import BrandSpinner from '@/components/ui/BrandSpinner';
-import UserAvatar from '@/components/ui/UserAvatar';
+
+// Dynamic imports for heavy components
+const BrandSpinner = dynamic(() => import('@/components/ui/BrandSpinner'), { ssr: false });
+const UserAvatar = dynamic(() => import('@/components/ui/UserAvatar'), { ssr: false });
 
 const ProfilePage = () => {
   const router = useRouter();
-  const { user, accessToken, logout, updateUser } = useAuthStore();
-  // Profile states
+  const { user, accessToken, logout, updateUser } = useAuthStore();  // Profile states
   const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
-    displayName: '', // Tên hiển thị (username)
+    name: '',
     phone: '',
     avatar: null,
     // Địa chỉ mặc định
@@ -46,22 +46,20 @@ const ProfilePage = () => {
   const [previewAvatar, setPreviewAvatar] = useState(null);
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
-
   // Password strength
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  // Location states removed - now using memoized value
 
-  // Location states
-  const [availableDistricts, setAvailableDistricts] = useState([]);
-
+  // File input ref
+  const fileInputRef = useRef(null);
   useEffect(() => {
     if (!accessToken) {
       router.push('/login');
       return;
-    } if (user) {
+    }
+
+    if (user) {
       setProfileData({
-        firstName: user.firstName || user.name?.split(' ')[0] || '',
-        lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
-        displayName: user.displayName || user.name || '',
+        name: user.name || '',
         phone: user.phone || '',
         avatar: user.avatar || null,
         // Địa chỉ mặc định từ defaultAddress nếu có
@@ -70,16 +68,10 @@ const ProfilePage = () => {
         city: user.defaultAddress?.city === 'N/A' ? '' : user.defaultAddress?.city || '',
         country: user.defaultAddress?.country === 'N/A' ? 'Việt Nam' : user.defaultAddress?.country || 'Việt Nam'
       });
-
-      // Cập nhật danh sách quận/huyện khi có thông tin city
-      const userCity = user.defaultAddress?.city === 'N/A' ? '' : user.defaultAddress?.city || '';
-      if (userCity) {
-        setAvailableDistricts(getDistrictsByCity(userCity));
-      }
     }
   }, [user, accessToken, router]);
-
-  const calculatePasswordStrength = (password) => {
+  // Memoize expensive calculations
+  const calculatePasswordStrength = useCallback((password) => {
     let strength = 0;
     if (password.length >= 8) strength++;
     if (/[a-z]/.test(password)) strength++;
@@ -87,18 +79,25 @@ const ProfilePage = () => {
     if (/[0-9]/.test(password)) strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
     return strength;
-  };
+  }, []);
 
-  useEffect(() => {
-    setPasswordStrength(calculatePasswordStrength(passwordData.newPassword));
-  }, [passwordData.newPassword]); const handleProfileUpdate = async (e) => {
+  const passwordStrength = useMemo(() =>
+    calculatePasswordStrength(passwordData.newPassword),
+    [passwordData.newPassword, calculatePasswordStrength]
+  );
+
+  // Memoize available districts
+  const availableDistricts = useMemo(() => {
+    const userCity = user?.defaultAddress?.city === 'N/A' ? '' : user?.defaultAddress?.city || '';
+    return userCity ? getDistrictsByCity(userCity) : [];
+  }, [user?.defaultAddress?.city]); const handleProfileUpdate = useCallback(async (e) => {
     e.preventDefault();
     setIsProfileLoading(true);
+
     try {
       // Format data according to backend DTO structure
       const updateData = {
-        name: `${profileData.firstName} ${profileData.lastName}`.trim(),
-        displayName: profileData.displayName,
+        name: profileData.name,
         phone: profileData.phone,
         defaultAddress: {
           street: profileData.street || 'N/A',
@@ -106,7 +105,7 @@ const ProfilePage = () => {
           city: profileData.city || 'N/A',
           country: profileData.country || 'N/A',
           phone: profileData.phone || 'N/A',
-          recipientName: profileData.displayName || `${profileData.firstName} ${profileData.lastName}`.trim() || 'N/A'
+          recipientName: profileData.name || 'N/A'
         }
       };
 
@@ -120,9 +119,8 @@ const ProfilePage = () => {
     } finally {
       setIsProfileLoading(false);
     }
-  };
-
-  const handlePasswordChange = async (e) => {
+  }, [profileData, updateUser]);
+  const handlePasswordChange = useCallback(async (e) => {
     e.preventDefault();
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
@@ -154,7 +152,7 @@ const ProfilePage = () => {
     } finally {
       setIsPasswordLoading(false);
     }
-  }; const handleAvatarUpload = async (file) => {
+  }, [passwordData]); const handleAvatarUpload = async (file) => {
     if (!file) return;
 
     const formData = new FormData();
@@ -175,9 +173,7 @@ const ProfilePage = () => {
       // Step 2: Update user profile with the new avatar URL
       const updateResponse = await axiosInstance.put('/profile/avatar', {
         avatarUrl: avatarUrl
-      });
-
-      // Update user state with new avatar
+      });      // Update user state with new avatar
       updateUser({ ...user, avatar: avatarUrl, avatarUrl: avatarUrl });
       toast.success('Cập nhật ảnh đại diện thành công!');
     } catch (error) {
@@ -188,6 +184,11 @@ const ProfilePage = () => {
       setIsAvatarLoading(false);
       setPendingAvatarFile(null);
       setPreviewAvatar(null);
+
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -209,11 +210,14 @@ const ProfilePage = () => {
     if (pendingAvatarFile) {
       handleAvatarUpload(pendingAvatarFile);
     }
-  };
-
-  const handleAvatarCancel = () => {
+  }; const handleAvatarCancel = () => {
     setPendingAvatarFile(null);
     setPreviewAvatar(null);
+
+    // Reset file input value để có thể chọn lại cùng file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const getPasswordStrengthColor = (strength) => {
@@ -291,8 +295,8 @@ const ProfilePage = () => {
 
                   {/* Upload Button */}
                   <label className="absolute bottom-0 right-0 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-3 cursor-pointer shadow-lg transition-all duration-200 hover:scale-110">
-                    <FaCamera className="text-sm" />
-                    <input
+                    <FaCamera className="text-sm" />                    <input
+                      ref={fileInputRef}
                       type="file"
                       className="hidden"
                       accept="image/*"
@@ -385,52 +389,20 @@ const ProfilePage = () => {
                     <FaEdit className="mr-2" />
                     {isEditing ? 'Hủy' : 'Chỉnh sửa'}
                   </button>
-                </div>
-
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Họ
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.firstName}
-                        onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                        disabled={!isEditing}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
-                        placeholder="Nhập họ của bạn"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Tên
-                      </label>
-                      <input
-                        type="text"
-                        value={profileData.lastName}
-                        onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                        disabled={!isEditing}
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200" placeholder="Nhập tên của bạn"
-                      />
-                    </div>
-                  </div>
-
+                </div>                <form onSubmit={handleProfileUpdate} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Tên hiển thị (Username)
+                      Tên đầy đủ
                     </label>
                     <input
                       type="text"
-                      value={profileData.displayName}
-                      onChange={(e) => setProfileData({ ...profileData, displayName: e.target.value })}
+                      value={profileData.name}
+                      onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                       disabled={!isEditing}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
-                      placeholder="Nhập tên hiển thị của bạn"
+                      placeholder="Nhập tên đầy đủ của bạn"
+                      required
                     />
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Tên này sẽ được hiển thị công khai trên website
-                    </p>
                   </div>
 
                   <div>
