@@ -1,9 +1,11 @@
 // src/components/chat/ChatWindow.jsx
 'use client';
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { FiX, FiLoader, FiAlertCircle, FiUserCircle } from 'react-icons/fi';
+import { RiRobot2Line } from 'react-icons/ri';
 import { useChatStore, ADMIN_NAME, ADMIN_AVATAR } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
+import { useAiChatStore } from '@/store/aiChatStore';
 import MessageItem from './MessageItem';
 import ChatInput from './ChatInput';
 import Image from 'next/image';
@@ -22,8 +24,10 @@ const ChatWindow = () => {
     isConnected,
   } = useChatStore();
   const { user: currentUser, isAuthenticated } = useAuthStore();
+  const { isAiChatOpen, toggleAiChat } = useAiChatStore();
   const messagesEndRef = useRef(null);
-  const chatBodyRef = useRef(null);  // Initialize chat when component mounts and user is authenticated
+  const chatBodyRef = useRef(null);
+  const [isOfflineNoticeVisible, setIsOfflineNoticeVisible] = useState(true);  // Initialize chat when component mounts and user is authenticated
   useEffect(() => {
     if (isAuthenticated && currentUser && currentUser.roles && currentUser.roles.includes('ROLE_CUSTOMER')) {
       initializeUserChat(currentUser);
@@ -62,6 +66,13 @@ const ChatWindow = () => {
     }
   }, [isChatOpen, userMessages, markUserMessagesAsRead]);
 
+  // Reset thông báo offline khi admin quay lại online hoặc khi mở lại chat
+  useEffect(() => {
+    if (userConversation?.isAdminOnline || isChatOpen) {
+      setIsOfflineNoticeVisible(true);
+    }
+  }, [userConversation?.isAdminOnline, isChatOpen]);
+
   const scrollToBottom = () => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
@@ -73,11 +84,25 @@ const ChatWindow = () => {
     }
 
     await sendUserMessage(messageData.content);
+  };
+
+  const handleSwitchToAiChat = () => {
+    // Đóng admin chat
+    toggleChat();
+    // Mở AI chat
+    toggleAiChat();
+  };
+
+  const handleDismissOfflineNotice = () => {
+    setIsOfflineNoticeVisible(false);
   }; if (!isChatOpen) return null;
+
+  // Admin chat window ở bên phải màn hình, bên trái của các bubble chat
+  const positionClass = "fixed bottom-20 right-20 w-[360px] h-[500px] bg-white dark:bg-gray-800 shadow-2xl rounded-lg flex flex-col border border-gray-200 dark:border-gray-700 z-[999] overflow-hidden transition-all duration-300 ease-in-out";
 
   return (
     <>
-      <div className="fixed bottom-20 right-6 w-[360px] h-[500px] bg-white dark:bg-gray-800 shadow-2xl rounded-lg flex flex-col border border-gray-200 dark:border-gray-700 z-[999] overflow-hidden">
+      <div className={positionClass}>
         {/* Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
           <div className="flex items-center">
@@ -104,6 +129,31 @@ const ChatWindow = () => {
             <FiX size={20} />
           </button>
         </div>
+
+        {/* Admin Offline Notice */}
+        {!isConnecting && userConversation && !userConversation.isAdminOnline && isOfflineNoticeVisible && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800 relative">
+            <button
+              onClick={handleDismissOfflineNotice}
+              className="absolute top-2 right-2 p-1 text-blue-400 dark:text-blue-500 hover:text-blue-600 dark:hover:text-blue-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+              aria-label="Đóng thông báo"
+            >
+              <FiX size={14} />
+            </button>
+            <div className="text-center pr-6">
+              <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                Admin hiện đang ngoại tuyến
+              </p>
+              <button
+                onClick={handleSwitchToAiChat}
+                className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 underline hover:no-underline transition-colors"
+              >
+                <RiRobot2Line size={16} />
+                Bạn có muốn chat với AI không?
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Message Area */}
         <div ref={chatBodyRef} className="flex-grow p-4 space-y-3 overflow-y-auto bg-gray-50 dark:bg-gray-700/50">

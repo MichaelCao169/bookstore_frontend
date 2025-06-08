@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiCpu, FiSend } from 'react-icons/fi';
 import { useAiChatStore } from '@/store/aiChatStore';
+import { useChatStore } from '@/store/chatStore';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useAuthStore } from '@/store/authStore';
 import { format } from 'date-fns';
@@ -18,15 +19,14 @@ const AiMessageItem = ({ message }) => {
       {!isUser && (
         // [CẬP NHẬT MÀU SẮC]
         <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white flex-shrink-0">
-            <RiRobot2Line size={18}/>
+          <RiRobot2Line size={18} />
         </div>
       )}
       <div
-        className={`max-w-[80%] p-3 rounded-xl shadow-sm ${
-          isUser
-            ? 'bg-orange-500 text-white rounded-br-none' // Tin nhắn của user vẫn màu cam
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'
-        } ${message.isError ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : ''}`}
+        className={`max-w-[80%] p-3 rounded-xl shadow-sm ${isUser
+          ? 'bg-orange-500 text-white rounded-br-none' // Tin nhắn của user vẫn màu cam
+          : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'
+          } ${message.isError ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : ''}`}
       >
         <p className="whitespace-pre-wrap break-words text-sm">{message.text}</p>
         <p className={`text-xs mt-1 ${isUser ? 'text-orange-100 dark:text-orange-300' : 'text-gray-500 dark:text-gray-400'} text-right`}>
@@ -43,6 +43,7 @@ const AiMessageItem = ({ message }) => {
 // Component cho cửa sổ chat (Cập nhật vị trí và màu sắc)
 const AiChatWindow = () => {
   const { isAiChatOpen, toggleAiChat, aiMessages, isLoading, sendAiMessage } = useAiChatStore();
+  const { isChatOpen: isAdminChatOpen } = useChatStore();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -60,22 +61,22 @@ const AiChatWindow = () => {
 
   if (!isAiChatOpen) return null;
 
+  // AI chat window ở bên phải màn hình, bên trái của các bubble chat
+  const positionClass = "fixed bottom-20 right-20 w-[360px] h-[500px] bg-white dark:bg-gray-800 shadow-2xl rounded-lg flex flex-col border border-gray-200 dark:border-gray-700 z-[999] overflow-hidden transition-all duration-300 ease-in-out";
+
   return (
-    // [THAY ĐỔI 1: VỊ TRÍ CỬA SỔ CHAT]
-    // bottom-20 để nằm trên bubble chat
-    // left-6 -> right-6 để đưa sang góc phải
-    <div className="fixed bottom-24 right-6 w-[360px] h-[500px] bg-white dark:bg-gray-800 shadow-2xl rounded-lg flex flex-col border border-gray-200 dark:border-gray-700 z-[999] overflow-hidden">
+    <div className={positionClass}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
         <div className="flex items-center">
-            {/* [THAY ĐỔI 2: MÀU SẮC HEADER] */}
-            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white mr-3">
-                <RiRobot2Line size={22}/>
-            </div>
-            <div>
-                <h3 className="font-semibold text-gray-800 dark:text-gray-100">AI Book Advisor</h3>
-                <p className="text-xs text-green-500 dark:text-green-400">Online</p>
-            </div>
+          {/* [THAY ĐỔI 2: MÀU SẮC HEADER] */}
+          <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white mr-3">
+            <RiRobot2Line size={22} />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-100">Atom</h3>
+            <p className="text-xs text-green-500 dark:text-green-400">Online</p>
+          </div>
         </div>
         <button
           onClick={toggleAiChat}
@@ -94,14 +95,14 @@ const AiChatWindow = () => {
         {isLoading && (
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white flex-shrink-0">
-                <RiRobot2Line size={18}/>
+              <RiRobot2Line size={18} />
             </div>
             <div className="p-3 rounded-xl bg-gray-100 dark:bg-gray-700 rounded-bl-none">
-                <div className="flex items-center space-x-1">
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></span>
-                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></span>
-                </div>
+              <div className="flex items-center space-x-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+              </div>
             </div>
           </div>
         )}
