@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
-import { FiShoppingBag, FiEye, FiLoader, FiCalendar, FiUser, FiDollarSign, FiTag } from 'react-icons/fi';
+import { FiShoppingBag, FiEye, FiLoader, FiCalendar, FiUser, FiDollarSign, FiTag, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 export default function OrdersManagement() {
     const [orders, setOrders] = useState([]);
@@ -190,42 +190,69 @@ export default function OrdersManagement() {
                         </div>
 
                         {totalPages > 1 && (
-                            <div className="flex justify-center mt-6">
-                                <div className="flex space-x-2">
+                            <nav aria-label="Phân trang" className="flex items-center justify-center mt-6">
+                                <div className="flex items-center space-x-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+                                    {/* Nút Trước */}
                                     <button
                                         onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                                         disabled={currentPage === 0}
-                                        className={`px-3 py-1 rounded ${currentPage === 0
-                                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-                                            : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:hover:bg-orange-800/40'
-                                            }`}
+                                        className={`
+                                            flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                                            ${currentPage === 0
+                                                ? 'cursor-not-allowed text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50'
+                                                : 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:shadow-sm'
+                                            }
+                                            focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-600 focus:ring-opacity-50
+                                        `}
+                                        aria-label="Trang trước"
                                     >
-                                        Trang trước
+                                        <FiChevronLeft className="w-4 h-4 mr-1" />
+                                        Trước
                                     </button>
+
+                                    {/* Các nút số trang */}
                                     {Array.from({ length: totalPages }, (_, i) => (
                                         <button
                                             key={i}
                                             onClick={() => setCurrentPage(i)}
-                                            className={`px-3 py-1 rounded ${currentPage === i
-                                                ? 'bg-orange-600 text-white dark:bg-orange-500'
-                                                : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:hover:bg-orange-800/40'
-                                                }`}
+                                            className={`
+                                                flex items-center justify-center w-10 h-10 text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                                                focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-600 focus:ring-opacity-50
+                                                ${currentPage === i
+                                                    ? 'text-white bg-orange-600 dark:bg-orange-500 shadow-md cursor-default ring-2 ring-orange-300 dark:ring-orange-600 ring-opacity-50'
+                                                    : 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:shadow-sm'
+                                                }
+                                            `}
+                                            aria-label={`Đi đến trang ${i + 1}`}
                                         >
                                             {i + 1}
                                         </button>
                                     ))}
+
+                                    {/* Nút Tiếp */}
                                     <button
                                         onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                                         disabled={currentPage === totalPages - 1}
-                                        className={`px-3 py-1 rounded ${currentPage === totalPages - 1
-                                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-                                            : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:hover:bg-orange-800/40'
-                                            }`}
+                                        className={`
+                                            flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                                            ${currentPage === totalPages - 1
+                                                ? 'cursor-not-allowed text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50'
+                                                : 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:shadow-sm'
+                                            }
+                                            focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-600 focus:ring-opacity-50
+                                        `}
+                                        aria-label="Trang tiếp"
                                     >
-                                        Trang tiếp
+                                        Tiếp
+                                        <FiChevronRight className="w-4 h-4 ml-1" />
                                     </button>
                                 </div>
-                            </div>
+
+                                {/* Thông tin trang hiện tại */}
+                                <div className="ml-4 text-sm text-gray-600 dark:text-gray-400">
+                                    Trang <span className="font-medium text-orange-600 dark:text-orange-400">{currentPage + 1}</span> / <span className="font-medium">{totalPages}</span>
+                                </div>
+                            </nav>
                         )}
                     </>
                 )}

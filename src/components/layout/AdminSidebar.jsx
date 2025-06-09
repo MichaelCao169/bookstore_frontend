@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
-import { FiHome, FiBook, FiFolder, FiPackage, FiUsers, FiLogOut, FiTool } from 'react-icons/fi';
+import { FiHome, FiBook, FiFolder, FiPackage, FiUsers, FiLogOut } from 'react-icons/fi';
 import axiosInstance from '@/lib/axiosInstance';
 import { toast } from 'react-toastify';
 import { FiMessageSquare } from 'react-icons/fi';
@@ -13,8 +13,7 @@ const navItems = [
     { name: 'Danh mục', href: '/admin/categories', icon: <FiFolder className="w-5 h-5" /> },
     { name: 'Đơn hàng', href: '/admin/orders', icon: <FiPackage className="w-5 h-5" /> },
     { name: 'Người dùng', href: '/admin/users', icon: <FiUsers className="w-5 h-5" /> },
-     { name: 'Quản lý Chat', href: '/admin/chat', icon: <FiMessageSquare className="w-5 h-5" /> },
-    { name: 'Kiểm tra API', href: '/admin/dashboard/debug', icon: <FiTool className="w-5 h-5" /> },
+    { name: 'Quản lý Chat', href: '/admin/chat', icon: <FiMessageSquare className="w-5 h-5" /> },
 ];
 
 export default function AdminSidebar() {
@@ -39,7 +38,7 @@ export default function AdminSidebar() {
             console.error('Logout error:', error);
 
             // Vẫn thực hiện logout phía client nếu API thất bại
-        logout();
+            logout();
 
             // Hiển thị thông báo lỗi
             toast.warning('Đã có lỗi xảy ra, nhưng bạn đã được đăng xuất khỏi phiên này.');

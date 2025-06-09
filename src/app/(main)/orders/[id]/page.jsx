@@ -183,18 +183,19 @@ export default function OrderDetailPage() {
                             <button
                                 onClick={handleCancelOrder}
                                 disabled={isCancelling}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >                                {isCancelling ? (
-                                <>
-                                    <BrandSpinner size="sm" className="mr-2" />
-                                    Đang hủy...
-                                </>
-                            ) : (
-                                <>
-                                    <FiXCircle className="mr-2" />
-                                    Hủy đơn hàng
-                                </>
-                            )}
+                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-red-300 text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 dark:border-red-600 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/30 whitespace-nowrap"
+                            >
+                                {isCancelling ? (
+                                    <>
+                                        <div className="animate-spin rounded-full h-3 w-3 border border-red-600 border-t-transparent mr-1.5"></div>
+                                        Đang hủy...
+                                    </>
+                                ) : (
+                                    <>
+                                        <FiXCircle className="mr-1.5 h-3 w-3" />
+                                        Hủy đơn hàng
+                                    </>
+                                )}
                             </button>
                         )}
                     </div>

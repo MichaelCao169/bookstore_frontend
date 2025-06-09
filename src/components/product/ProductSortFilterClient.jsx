@@ -7,10 +7,10 @@ import { FiGrid, FiList } from 'react-icons/fi';
 const sortOptions = [
     { value: 'title,asc', label: 'Tên A-Z' },
     { value: 'title,desc', label: 'Tên Z-A' },
-    { value: 'price,asc', label: 'Giá tăng dần' },
-    { value: 'price,desc', label: 'Giá giảm dần' },
+    { value: 'currentPrice,asc', label: 'Giá tăng dần' },
+    { value: 'currentPrice,desc', label: 'Giá giảm dần' },
     { value: 'createdAt,desc', label: 'Mới nhất' },
-    { value: 'averageRating,desc', label: 'Đánh giá cao nhất' },
+    { value: 'soldCount,desc', label: 'Bán chạy nhất' },
 ];
 
 const ProductSortFilterClient = () => {
@@ -74,8 +74,8 @@ const ProductSortFilterClient = () => {
             <div className="flex items-center gap-2">
                 <button
                     className={`p-2 border border-gray-300 dark:border-gray-700 rounded-md ${viewMode === 'grid'
-                            ? 'bg-orange-500 text-white border-orange-500 dark:border-orange-500'
-                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                        ? 'bg-orange-500 text-white border-orange-500 dark:border-orange-500'
+                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}
                     onClick={() => handleViewModeChange('grid')}
                     aria-label="Xem dạng lưới"
@@ -84,8 +84,8 @@ const ProductSortFilterClient = () => {
                 </button>
                 <button
                     className={`p-2 border border-gray-300 dark:border-gray-700 rounded-md ${viewMode === 'list'
-                            ? 'bg-orange-500 text-white border-orange-500 dark:border-orange-500'
-                            : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400'
+                        ? 'bg-orange-500 text-white border-orange-500 dark:border-orange-500'
+                        : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400'
                         }`}
                     onClick={() => handleViewModeChange('list')}
                     aria-label="Xem dạng danh sách"

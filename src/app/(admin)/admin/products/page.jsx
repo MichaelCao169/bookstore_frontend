@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
-import { FiPlusCircle, FiSearch, FiEdit2, FiTrash2, FiLoader, FiInfo } from 'react-icons/fi';
+import { FiPlusCircle, FiSearch, FiEdit2, FiTrash2, FiLoader, FiInfo, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { formatCurrency } from '@/components/order/OrderHelpers';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 
@@ -119,26 +119,27 @@ export default function ProductsManagement() {
                     <div className="text-center py-4 text-red-600 dark:text-red-400">{error}</div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <div className="overflow-x-auto shadow-inner rounded-lg border border-gray-200 dark:border-gray-700 scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-gray-100 dark:scrollbar-track-gray-700 dark:scrollbar-thumb-orange-500">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed"
+                                style={{ minWidth: '1200px' }}>
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             ID
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="w-80 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Tên sản phẩm
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Giá tiền
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Tồn kho
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Danh mục
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Thao tác
                                         </th>
                                     </tr>
@@ -146,9 +147,9 @@ export default function ProductsManagement() {
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     {products.length > 0 ? (products.map((product) => (
                                         <tr key={product.productId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
+                                            <td className="w-32 px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
                                                 <div className="flex items-center">
-                                                    <span className="font-mono">{truncateUUID(product.productId)}</span>
+                                                    <span className="font-mono text-sm">{truncateUUID(product.productId)}</span>
                                                     <span className="group relative ml-1 cursor-pointer">
                                                         <FiInfo className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" size={16} />
                                                         <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 w-64 shadow-lg z-10">
@@ -158,15 +159,23 @@ export default function ProductsManagement() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{product.title}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{formatCurrency(product.currentPrice, 'VND', 'vi-VN')}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">{product.quantity}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                                {product.categories && product.categories.length > 0
-                                                    ? product.categories.map(cat => cat.name).join(', ')
-                                                    : product.category?.name || 'N/A'}
+                                            <td className="w-80 px-6 py-4 text-gray-900 dark:text-gray-100">
+                                                <div className="max-w-xs truncate" title={product.title}>
+                                                    {product.title}
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                                            <td className="w-32 px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100 text-sm">{formatCurrency(product.currentPrice, 'VND', 'vi-VN')}</td>
+                                            <td className="w-24 px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100 text-center">{product.quantity}</td>
+                                            <td className="w-48 px-6 py-4 text-gray-900 dark:text-gray-100">
+                                                <div className="max-w-xs truncate" title={product.categories && product.categories.length > 0
+                                                    ? product.categories.map(cat => cat.name).join(', ')
+                                                    : product.category?.name || 'N/A'}>
+                                                    {product.categories && product.categories.length > 0
+                                                        ? product.categories.map(cat => cat.name).join(', ')
+                                                        : product.category?.name || 'N/A'}
+                                                </div>
+                                            </td>
+                                            <td className="w-32 px-6 py-4 whitespace-nowrap space-x-2">
                                                 <Link
                                                     href={`/admin/products/edit/${product.productId}`}
                                                     className="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 inline-flex items-center"
@@ -194,42 +203,84 @@ export default function ProductsManagement() {
                         </div>
 
                         {totalPages > 1 && (
-                            <div className="flex justify-center mt-6">
-                                <div className="flex space-x-2">
+                            <nav aria-label="Phân trang" className="flex items-center justify-center mt-6">
+                                <div className="flex items-center space-x-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
+                                    {/* Nút Trước */}
                                     <button
                                         onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
                                         disabled={currentPage === 0}
-                                        className={`px-3 py-1 rounded flex items-center ${currentPage === 0
-                                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-                                            : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50'
-                                            }`}
+                                        className={`
+                                            flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                                            ${currentPage === 0
+                                                ? 'cursor-not-allowed text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50'
+                                                : 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:shadow-sm'
+                                            }
+                                            focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-600 focus:ring-opacity-50
+                                        `}
+                                        aria-label="Trang trước"
                                     >
+                                        <FiChevronLeft className="w-4 h-4 mr-1" />
                                         Trước
                                     </button>
-                                    {Array.from({ length: totalPages }, (_, i) => (
-                                        <button
-                                            key={i}
-                                            onClick={() => setCurrentPage(i)}
-                                            className={`px-3 py-1 rounded ${currentPage === i
-                                                ? 'bg-orange-600 text-white dark:bg-orange-500'
-                                                : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50'
-                                                }`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
+
+                                    {/* Hiển thị các trang */}
+                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                        let pageIndex;
+                                        if (totalPages <= 5) {
+                                            pageIndex = i;
+                                        } else if (currentPage <= 2) {
+                                            pageIndex = i;
+                                        } else if (currentPage >= totalPages - 3) {
+                                            pageIndex = totalPages - 5 + i;
+                                        } else {
+                                            pageIndex = currentPage - 2 + i;
+                                        }
+
+                                        if (pageIndex < 0 || pageIndex >= totalPages) return null;
+
+                                        return (
+                                            <button
+                                                key={pageIndex}
+                                                onClick={() => setCurrentPage(pageIndex)}
+                                                className={`
+                                                    flex items-center justify-center w-10 h-10 text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                                                    focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-600 focus:ring-opacity-50
+                                                    ${currentPage === pageIndex
+                                                        ? 'text-white bg-orange-600 dark:bg-orange-500 shadow-md cursor-default ring-2 ring-orange-300 dark:ring-orange-600 ring-opacity-50'
+                                                        : 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:shadow-sm'
+                                                    }
+                                                `}
+                                                aria-label={`Đi đến trang ${pageIndex + 1}`}
+                                            >
+                                                {pageIndex + 1}
+                                            </button>
+                                        );
+                                    })}
+
+                                    {/* Nút Tiếp */}
                                     <button
                                         onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
                                         disabled={currentPage === totalPages - 1}
-                                        className={`px-3 py-1 rounded flex items-center ${currentPage === totalPages - 1
-                                            ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-                                            : 'bg-orange-100 text-orange-600 hover:bg-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-900/50'
-                                            }`}
+                                        className={`
+                                            flex items-center px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ease-in-out
+                                            ${currentPage === totalPages - 1
+                                                ? 'cursor-not-allowed text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50'
+                                                : 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:shadow-sm'
+                                            }
+                                            focus:outline-none focus:ring-2 focus:ring-orange-300 dark:focus:ring-orange-600 focus:ring-opacity-50
+                                        `}
+                                        aria-label="Trang tiếp"
                                     >
                                         Tiếp
+                                        <FiChevronRight className="w-4 h-4 ml-1" />
                                     </button>
                                 </div>
-                            </div>
+
+                                {/* Thông tin trang hiện tại */}
+                                <div className="ml-4 text-sm text-gray-600 dark:text-gray-400">
+                                    Trang <span className="font-medium text-orange-600 dark:text-orange-400">{currentPage + 1}</span> / <span className="font-medium">{totalPages}</span>
+                                </div>
+                            </nav>
                         )}
                     </>
                 )}

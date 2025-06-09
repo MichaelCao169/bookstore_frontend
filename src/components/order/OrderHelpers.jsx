@@ -9,6 +9,7 @@ export const OrderStatusBadge = ({ status }) => {
     let textColor = 'text-gray-600 dark:text-gray-300';
     let dotColor = 'bg-gray-400';
     let icon = <FiInfo size={12} className="hidden sm:inline" />; // Default icon, ẩn trên mobile
+    let displayText = 'Không xác định';
 
     // Mặc định Enum từ Backend: PENDING, PENDING_PAYMENT, PROCESSING, SHIPPED, DELIVERED, CANCELLED, PAYMENT_FAILED
     switch (status) {
@@ -17,49 +18,60 @@ export const OrderStatusBadge = ({ status }) => {
             textColor = 'text-yellow-700 dark:text-yellow-400';
             dotColor = 'bg-yellow-500';
             icon = <BrandSpinner size="xs" className="hidden sm:inline" />;
+            displayText = 'Chờ xử lý';
             break;
         case 'PENDING_PAYMENT':
             bgColor = 'bg-orange-50 dark:bg-orange-900/30';
             textColor = 'text-orange-700 dark:text-orange-400';
             dotColor = 'bg-orange-500';
             icon = <FiDollarSign size={12} className="hidden sm:inline" />;
+            displayText = 'Chờ thanh toán';
             break;
         case 'PROCESSING':
             bgColor = 'bg-blue-50 dark:bg-blue-900/30';
             textColor = 'text-blue-700 dark:text-blue-400';
             dotColor = 'bg-blue-500';
             icon = <FiPackage size={12} className="hidden sm:inline" />;
+            displayText = 'Đang xử lý';
             break;
         case 'SHIPPED':
             bgColor = 'bg-indigo-50 dark:bg-indigo-900/30';
             textColor = 'text-indigo-700 dark:text-indigo-400';
             dotColor = 'bg-indigo-500';
             icon = <FiTruck size={12} className="hidden sm:inline" />;
+            displayText = 'Đang giao hàng';
             break;
         case 'DELIVERED':
             bgColor = 'bg-green-50 dark:bg-green-900/30';
             textColor = 'text-green-700 dark:text-green-400';
             dotColor = 'bg-green-500';
             icon = <FiCheckCircle size={12} className="hidden sm:inline" />;
+            displayText = 'Đã giao hàng';
             break;
         case 'CANCELLED':
+            bgColor = 'bg-red-50 dark:bg-red-900/30';
+            textColor = 'text-red-700 dark:text-red-400';
+            dotColor = 'bg-red-500';
+            icon = <FiXCircle size={12} className="hidden sm:inline" />;
+            displayText = 'Đã hủy';
+            break;
         case 'PAYMENT_FAILED':
             bgColor = 'bg-red-50 dark:bg-red-900/30';
             textColor = 'text-red-700 dark:text-red-400';
             dotColor = 'bg-red-500';
             icon = <FiXCircle size={12} className="hidden sm:inline" />;
+            displayText = 'Thanh toán thất bại';
             break;
         default: // Xử lý trường hợp status không khớp
-            status = 'UNKNOWN';
+            displayText = 'Không xác định';
             break;
     }
 
     return (
-        <span className={`inline-flex items-center gap-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor}`}>
+        <span className={`inline-flex items-center gap-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor} whitespace-nowrap`}>
             <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
             {icon}
-            {/* Thay thế dấu gạch dưới và viết hoa chữ cái đầu */}
-            {status.replace(/_/g, ' ').replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}
+            {displayText}
         </span>
     );
 };

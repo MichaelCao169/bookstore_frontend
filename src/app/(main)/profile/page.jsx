@@ -86,10 +86,13 @@ const ProfilePage = () => {
     [passwordData.newPassword, calculatePasswordStrength]
   );
 
-  // Memoize available districts
-  const availableDistricts = useMemo(() => {
+  // Available districts state
+  const [availableDistricts, setAvailableDistricts] = useState([]);
+
+  // Update available districts when user's city changes
+  useEffect(() => {
     const userCity = user?.defaultAddress?.city === 'N/A' ? '' : user?.defaultAddress?.city || '';
-    return userCity ? getDistrictsByCity(userCity) : [];
+    setAvailableDistricts(userCity ? getDistrictsByCity(userCity) : []);
   }, [user?.defaultAddress?.city]); const handleProfileUpdate = useCallback(async (e) => {
     e.preventDefault();
     setIsProfileLoading(true);
@@ -399,7 +402,7 @@ const ProfilePage = () => {
                       value={profileData.name}
                       onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
                       placeholder="Nhập tên đầy đủ của bạn"
                       required
                     />
@@ -414,7 +417,7 @@ const ProfilePage = () => {
                       value={profileData.phone}
                       onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
                       placeholder="Nhập số điện thoại của bạn" />
                   </div>
 
@@ -440,7 +443,7 @@ const ProfilePage = () => {
                           value={profileData.street}
                           onChange={(e) => setProfileData({ ...profileData, street: e.target.value })}
                           disabled={!isEditing}
-                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
                           placeholder="Ví dụ: 123 Nguyễn Văn A"
                         />
                       </div>
@@ -453,7 +456,7 @@ const ProfilePage = () => {
                             value={profileData.city}
                             onChange={(e) => handleCityChange(e.target.value)}
                             disabled={!isEditing}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
                           >
                             <option value="">Chọn tỉnh/thành phố</option>
                             {cities.map((city) => (
@@ -471,7 +474,7 @@ const ProfilePage = () => {
                             value={profileData.district}
                             onChange={(e) => setProfileData({ ...profileData, district: e.target.value })}
                             disabled={!isEditing || !profileData.city}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
+                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
                           >
                             <option value="">
                               {!profileData.city ? 'Chọn tỉnh/thành phố trước' : 'Chọn quận/huyện'}
@@ -494,7 +497,7 @@ const ProfilePage = () => {
                           value={profileData.country}
                           onChange={(e) => setProfileData({ ...profileData, country: e.target.value })}
                           disabled={!isEditing}
-                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-all duration-200"
                           placeholder="Việt Nam"
                         />
                       </div>
@@ -559,7 +562,7 @@ const ProfilePage = () => {
                         type={showPasswords.current ? "text" : "password"}
                         value={passwordData.currentPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all duration-200"
                         placeholder="Nhập mật khẩu hiện tại"
                       />
                       <button
@@ -581,7 +584,7 @@ const ProfilePage = () => {
                         type={showPasswords.new ? "text" : "password"}
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all duration-200"
                         placeholder="Nhập mật khẩu mới"
                       />
                       <button
@@ -623,7 +626,7 @@ const ProfilePage = () => {
                         type={showPasswords.confirm ? "text" : "password"}
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                        className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 focus:outline-none transition-all duration-200"
                         placeholder="Xác nhận mật khẩu mới"
                       />
                       <button
