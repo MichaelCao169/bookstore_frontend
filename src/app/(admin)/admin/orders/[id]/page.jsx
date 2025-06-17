@@ -71,9 +71,11 @@ export default function OrderDetail({ params }) {
     const getStatusColor = (status) => {
         switch (status) {
             case 'PENDING_PAYMENT':
-                return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
             case 'PENDING':
                 return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+            case 'PAID':
+                return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
             case 'PROCESSING':
                 return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
             case 'SHIPPED':
@@ -81,6 +83,8 @@ export default function OrderDetail({ params }) {
             case 'DELIVERED':
                 return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
             case 'CANCELLED':
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+            case 'PAYMENT_FAILED':
                 return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
             default:
                 return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
@@ -93,6 +97,8 @@ export default function OrderDetail({ params }) {
                 return 'Chờ thanh toán';
             case 'PENDING':
                 return 'Chờ xử lý';
+            case 'PAID':
+                return 'Đã thanh toán';
             case 'PROCESSING':
                 return 'Đang xử lý';
             case 'SHIPPED':
@@ -101,6 +107,8 @@ export default function OrderDetail({ params }) {
                 return 'Đã giao hàng';
             case 'CANCELLED':
                 return 'Đã hủy';
+            case 'PAYMENT_FAILED':
+                return 'Thanh toán thất bại';
             default:
                 return status;
         }
@@ -207,10 +215,12 @@ export default function OrderDetail({ params }) {
                             >
                                 <option value="PENDING_PAYMENT">Chờ thanh toán</option>
                                 <option value="PENDING">Chờ xử lý</option>
+                                <option value="PAID">Đã thanh toán</option>
                                 <option value="PROCESSING">Đang xử lý</option>
                                 <option value="SHIPPED">Đã gửi hàng</option>
                                 <option value="DELIVERED">Đã giao hàng</option>
                                 <option value="CANCELLED">Đã hủy</option>
+                                <option value="PAYMENT_FAILED">Thanh toán thất bại</option>
                             </select>
                         </div>
                         <button

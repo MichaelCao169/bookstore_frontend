@@ -167,9 +167,9 @@ export default function OrderDetailPage() {
                 <span className="font-medium text-gray-700 dark:text-gray-300"> Đơn hàng #{order.orderId || order.id}</span>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow border dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow border border-gray-200 dark:border-gray-700">
                 {/* Order Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b dark:border-gray-600 pb-4 mb-6 gap-3">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-600 pb-4 mb-6 gap-3">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-100">Đơn hàng #{order.orderId || order.id}</h1>
                         <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -253,12 +253,12 @@ export default function OrderDetailPage() {
 
                 {/* Product List */}
                 <div>
-                    <h3 className="text-lg font-semibold mb-3 border-t dark:border-gray-600 pt-4 text-gray-800 dark:text-gray-200">
+                    <h3 className="text-lg font-semibold mb-3 border-t border-gray-200 dark:border-gray-600 pt-4 text-gray-800 dark:text-gray-200">
                         Sản phẩm đã đặt ({order.orderItems?.length || 0})
                     </h3>
                     <div className="space-y-4">
                         {order.orderItems?.map((item) => (
-                            <div key={item.orderItemId || item.id} className="flex items-center gap-4 border-b dark:border-gray-700 pb-4 last:border-b-0 last:pb-0">
+                            <div key={item.orderItemId || item.id} className="flex items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0 last:pb-0">
                                 <div className="w-16 h-20 flex-shrink-0 relative rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
                                     <Image
                                         src={item.productImageUrl || '/sample_books.jpg'}

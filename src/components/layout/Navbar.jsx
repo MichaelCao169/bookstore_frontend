@@ -67,6 +67,8 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   const isLoading = useAuthStore((state) => state.isLoading);
   const cartItemCount = useCartStore((state) => state.itemCount);
   const wishlistItemCount = useWishlistStore((state) => state.itemCount);
+  const setWishlistProductIds = useWishlistStore((state) => state.setWishlistProductIds);
+  const setWishlistCount = useWishlistStore((state) => state.setInitialCount);
 
   // Kiểm tra nếu user có role admin
   const isAdmin = user?.roles?.some(role => role === 'ROLE_ADMIN');
@@ -82,6 +84,34 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchRef = useRef(null);
+
+  // Fetch wishlist data when user is authenticated
+  useEffect(() => {
+    const fetchWishlistData = async () => {
+      if (isAuthenticated && !isLoading) {
+        try {
+          const response = await axiosInstance.get('/wishlist');
+          const fetchedData = response.data || { items: [], itemCount: 0 };
+          setWishlistCount(fetchedData.items?.length ?? 0);
+          // Set danh sách productId trong store
+          const productIds = (fetchedData.items || []).map(item => item.productId);
+          setWishlistProductIds(productIds);
+        } catch (error) {
+          console.error('Failed to fetch wishlist data in navbar:', error);
+          // Don't show error toast in navbar, just reset counts
+          setWishlistCount(0);
+          setWishlistProductIds([]);
+        }
+      } else if (!isAuthenticated && !isLoading) {
+        // Clear wishlist data when not authenticated
+        setWishlistCount(0);
+        setWishlistProductIds([]);
+      }
+    };
+
+    fetchWishlistData();
+  }, [isAuthenticated, isLoading, setWishlistCount, setWishlistProductIds]);
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -393,20 +423,20 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
 
                 {showDropdown && (
                   <div
-                    className="absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border dark:border-gray-700 z-50 mt-1"
+                    className="absolute right-0 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-gray-700 z-50 mt-1"
                     onMouseLeave={() => setShowDropdown(false)}
                   >
                     <div className="absolute h-3 w-full top-[-12px]"></div>
 
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700">
+                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-600 hover:text-gray-800 dark:hover:text-white">
                       Hồ sơ của tôi
                     </Link>
-                    <Link href="/orders/my-history" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700">
+                    <Link href="/orders/my-history" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-600 hover:text-gray-800 dark:hover:text-white">
                       Lịch sử đơn hàng
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700"
+                      className="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-orange-100 dark:hover:bg-orange-600 hover:text-gray-800 dark:hover:text-white"
                     >
                       <FiLogOut className="inline mr-2" /> Đăng xuất
                     </button>

@@ -39,8 +39,16 @@ export default function ProductsManagement() {
             // Kiểm tra định dạng phản hồi
             if (response.data && response.data.content) {
                 setProducts(response.data.content);
-                setTotalPages(response.data.totalPages || 1);
-                setCurrentPage(response.data.number || 0);
+
+                // Kiểm tra cấu trúc response mới với nested page object
+                if (response.data.page) {
+                    setTotalPages(response.data.page.totalPages || 1);
+                    setCurrentPage(response.data.page.number || 0);
+                } else {
+                    // Legacy format
+                    setTotalPages(response.data.totalPages || 1);
+                    setCurrentPage(response.data.number || 0);
+                }
             } else {
                 // Nếu phản hồi là mảng thay vì đối tượng phân trang
                 setProducts(Array.isArray(response.data) ? response.data : []);

@@ -51,7 +51,22 @@ async function getProducts(searchParams) {
         }
 
         const data = await res.json();
-        return data; // Trả về đối tượng Page từ API
+
+        // Kiểm tra nếu backend trả về cấu trúc mới với page object
+        if (data.page) {
+            // Flatten pagination data để frontend có thể đọc được
+            return {
+                content: data.content,
+                totalElements: data.page.totalElements,
+                totalPages: data.page.totalPages,
+                number: data.page.number,
+                size: data.page.size,
+                first: data.page.number === 0,
+                last: data.page.number === data.page.totalPages - 1
+            };
+        }
+
+        return data; // Trả về đối tượng Page từ API (legacy format)
 
     } catch (error) {
         console.error("Error fetching products:", error);

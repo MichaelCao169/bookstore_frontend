@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '@/lib/axiosInstance';
 import DashboardCard from '@/components/layout/DashboardCard';
-import { FiShoppingBag, FiPackage, FiUsers, FiDollarSign, FiActivity, FiStar, FiTrendingUp, FiAlertCircle, FiLoader } from 'react-icons/fi';
+import { FiShoppingBag, FiPackage, FiUsers, FiDollarSign, FiActivity, FiStar, FiTrendingUp, FiAlertCircle, FiLoader, FiMessageCircle } from 'react-icons/fi';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import BrandSpinner from '@/components/ui/BrandSpinner';
@@ -17,8 +17,10 @@ export default function AdminDashboard() {
     });
     const [recentOrders, setRecentOrders] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
+    const [recentChats, setRecentChats] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [recalculating, setRecalculating] = useState(false);
 
     // Demo data to use as fallback
     const demoStats = {
@@ -44,124 +46,156 @@ export default function AdminDashboard() {
         { id: 5, title: 'Hành Trình Về Phương Đông', author: 'Baird T. Spalding', price: 88000, soldCount: 118 },
     ];
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                setLoading(true);
-                let hasError = false;
-                let errorDetails = [];
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true);
+            let hasError = false;
+            let errorDetails = [];
 
-                // Xác định token xác thực từ store
-                const token = useAuthStore?.getState()?.accessToken;
-                if (!token) {
-                    console.error('Không tìm thấy access token');
-                    hasError = true;
-                    errorDetails.push('Chưa xác thực');
-                }
-
-                try {
-                    // Thử dùng token trong header thay vì dựa vào interceptor
-                    console.log("Đang gọi API dashboard stats...");
-                    const statsResponse = await axiosInstance.get('/api/admin/dashboard/stats', {
-                        headers: token ? { Authorization: `Bearer ${token}` } : {}
-                    });
-                    console.log("Kết quả API dashboard stats:", statsResponse.data);
-                    setStats(statsResponse.data);
-                } catch (err) {
-                    console.error('Error fetching dashboard stats:', err);
-                    errorDetails.push(`Dashboard stats: ${err.message}`);
-                    if (err.response) {
-                        console.error('API Response:', err.response.status, err.response.data);
-                        errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
-                    }
-                    // Nếu có lỗi, thử dùng dữ liệu mẫu
-                    setStats(demoStats);
-                    hasError = true;
-                }
-
-                try {
-                    // Fetch recent orders với token rõ ràng
-                    console.log("Đang gọi API orders...");
-                    const ordersResponse = await axiosInstance.get('/api/admin/orders', {
-                        params: { page: 0, size: 5 },
-                        headers: token ? { Authorization: `Bearer ${token}` } : {}
-                    });
-                    console.log("Kết quả API orders:", ordersResponse.data);
-
-                    // Map dữ liệu API về định dạng mong muốn
-                    const formattedOrders = ordersResponse.data.content ? ordersResponse.data.content.map(order => ({
-                        id: order.id || order.orderId,
-                        orderId: order.id || order.orderId,
-                        orderDate: order.createdAt || order.orderDate || new Date(),
-                        customerName: order.user?.name || order.userName || 'Khách hàng',
-                        totalAmount: order.total || order.totalAmount || 0,
-                        status: order.status || 'PENDING'
-                    })) : [];
-
-                    setRecentOrders(formattedOrders);
-                } catch (err) {
-                    console.error('Error fetching recent orders:', err);
-                    errorDetails.push(`Orders: ${err.message}`);
-                    if (err.response) {
-                        console.error('API Response:', err.response.status, err.response.data);
-                        errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
-                    }
-                    // Nếu có lỗi, dùng dữ liệu mẫu
-                    const mockDemoOrders = demoOrders.map((order, idx) => ({
-                        ...order,
-                        id: `demo-order-${idx + 1}`
-                    }));
-                    setRecentOrders(mockDemoOrders);
-                    hasError = true;
-                }
-
-                try {
-                    // Fetch top products với token rõ ràng
-                    console.log("Đang gọi API top products...");
-                    const productsResponse = await axiosInstance.get('/api/products/top-selling', {
-                        headers: token ? { Authorization: `Bearer ${token}` } : {}
-                    });
-                    console.log("Kết quả API top products:", productsResponse.data);                    // Đảm bảo dữ liệu có định dạng nhất quán
-                    const formattedProducts = productsResponse.data.map(product => ({
-                        productId: product.productId,
-                        title: product.title,
-                        author: product.author || 'Tác giả',
-                        currentPrice: product.currentPrice || 0,
-                        soldCount: product.soldCount || 0
-                    }));
-
-                    setTopProducts(formattedProducts);
-                } catch (err) {
-                    console.error('Error fetching top products:', err);
-                    errorDetails.push(`Top products: ${err.message}`);
-                    if (err.response) {
-                        console.error('API Response:', err.response.status, err.response.data);
-                        errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
-                    }
-                    // Nếu có lỗi, dùng dữ liệu mẫu
-                    setTopProducts(demoProducts);
-                    hasError = true;
-                }
-
-                if (hasError) {
-                    setError(`⚠️ ĐANG HIỂN THỊ DỮ LIỆU MẪU: Không thể tải dữ liệu thực từ server. Lỗi: ${errorDetails.join(' | ')}`);
-                } else {
-                    setError(null);
-                }
-
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching dashboard data:', error);
-                setError(`⚠️ ĐANG HIỂN THỊ DỮ LIỆU MẪU: Lỗi chung khi tải dữ liệu: ${error.message}`);
-                setStats(demoStats);
-                setRecentOrders(demoOrders.map((order, idx) => ({ ...order, id: `demo-order-${idx + 1}` })));
-                setTopProducts(demoProducts);
-                setLoading(false);
+            // Xác định token xác thực từ store
+            const token = useAuthStore?.getState()?.accessToken;
+            if (!token) {
+                console.error('Không tìm thấy access token');
+                hasError = true;
+                errorDetails.push('Chưa xác thực');
             }
-        };
 
-        fetchDashboardData();
-    }, []);
+            try {
+                // Thử dùng token trong header thay vì dựa vào interceptor
+                console.log("Đang gọi API dashboard stats...");
+                const statsResponse = await axiosInstance.get('/api/admin/dashboard/stats', {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                console.log("Kết quả API dashboard stats:", statsResponse.data);
+                setStats(statsResponse.data);
+            } catch (err) {
+                console.error('Error fetching dashboard stats:', err);
+                errorDetails.push(`Dashboard stats: ${err.message}`);
+                if (err.response) {
+                    console.error('API Response:', err.response.status, err.response.data);
+                    errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
+                }
+                // Nếu có lỗi, thử dùng dữ liệu mẫu
+                setStats(demoStats);
+                hasError = true;
+            }
+
+            try {
+                // Fetch recent orders với token rõ ràng
+                console.log("Đang gọi API orders...");
+                const ordersResponse = await axiosInstance.get('/api/admin/orders', {
+                    params: { page: 0, size: 5 },
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                console.log("Kết quả API orders:", ordersResponse.data);
+
+                // Map dữ liệu API về định dạng mong muốn
+                const formattedOrders = ordersResponse.data.content ? ordersResponse.data.content.map(order => ({
+                    id: order.id || order.orderId,
+                    orderId: order.id || order.orderId,
+                    orderDate: order.createdAt || order.orderDate || new Date(),
+                    customerName: order.user?.name || order.userName || 'Khách hàng',
+                    totalAmount: order.total || order.totalAmount || 0,
+                    status: order.status || 'PENDING'
+                })) : [];
+
+                setRecentOrders(formattedOrders);
+            } catch (err) {
+                console.error('Error fetching recent orders:', err);
+                errorDetails.push(`Orders: ${err.message}`);
+                if (err.response) {
+                    console.error('API Response:', err.response.status, err.response.data);
+                    errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
+                }
+                // Nếu có lỗi, dùng dữ liệu mẫu
+                const mockDemoOrders = demoOrders.map((order, idx) => ({
+                    ...order,
+                    id: `demo-order-${idx + 1}`
+                }));
+                setRecentOrders(mockDemoOrders);
+                hasError = true;
+            }
+
+            try {
+                // Fetch top products với token rõ ràng
+                console.log("Đang gọi API top products...");
+                const productsResponse = await axiosInstance.get('/api/products/top-selling', {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                console.log("Kết quả API top products:", productsResponse.data);                    // Đảm bảo dữ liệu có định dạng nhất quán
+                const formattedProducts = productsResponse.data.map(product => ({
+                    productId: product.productId,
+                    title: product.title,
+                    author: product.author || 'Tác giả',
+                    currentPrice: product.currentPrice || 0,
+                    soldCount: product.soldCount || 0
+                }));
+
+                setTopProducts(formattedProducts);
+            } catch (err) {
+                console.error('Error fetching top products:', err);
+                errorDetails.push(`Top products: ${err.message}`);
+                if (err.response) {
+                    console.error('API Response:', err.response.status, err.response.data);
+                    errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
+                }
+                // Nếu có lỗi, dùng dữ liệu mẫu
+                setTopProducts(demoProducts);
+                hasError = true;
+            }
+
+            try {
+                // Fetch recent chats với token rõ ràng
+                console.log("Đang gọi API recent chats...");
+                const chatsResponse = await axiosInstance.get('/api/chat/admin/conversations', {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {}
+                });
+                console.log("Kết quả API recent chats:", chatsResponse.data);
+
+                // Format chat data and get only the 5 most recent
+                const formattedChats = chatsResponse.data
+                    .sort((a, b) => new Date(b.lastMessageTimestamp || b.updatedAt) - new Date(a.lastMessageTimestamp || a.updatedAt))
+                    .slice(0, 5)
+                    .map(chat => ({
+                        id: chat.id,
+                        userName: chat.customerName || chat.user?.name || 'Người dùng',
+                        userAvatar: chat.customerAvatar || '/default-avatar.png',
+                        lastMessage: chat.lastMessageContent || 'Không có tin nhắn',
+                        timestamp: chat.lastMessageTimestamp || chat.updatedAt || new Date(),
+                        isRead: chat.unreadCountAdmin === 0,
+                        isOnline: chat.isCustomerOnline || false
+                    }));
+
+                setRecentChats(formattedChats);
+            } catch (err) {
+                console.error('Error fetching recent chats:', err);
+                errorDetails.push(`Recent chats: ${err.message}`);
+                if (err.response) {
+                    console.error('API Response:', err.response.status, err.response.data);
+                    errorDetails.push(`Status: ${err.response.status}, Data: "${JSON.stringify(err.response.data)}"`);
+                }
+                // Nếu có lỗi, để trống danh sách chat
+                setRecentChats([]);
+                hasError = true;
+            }
+
+            if (hasError) {
+                setError(`⚠️ ĐANG HIỂN THỊ DỮ LIỆU MẪU: Không thể tải dữ liệu thực từ server. Lỗi: ${errorDetails.join(' | ')}`);
+            } else {
+                setError(null);
+            }
+
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+            setError(`⚠️ ĐANG HIỂN THỊ DỮ LIỆU MẪU: Lỗi chung khi tải dữ liệu: ${error.message}`);
+            setStats(demoStats);
+            setRecentOrders(demoOrders.map((order, idx) => ({ ...order, id: `demo-order-${idx + 1}` })));
+            setTopProducts(demoProducts);
+            setRecentChats([]);
+            setLoading(false);
+        }
+    };
 
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -172,10 +206,29 @@ export default function AdminDashboard() {
         return new Date(dateString).toLocaleDateString('vi-VN', options);
     };
 
+    const formatChatTime = (timestamp) => {
+        const now = new Date();
+        const chatTime = new Date(timestamp);
+        const diffInMinutes = Math.floor((now - chatTime) / (1000 * 60));
+
+        if (diffInMinutes < 1) return 'Vừa xong';
+        if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours} giờ trước`;
+
+        const diffInDays = Math.floor(diffInHours / 24);
+        return `${diffInDays} ngày trước`;
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
+            case 'PENDING_PAYMENT':
+                return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300';
             case 'PENDING':
                 return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+            case 'PAID':
+                return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300';
             case 'PROCESSING':
                 return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
             case 'SHIPPED':
@@ -184,6 +237,8 @@ export default function AdminDashboard() {
                 return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
             case 'CANCELLED':
                 return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+            case 'PAYMENT_FAILED':
+                return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
             default:
                 return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
         }
@@ -191,8 +246,12 @@ export default function AdminDashboard() {
 
     const getStatusTranslation = (status) => {
         switch (status) {
+            case 'PENDING_PAYMENT':
+                return 'Chờ thanh toán';
             case 'PENDING':
                 return 'Chờ xử lý';
+            case 'PAID':
+                return 'Đã thanh toán';
             case 'PROCESSING':
                 return 'Đang xử lý';
             case 'SHIPPED':
@@ -201,10 +260,34 @@ export default function AdminDashboard() {
                 return 'Đã giao hàng';
             case 'CANCELLED':
                 return 'Đã hủy';
+            case 'PAYMENT_FAILED':
+                return 'Thanh toán thất bại';
             default:
                 return status;
         }
     };
+
+    const handleRecalculateSoldCount = async () => {
+        try {
+            setRecalculating(true);
+            const response = await axiosInstance.post('/api/admin/dashboard/recalculate-sold-count');
+            console.log('Recalculate response:', response.data);
+
+            // Refresh the dashboard data after recalculation
+            fetchDashboardData();
+
+            alert('Đã cập nhật thành công số lượng bán cho tất cả sản phẩm!');
+        } catch (error) {
+            console.error('Error recalculating sold count:', error);
+            alert('Có lỗi xảy ra khi cập nhật số lượng bán. Vui lòng thử lại.');
+        } finally {
+            setRecalculating(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
 
     if (loading) {
         return (
@@ -245,33 +328,29 @@ export default function AdminDashboard() {
                     value={stats.totalOrders}
                     color="bg-orange-100"
                     darkColor="bg-orange-900/30"
-                    iconComponent={<FiShoppingBag className="text-orange-600 dark:text-orange-400" />}
                 />
                 <DashboardCard
                     title="Tổng sản phẩm"
                     value={stats.totalProducts}
                     color="bg-green-100"
                     darkColor="bg-green-900/30"
-                    iconComponent={<FiPackage className="text-green-600 dark:text-green-400" />}
                 />
                 <DashboardCard
                     title="Tổng người dùng"
                     value={stats.totalUsers}
                     color="bg-blue-100"
                     darkColor="bg-blue-900/30"
-                    iconComponent={<FiUsers className="text-blue-600 dark:text-blue-400" />}
                 />
                 <DashboardCard
                     title="Tổng doanh thu"
                     value={formatCurrency(stats.totalRevenue)}
                     color="bg-purple-100"
                     darkColor="bg-purple-900/30"
-                    iconComponent={<FiDollarSign className="text-purple-600 dark:text-purple-400" />}
                 />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div className="lg:col-span-3 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                             <FiShoppingBag className="mr-2 text-orange-500" /> Đơn hàng gần đây
@@ -286,16 +365,16 @@ export default function AdminDashboard() {
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Mã
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Mã đơn hàng
                                         </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Ngày
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                            Ngày đặt
                                         </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Tổng tiền
                                         </th>
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
                                             Trạng thái
                                         </th>
                                     </tr>
@@ -303,19 +382,23 @@ export default function AdminDashboard() {
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     {recentOrders.map((order) => (
                                         <tr key={order.id || order.orderId || `order-${Math.random()}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <Link href={`/admin/orders/${order.id || order.orderId}`} className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium">
-                                                    #{order.id || order.orderId}
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <Link
+                                                    href={`/admin/orders/${order.id || order.orderId}`}
+                                                    className="text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 font-medium"
+                                                    title={order.id || order.orderId}
+                                                >
+                                                    {String(order.id || order.orderId).substring(0, 6)}...
                                                 </Link>
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">
                                                 {formatDate(order.orderDate)}
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-300 text-sm">
                                                 {formatCurrency(order.totalAmount)}
                                             </td>
-                                            <td className="px-4 py-3 whitespace-nowrap">
-                                                <span className={`px-2 py-1 text-xs rounded-full inline-flex items-center ${getStatusColor(order.status)}`}>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-3 py-1 text-xs rounded-full inline-flex items-center whitespace-nowrap ${getStatusColor(order.status)}`}>
                                                     {getStatusTranslation(order.status)}
                                                 </span>
                                             </td>
@@ -331,46 +414,130 @@ export default function AdminDashboard() {
                     )}
                 </div>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                            <FiTrendingUp className="mr-2 text-orange-500" /> Sản phẩm bán chạy
+                            <FiMessageCircle className="mr-2 text-orange-500" /> Chat gần đây
                         </h2>
-                        <Link href="/admin/products" className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">
+                        <Link href="/admin/chat" className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">
                             Xem tất cả
                         </Link>
                     </div>
 
-                    {topProducts && topProducts.length > 0 ? (
-                        <div className="divide-y divide-gray-200 dark:divide-gray-700">                            {topProducts.map((product, index) => (
-                            <div key={product.productId} className="py-3 flex items-center space-x-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index < 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
-                                    {index + 1}
+                    {recentChats && recentChats.length > 0 ? (
+                        <div className="space-y-4">
+                            {recentChats.map((chat) => (
+                                <Link
+                                    key={chat.id}
+                                    href={`/admin/chat?conversation=${chat.id}`}
+                                    className="flex items-start space-x-4 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-100 dark:border-gray-600 hover:border-orange-200 dark:hover:border-orange-700"
+                                >
+                                    <div className="relative flex-shrink-0">
+                                        <div className="w-12 h-12 rounded-full overflow-hidden">
+                                            <img
+                                                src={chat.userAvatar}
+                                                alt={chat.userName}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.src = '/default-avatar.png';
+                                                }}
+                                            />
+                                        </div>
+                                        {chat.isOnline && (
+                                            <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-800"></span>
+                                        )}
+                                        {!chat.isRead && (
+                                            <span className="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-orange-500 ring-2 ring-white dark:ring-gray-800"></span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <p className={`text-sm font-medium truncate ${!chat.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+                                                {chat.userName}
+                                            </p>
+                                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
+                                                {formatChatTime(chat.timestamp)}
+                                            </span>
+                                        </div>
+                                        <p className={`text-sm truncate ${!chat.isRead ? 'text-gray-700 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                                            {chat.lastMessage}
+                                        </p>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8">
+                            <FiMessageCircle className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+                            <p className="text-gray-500 dark:text-gray-400">Chưa có tin nhắn nào</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Top Products Section - Moved Below */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                        <FiTrendingUp className="mr-2 text-orange-500" /> Sản phẩm bán chạy
+                    </h2>
+                    <div className="flex items-center space-x-3">
+                        <button
+                            onClick={handleRecalculateSoldCount}
+                            disabled={recalculating}
+                            className="px-3 py-1.5 text-xs bg-orange-100 hover:bg-orange-200 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 text-orange-700 dark:text-orange-300 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                        >
+                            {recalculating ? (
+                                <>
+                                    <FiLoader className="animate-spin mr-1" />
+                                    Đang cập nhật...
+                                </>
+                            ) : (
+                                <>
+                                    <FiActivity className="mr-1" />
+                                    Cập nhật số liệu
+                                </>
+                            )}
+                        </button>
+                        <Link href="/admin/products" className="text-sm text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300">
+                            Xem tất cả
+                        </Link>
+                    </div>
+                </div>
+
+                {topProducts && topProducts.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+                        {topProducts.map((product, index) => (
+                            <div key={product.productId} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
+                                <div className="flex items-center space-x-3 mb-3">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${index < 3 ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>
+                                        {index + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <Link href={`/admin/products/edit/${product.productId}`} className="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 font-medium truncate block">
+                                            {product.title}
+                                        </Link>
+                                    </div>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <Link href={`/admin/products/edit/${product.productId}`} className="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 font-medium truncate">
-                                        {product.title}
-                                    </Link>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                        {product.author}
-                                    </p>
-                                </div>                    <div className="text-right">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-2">
+                                    {product.author}
+                                </p>
+                                <div className="flex items-center justify-between">
                                     <p className="text-gray-900 dark:text-white font-medium">
                                         {formatCurrency(product.currentPrice)}
                                     </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-end">
-                                        <FiStar className="text-yellow-400 mr-1" /> {product.soldCount || 0} đã bán
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                                        <FiStar className="text-yellow-400 mr-1" /> {product.soldCount || 0}
                                     </p>
                                 </div>
                             </div>
                         ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-8">
-                            <p className="text-gray-500 dark:text-gray-400">Chưa có dữ liệu sản phẩm bán chạy</p>
-                        </div>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <div className="text-center py-8">
+                        <p className="text-gray-500 dark:text-gray-400">Chưa có dữ liệu sản phẩm bán chạy</p>
+                    </div>
+                )}
             </div>
         </div>
     );

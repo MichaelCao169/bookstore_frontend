@@ -49,7 +49,8 @@ const ProductCard = ({ product }) => {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const fetchCartCount = useCartStore((state) => state.fetchCartCount);
-  const incrementWishlistCount = useWishlistStore((state) => state.incrementItemCount);
+  const addProductToWishlist = useWishlistStore((state) => state.addProductToWishlist);
+  const isInWishlist = useWishlistStore((state) => state.isInWishlist);
 
   // Kiểm tra và xử lý URL hình ảnh khi component mount
   useEffect(() => {
@@ -128,11 +129,12 @@ const ProductCard = ({ product }) => {
     setIsAddingToWishlist(true); try {
       await axiosInstance.post(`/wishlist/products/${product.productId}`);
       toast.success('Đã thêm sản phẩm vào danh sách yêu thích!');
-      incrementWishlistCount();
+      addProductToWishlist(product.productId);
       setAddedToWishlist(true);
     } catch (error) {
       if (error.response?.status === 409) {
         toast.info('Sản phẩm đã có trong danh sách yêu thích.');
+        addProductToWishlist(product.productId);
         setAddedToWishlist(true);
       } else {
         const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể thêm vào danh sách yêu thích.';
@@ -146,6 +148,9 @@ const ProductCard = ({ product }) => {
   if (!product) {
     return null;
   }
+
+  // Kiểm tra xem sản phẩm đã có trong wishlist chưa
+  const productInWishlist = isInWishlist(product.productId) || addedToWishlist;
 
   return (<Link
     href={`/products/${product.productId}`}
@@ -183,24 +188,20 @@ const ProductCard = ({ product }) => {
         </div>
       )}
 
-      {/* Nút thêm vào danh sách yêu thích */}
-      <button
-        onClick={handleAddToWishlist}
-        disabled={isAddingToWishlist}
-        className={`absolute top-2 right-2 p-2 rounded-full text-white shadow-md transition-all duration-200 z-10
-            ${addedToWishlist
-            ? 'bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 opacity-100'
-            : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 opacity-0 group-hover:opacity-100'
-          }`}
-        title={addedToWishlist ? 'Đã thêm vào yêu thích' : 'Thêm vào yêu thích'}
-      >          {isAddingToWishlist ? (
-        <BrandSpinner size="sm" />
-      ) : addedToWishlist ? (
-        <FiCheck size={18} />
-      ) : (
-        <FiHeart size={18} />
+      {/* Nút thêm vào danh sách yêu thích - chỉ hiện khi chưa có trong wishlist */}
+      {!productInWishlist && (
+        <button
+          onClick={handleAddToWishlist}
+          disabled={isAddingToWishlist}
+          className="absolute top-2 right-2 p-2 rounded-full text-white shadow-md transition-all duration-200 z-10 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 opacity-0 group-hover:opacity-100"
+          title="Thêm vào yêu thích"
+        >                    {isAddingToWishlist ? (
+          <BrandSpinner size="sm" />
+        ) : (
+          <FiHeart size={18} />
+        )}
+        </button>
       )}
-      </button>
     </div>
 
     {/* Thông tin sản phẩm */}
@@ -256,7 +257,7 @@ const ProductCard = ({ product }) => {
     >{isAddingToCart ? (
       <BrandSpinner size="sm" />
     ) : (
-      <BsCartPlus size={18} />
+      <FiShoppingCart size={18} />
     )}
     </button>
   </Link>

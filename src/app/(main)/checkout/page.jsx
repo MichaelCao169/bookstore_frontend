@@ -11,6 +11,7 @@ import { FiShoppingCart, FiMapPin, FiPhone, FiUser, FiCreditCard, FiLoader, FiAl
 import { formatCurrency } from '@/components/order/OrderHelpers';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 import { cities, getDistrictsByCity } from '@/data/vietnamLocations';
+import { vnpayService } from '@/services/vnpayService';
 
 // Components Loading/Error
 const LoadingSpinner = () => (
@@ -50,6 +51,7 @@ const CheckoutPage = () => {
     const [country, setCountry] = useState('Việt Nam');
     const [notes, setNotes] = useState('');
     const [formErrors, setFormErrors] = useState({});
+    const [paymentMethod, setPaymentMethod] = useState('COD');
 
     // State cho dropdown địa chỉ
     const [availableDistricts, setAvailableDistricts] = useState([]);
@@ -184,13 +186,23 @@ const CheckoutPage = () => {
 
         const orderRequest = {
             shippingAddress: addressData,
-            paymentMethod: 'COD',
+            paymentMethod: paymentMethod,
             notes: notes,
         };
 
         try {
             console.log('Placing order with data:', orderRequest);
             const response = await axiosInstance.post('/orders', orderRequest);
+
+            // Nếu là VNPay, response sẽ chứa paymentUrl
+            if (paymentMethod === 'VNPAY' && response.data.paymentUrl) {
+                console.log('Redirecting to VNPay payment:', response.data);
+                toast.info('Đang chuyển hướng đến trang thanh toán VNPay...');
+                vnpayService.redirectToPayment(response.data.paymentUrl);
+                return;
+            }
+
+            // Nếu là COD hoặc thanh toán khác
             const createdOrder = response.data;
             console.log('Order placed successfully:', createdOrder);
             toast.success(`Đơn hàng #${createdOrder.orderId} đã được đặt thành công!`);
@@ -407,24 +419,82 @@ const CheckoutPage = () => {
                                     Phương thức thanh toán
                                 </h3>
 
-                                <div className="border-2 border-orange-300 dark:border-orange-700 rounded-xl p-6 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20">
-                                    <label className="flex items-center cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="paymentMethod"
-                                            className="h-5 w-5 text-orange-600 border-gray-300 focus:ring-orange-500 dark:border-gray-600"
-                                            checked
-                                            readOnly
-                                        />
-                                        <div className="ml-4">
-                                            <span className="block text-lg font-semibold text-orange-800 dark:text-orange-200">
-                                                Thanh toán khi nhận hàng (COD)
-                                            </span>
-                                            <p className="text-sm text-orange-600 dark:text-orange-300 mt-1">
-                                                Bạn sẽ thanh toán bằng tiền mặt cho nhân viên giao hàng khi nhận được sản phẩm
-                                            </p>
-                                        </div>
-                                    </label>
+                                <div className="space-y-4">
+                                    {/* COD Option */}
+                                    <div className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${paymentMethod === 'COD'
+                                        ? 'border-orange-300 dark:border-orange-700 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20'
+                                        : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:border-orange-200 dark:hover:border-orange-600'
+                                        }`} onClick={() => setPaymentMethod('COD')}>
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="paymentMethod"
+                                                value="COD"
+                                                checked={paymentMethod === 'COD'}
+                                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                                className="h-5 w-5 text-orange-600 border-gray-300 focus:ring-orange-500 dark:border-gray-600"
+                                            />
+                                            <div className="ml-4">
+                                                <span className={`block text-lg font-semibold ${paymentMethod === 'COD'
+                                                    ? 'text-orange-800 dark:text-orange-200'
+                                                    : 'text-gray-700 dark:text-gray-300'
+                                                    }`}>
+                                                    Thanh toán khi nhận hàng (COD)
+                                                </span>
+                                                <p className={`text-sm mt-1 ${paymentMethod === 'COD'
+                                                    ? 'text-orange-600 dark:text-orange-300'
+                                                    : 'text-gray-500 dark:text-gray-400'
+                                                    }`}>
+                                                    Bạn sẽ thanh toán bằng tiền mặt cho nhân viên giao hàng khi nhận được sản phẩm
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    {/* VNPay Option */}
+                                    <div className={`border-2 rounded-xl p-6 cursor-pointer transition-all ${paymentMethod === 'VNPAY'
+                                        ? 'border-blue-300 dark:border-blue-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20'
+                                        : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:border-blue-200 dark:hover:border-blue-600'
+                                        }`} onClick={() => setPaymentMethod('VNPAY')}>
+                                        <label className="flex items-center cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="paymentMethod"
+                                                value="VNPAY"
+                                                checked={paymentMethod === 'VNPAY'}
+                                                onChange={(e) => setPaymentMethod(e.target.value)}
+                                                className="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 dark:border-gray-600"
+                                            />
+                                            <div className="ml-4 flex-grow">
+                                                <div className="flex items-center">
+                                                    <span className={`block text-lg font-semibold ${paymentMethod === 'VNPAY'
+                                                        ? 'text-blue-800 dark:text-blue-200'
+                                                        : 'text-gray-700 dark:text-gray-300'
+                                                        }`}>
+                                                        Thanh toán online qua VNPay
+                                                    </span>
+                                                    <div className="ml-2 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded text-xs font-medium">
+                                                        An toàn
+                                                    </div>
+                                                </div>
+                                                <p className={`text-sm mt-1 ${paymentMethod === 'VNPAY'
+                                                    ? 'text-blue-600 dark:text-blue-300'
+                                                    : 'text-gray-500 dark:text-gray-400'
+                                                    }`}>
+                                                    Thanh toán bằng thẻ ATM, thẻ tín dụng, ví điện tử qua cổng VNPay
+                                                </p>
+                                                <div className="flex items-center mt-2 space-x-2">
+                                                    <span className="text-xs text-gray-500">Hỗ trợ:</span>
+                                                    <div className="flex space-x-1">
+                                                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Visa</span>
+                                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Mastercard</span>
+                                                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">ATM</span>
+                                                        <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">QR Code</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -484,17 +554,19 @@ const CheckoutPage = () => {
                                 <button
                                     onClick={handlePlaceOrder}
                                     disabled={isPlacingOrder}
-                                    className="mt-8 w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105"
+                                    className={`mt-8 w-full text-white px-6 py-4 rounded-xl font-semibold text-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 ${paymentMethod === 'VNPAY'
+                                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                                        : 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600'
+                                        }`}
                                 >
                                     {isPlacingOrder ? (
                                         <>
                                             <BrandSpinner size="sm" className="mr-3" />
-                                            Đang xử lý...
+                                            {paymentMethod === 'VNPAY' ? 'Đang tạo thanh toán...' : 'Đang xử lý...'}
                                         </>
                                     ) : (
                                         <>
-                                            <FiCheckCircle className="mr-3" />
-                                            Đặt hàng ngay
+                                            {paymentMethod === 'VNPAY' ? 'Thanh toán với VNPay' : 'Đặt hàng ngay'}
                                         </>
                                     )}
                                 </button>

@@ -36,10 +36,12 @@ export default function DashboardCard({ title, value, icon, iconComponent, color
 
     return (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-lg">
-            <div className="flex items-center space-x-4">
-                <div className={`w-14 h-14 ${color} dark:${darkColor || color} rounded-full flex items-center justify-center text-2xl shadow-sm`}>
-                    {iconComponent || icon}
-                </div>
+            <div className={`flex items-center ${iconComponent || icon ? 'space-x-4' : ''}`}>
+                {(iconComponent || icon) && (
+                    <div className={`w-14 h-14 ${color} dark:${darkColor || color} rounded-full flex items-center justify-center text-2xl shadow-sm`}>
+                        {iconComponent || icon}
+                    </div>
+                )}
                 <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
                     <p className="text-2xl font-bold text-gray-800 dark:text-white">

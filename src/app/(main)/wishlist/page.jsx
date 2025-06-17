@@ -74,7 +74,8 @@ const WishlistPage = () => {
   const isAuthLoading = useAuthStore((state) => state.isLoading);
   const logoutAction = useAuthStore((state) => state.logout);
   const setWishlistCount = useWishlistStore((state) => state.setInitialCount);
-  const decrementWishlistCount = useWishlistStore((state) => state.decrementItemCount);
+  const setWishlistProductIds = useWishlistStore((state) => state.setWishlistProductIds);
+  const removeProductFromWishlist = useWishlistStore((state) => state.removeProductFromWishlist);
 
   const router = useRouter();
 
@@ -87,6 +88,9 @@ const WishlistPage = () => {
       const fetchedData = response.data || { items: [], itemCount: 0 };
       setWishlistItems(fetchedData.items || []);
       setWishlistCount(fetchedData.items?.length ?? 0);
+      // Set danh sách productId trong store
+      const productIds = (fetchedData.items || []).map(item => item.productId);
+      setWishlistProductIds(productIds);
     } catch (err) {
       console.error('Lỗi khi tải danh sách yêu thích:', err);
       if (err.response?.status === 401) {
@@ -127,7 +131,7 @@ const WishlistPage = () => {
       await axiosInstance.delete(`/wishlist/products/${productId}`);
       toast.success(`Đã xóa "${productTitle}" khỏi danh sách yêu thích.`);
       setWishlistItems(prevItems => prevItems.filter(item => item.productId !== productId));
-      decrementWishlistCount();
+      removeProductFromWishlist(productId);
     } catch (error) {
       console.error(`Lỗi khi xóa sản phẩm ${productId} khỏi danh sách yêu thích:`, error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể xóa sản phẩm.';
@@ -135,7 +139,7 @@ const WishlistPage = () => {
     } finally {
       setRemovingItemId(null);
     }
-  }, [removingItemId, decrementWishlistCount]);
+  }, [removingItemId, removeProductFromWishlist]);
 
   // Hàm xóa tất cả sản phẩm khỏi wishlist
   const handleClearWishlist = useCallback(async () => {
@@ -266,7 +270,7 @@ const WishlistPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">            {wishlistItems.map((product) => (
             <div key={product.productId} className={`relative group transition-opacity duration-300 ${removingItemId === product.productId ? 'opacity-50 pointer-events-none' : ''}`}>
               <ProductCard product={product} />
-              <div className="absolute top-2 left-2 flex space-x-2 z-20">
+              <div className="absolute top-2 right-2 flex space-x-2 z-20">
                 <button
                   onClick={() => handleRemoveFromWishlist(product.productId, product.title)}
                   disabled={removingItemId === product.productId}

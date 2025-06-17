@@ -34,19 +34,20 @@ async function getBestsellers() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   try {
-    // In a real app, this would call a specific bestseller endpoint
-    const res = await fetch(`${apiUrl}/products?page=0&size=4&sort=soldCount,desc`, {
+    // Use the dedicated top-selling endpoint
+    const res = await fetch(`${apiUrl}/products/top-selling`, {
       method: 'GET',
       next: { revalidate: 3600 } // Cache 1 hour
     });
 
-    if (!res.ok) return { content: [] };
+    if (!res.ok) return [];
 
     const data = await res.json();
-    return data;
+    // The top-selling endpoint returns an array directly, not a paginated response
+    return data.slice(0, 4); // Take only first 4 for homepage
   } catch (error) {
     console.error("Error fetching bestsellers:", error);
-    return { content: [] };
+    return [];
   }
 }
 
@@ -116,6 +117,17 @@ export default async function HomePage() {
         <CuratedCollections products={bestsellersData.content} />
       </section>
       */}
+
+      {/* Bestsellers Section */}
+      <section className="container mx-auto px-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Sách bán chạy</h2>
+          <a href="/products?sort=soldCount,desc" className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-medium text-sm">
+            Xem tất cả →
+          </a>
+        </div>
+        <CuratedCollections products={bestsellersData} />
+      </section>
 
       {/* Special Offers */}
       <section className="bg-gray-50 dark:bg-gray-800/50 py-12">
