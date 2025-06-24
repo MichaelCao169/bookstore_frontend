@@ -1,11 +1,10 @@
-// src/components/chat/admin/AdminChatWindow.jsx
 'use client';
 import React, { useEffect, useRef } from 'react';
 import { FiInfo, FiPaperclip } from 'react-icons/fi';
 import { useChatStore } from '@/store/chatStore';
 import { useAuthStore } from '@/store/authStore';
-import MessageItem from '../MessageItem'; // Re-use
-import ChatInput from '../ChatInput';   // Re-use
+import MessageItem from '../MessageItem'; 
+import ChatInput from '../ChatInput';  
 import Image from 'next/image';
 import { FiMessageSquare } from 'react-icons/fi';
 
@@ -14,10 +13,7 @@ const AdminChatWindow = () => {
     adminActiveConversationId,
     adminConversations,
     adminMessages,
-    sendAdminMessage,
-    isConnected,
-    isConnecting,
-    initializeAdminChat
+    sendAdminMessage
   } = useChatStore();
   const { user: currentUser } = useAuthStore();
   const messagesEndRef = useRef(null);

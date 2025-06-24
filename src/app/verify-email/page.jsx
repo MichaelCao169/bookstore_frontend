@@ -26,7 +26,7 @@ export default function VerifyEmail() {
 
             try {
                 // Call the API to verify the email
-                await axiosInstance.get(`/api/auth/verify-email?token=${token}`);
+                await axiosInstance.get(`/auth/verify-email?token=${token}`);
                 setSuccess(true);
                 setVerifying(false);
             } catch (err) {

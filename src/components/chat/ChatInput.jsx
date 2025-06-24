@@ -1,7 +1,6 @@
-// src/components/chat/ChatInput.jsx
-'use client'; // Đặt directive này ở dòng ĐẦU TIÊN
+'use client'; 
 
-import { useState, useRef } from 'react'; // Bỏ dòng `_USE_CLIENT_DIRECTIVE_` ở đây
+import { useState, useRef } from 'react'; 
 import { FiSend, FiPaperclip, FiX } from 'react-icons/fi';
 import { uploadChatFile, formatFileSize } from '@/services/fileUploadService';
 import BrandSpinner from '@/components/ui/BrandSpinner';

@@ -1,4 +1,4 @@
-// src/app/page.jsx
+
 import HeroSection from '@/components/home/HeroSection';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import CuratedCollections from '@/components/home/CuratedCollections';
@@ -105,18 +105,7 @@ export default async function HomePage() {
         <NewArrivals products={newArrivalsData.content} />
       </section>
 
-      {/* Bestsellers and Staff Picks - tạm thời ẩn */}
-      {/* 
-      <section className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Sách bán chạy</h2>
-          <a href="/products?sort=soldCount,desc" className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-medium text-sm">
-            Xem tất cả →
-          </a>
-        </div>
-        <CuratedCollections products={bestsellersData.content} />
-      </section>
-      */}
+      
 
       {/* Bestsellers Section */}
       <section className="container mx-auto px-4">

@@ -1,14 +1,12 @@
-// src/lib/axiosInstance.js
 import axios from 'axios';
-import { useAuthStore } from '@/store/authStore'; // *** IMPORT AUTH STORE ***
-
+import { useAuthStore } from '@/store/authStore'; 
 // Sử dụng URL đầy đủ thay vì biến môi trường
 // const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
 const apiBaseUrl = 'http://localhost:8080';  // Quay lại URL gốc, không thêm /api
 
-// IMPORTANT: Set this to true to bypass authentication completely for API calls
-// This should match the same setting in admin layout
-const FORCE_BYPASS_AUTH = false; // Set to false in production
+// QUAN TRỌNG: Đặt thành true để bỏ qua hoàn toàn xác thực cho các lời gọi API
+// Cài đặt này phải khớp với cài đặt tương tự trong layout admin
+const FORCE_BYPASS_AUTH = false; // Đặt thành false trong production
 
 const axiosInstance = axios.create({
   baseURL: apiBaseUrl,
@@ -52,7 +50,7 @@ function logApiCall(method, url, headers, data = null) {
   console.groupEnd();
 }
 
-// --- Request Interceptor ---
+// --- Interceptor Request ---
 axiosInstance.interceptors.request.use(
   (config) => {
     // Tự động thêm prefix /api/ vào các URL nếu chưa có
@@ -61,7 +59,7 @@ axiosInstance.interceptors.request.use(
       config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
     }
     
-    // For admin routes in bypass mode, use a demo token or skip authentication
+    // Đối với các route admin trong chế độ bypass, sử dụng token demo hoặc bỏ qua xác thực
     if (FORCE_BYPASS_AUTH && config.url && 
         (config.url.includes('/admin/') || 
          config.url.includes('/users/') || 
@@ -69,19 +67,19 @@ axiosInstance.interceptors.request.use(
          config.url.includes('/orders/') ||
          config.url.includes('/dashboard/'))) {
       console.log(`Interceptor: Bypassing authentication for admin route: ${config.url}`);
-      // Either skip token completely or use a mock token
+      // Bỏ qua token hoàn toàn hoặc sử dụng token giả
       // config.headers['Authorization'] = 'Bearer mock-token-for-development';
       return config;
     }
     
-    // Normal auth flow - only add token for non-refresh endpoints
+    // Luồng xác thực bình thường - chỉ thêm token cho các endpoint không phải refresh
     const token = useAuthStore.getState().accessToken;
     if (token && config.url && !config._skipAuthCheck) {
       console.log(`Adding auth token to request: ${config.url}`);
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // Log request details
+    // Ghi log chi tiết request
     logApiCall(config.method.toUpperCase(), config.url, config.headers, config.data);
     
     return config;
@@ -92,7 +90,7 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// --- Response Interceptor ---
+// --- Interceptor Response ---
 // Biến để tránh vòng lặp refresh vô hạn
 let isRefreshing = false;
 // Hàng đợi chứa các request bị lỗi 401 trong khi đang refresh token
@@ -111,15 +109,15 @@ const processQueue = (error, token = null) => {
 
 // Hàm chuyển hướng đến trang login
 const redirectToLogin = () => {
-  // Check if we're in a browser environment
+  // Kiểm tra xem có đang ở môi trường trình duyệt không
   if (typeof window !== 'undefined') {
-    // Store the current URL to redirect back after login (optional)
+    // Lưu URL hiện tại để chuyển hướng trở lại sau khi đăng nhập (tùy chọn)
     const currentPath = window.location.pathname;
     if (!currentPath.includes('/login') && !currentPath.includes('/register')) {
       sessionStorage.setItem('redirectAfterLogin', currentPath);
     }
     
-    // Redirect to login page
+    // Chuyển hướng đến trang đăng nhập
     window.location.href = '/login';
   }
 };
@@ -129,7 +127,7 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // If in bypass mode and accessing admin routes, return mock successful response
+    // Nếu ở chế độ bypass và truy cập các route admin, trả về response giả thành công
     if (FORCE_BYPASS_AUTH && originalRequest.url && 
         (originalRequest.url.includes('/admin/') || 
          originalRequest.url.includes('/users/') || 
@@ -138,8 +136,8 @@ axiosInstance.interceptors.response.use(
          originalRequest.url.includes('/dashboard/'))) {
       console.log(`Interceptor: Using mock response for bypassed route: ${originalRequest.url}`);
       
-      // Create a mock successful response based on the request URL
-      // This prevents 401/403 errors during development when backend authentication is not working
+      // Tạo response giả thành công dựa trên URL request
+      // Điều này ngăn chặn lỗi 401/403 trong quá trình phát triển khi xác thực backend không hoạt động
       return Promise.resolve({
         data: getMockResponseData(originalRequest.url),
         status: 200,
@@ -156,11 +154,11 @@ axiosInstance.interceptors.response.use(
       console.log('Token expired or invalid. Attempting to refresh...');
 
       if (isRefreshing) {
-        // If already refreshing, queue this request
+        // Nếu đang refresh, xếp hàng request này
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
-          // When token is refreshed, retry with new token
+          // Khi token được refresh, thử lại với token mới
           originalRequest.headers['Authorization'] = `Bearer ${token}`;
           return axiosInstance(originalRequest);
         }).catch(err => {
@@ -168,7 +166,7 @@ axiosInstance.interceptors.response.use(
         });
       }
 
-      // Mark as retrying and refreshing
+      // Đánh dấu là đang thử lại và refresh
       originalRequest._retry = true;
       isRefreshing = true;
 
@@ -180,15 +178,15 @@ axiosInstance.interceptors.response.use(
           throw new Error('No user logged in');
         }
 
-        // Call the refresh endpoint (no auth header needed, uses cookie)
+        // Gọi endpoint refresh (không cần auth header, sử dụng cookie)
         const refreshResponse = await axiosInstance.post('/auth/refresh', {}, {
-          withCredentials: true, // Important: Send cookies with request
-          _skipAuthCheck: true   // Skip auth token for this request
+          withCredentials: true, // Quan trọng: Gửi cookies với request
+          _skipAuthCheck: true   // Bỏ qua token xác thực cho request này
         });
         
         const { accessToken: newToken, userId, ...restUserData } = refreshResponse.data;
         
-        // Map userId to id for frontend consistency if user data is returned
+        // Map userId thành id để nhất quán frontend nếu dữ liệu user được trả về
         if (userId) {
           const updatedUserData = {
             ...restUserData,
@@ -198,28 +196,28 @@ axiosInstance.interceptors.response.use(
           useAuthStore.getState().updateUser(updatedUserData);
         }
         
-        // Update token in store
+        // Cập nhật token trong store
         useAuthStore.getState().setAccessToken(newToken);
         
-        // Update auth header
+        // Cập nhật auth header
         originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
         
-        // Process queued requests
+        // Xử lý các request đang chờ
         processQueue(null, newToken);
         
-        // Retry original request
+        // Thử lại request gốc
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Log the error
+        // Ghi log lỗi
         console.error('Failed to refresh token:', refreshError);
         
-        // Process queued requests with error
+        // Xử lý các request đang chờ với lỗi
         processQueue(refreshError);
         
-        // Logout user
+        // Đăng xuất người dùng
         useAuthStore.getState().logout();
         
-        // Redirect to login
+        // Chuyển hướng đến login
         redirectToLogin();
         
         return Promise.reject(error);
@@ -233,9 +231,9 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Helper function to generate mock data based on request URL
+// Hàm helper để tạo dữ liệu giả dựa trên URL request
 function getMockResponseData(url) {
-  // Dashboard stats
+  // Thống kê dashboard
   if (url.includes('/dashboard/stats')) {
     return {
       totalProducts: 156,
@@ -249,7 +247,7 @@ function getMockResponseData(url) {
     };
   }
   
-  // Orders list
+  // Danh sách đơn hàng
   if (url.includes('/admin/orders') || url.includes('/orders')) {
     return {
       content: Array(5).fill().map((_, index) => ({
@@ -272,7 +270,7 @@ function getMockResponseData(url) {
     };
   }
   
-  // Products list
+  // Danh sách sản phẩm
   if (url.includes('/admin/products') || url.includes('/products')) {
     const mockProducts = Array(5).fill().map((_, index) => ({
       id: `mock-product-${index + 1}`,
@@ -286,12 +284,12 @@ function getMockResponseData(url) {
       createdAt: new Date(Date.now() - (index * 86400000)).toISOString()
     }));
     
-    // If top-selling endpoint, return the array directly
-    if (url.includes('/top-selling')) {
+    // Nếu là endpoint top-selling hoặc admin top-products, trả về mảng trực tiếp
+    if (url.includes('/top-selling') || url.includes('/top-products')) {
       return mockProducts;
     }
     
-    // Otherwise return paginated format
+    // Ngược lại trả về định dạng phân trang
     return {
       content: mockProducts,
       totalPages: 1,
@@ -301,7 +299,7 @@ function getMockResponseData(url) {
     };
   }
   
-  // Users list
+  // Danh sách người dùng
   if (url.includes('/admin/users') || url.includes('/users')) {
     return {
       content: Array(5).fill().map((_, index) => ({
@@ -318,7 +316,7 @@ function getMockResponseData(url) {
     };
   }
   
-  // Default mock data for any other request
+  // Dữ liệu giả mặc định cho bất kỳ request nào khác
   return {
     status: "success",
     message: "Mock data for development",

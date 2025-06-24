@@ -47,7 +47,7 @@ const ErrorMessage = ({ message, onRetry }) => (
     </div>
 );
 
-// Main component (Client Component)
+// Main component
 export default function OrderDetailPage() {
     const [order, setOrder] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -55,14 +55,14 @@ export default function OrderDetailPage() {
     const [isCancelling, setIsCancelling] = useState(false);
 
     const params = useParams();
-    const orderId = params.id; // Changed from params.orderId to params.id
+    const orderId = params.id; 
     const router = useRouter();
 
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
     const isAuthLoading = useAuthStore((state) => state.isLoading);
     const logout = useAuthStore((state) => state.logout);
 
-    // Function to fetch order details
+    // Fetch order details
     const fetchOrderDetails = useCallback(async () => {
         if (!orderId) {
             setError("ID đơn hàng không hợp lệ.");
@@ -71,7 +71,7 @@ export default function OrderDetailPage() {
         }
 
         if (!isAuthenticated) {
-            // No need to fetch if not authenticated (useEffect will handle redirect)
+            // No need to fetch if not authenticated
             setIsLoading(false);
             return;
         }
@@ -81,10 +81,9 @@ export default function OrderDetailPage() {
         setError(null);
 
         try {
-            // axiosInstance will automatically attach the token
             const response = await axiosInstance.get(`/orders/${orderId}`);
             console.log('Order details received:', response.data);
-            setOrder(response.data); // Store OrderDTO
+            setOrder(response.data); 
         } catch (err) {
             console.error(`Failed to fetch order ${orderId}:`, err);
 
@@ -92,7 +91,7 @@ export default function OrderDetailPage() {
                 setError("Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn hàng này.");
             } else if (err.response?.status === 401 || err.response?.status === 403) {
                 toast.error("Phiên đăng nhập hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.");
-                logout(); // Log out client state
+                logout(); 
                 router.push(`/login?redirect=/orders/${orderId}`);
             } else {
                 setError(err.response?.data?.message || err.message || 'Không thể tải thông tin đơn hàng.');
@@ -104,7 +103,7 @@ export default function OrderDetailPage() {
         }
     }, [orderId, isAuthenticated, logout, router]);
 
-    // Function to cancel order
+    // Cancel order
     const handleCancelOrder = async () => {
         if (!confirm('Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.')) {
             return;
@@ -114,7 +113,7 @@ export default function OrderDetailPage() {
         try {
             await axiosInstance.put(`/orders/${orderId}/cancel`);
             toast.success('Đã hủy đơn hàng thành công');
-            // Refresh order data to show updated status
+            // Refresh order data
             fetchOrderDetails();
         } catch (err) {
             console.error('Error cancelling order:', err);
@@ -124,40 +123,39 @@ export default function OrderDetailPage() {
         }
     };
 
-    // useEffect to fetch when component mounts or when auth state is ready
+    // Fetch when component mounts or when auth state is ready
     useEffect(() => {
         if (!isAuthLoading && isAuthenticated) {
             fetchOrderDetails();
         } else if (!isAuthLoading && !isAuthenticated) {
-            // Redirect if not logged in
+            // Redirect to login if not logged in
             router.replace(`/login?redirect=/orders/${orderId}`);
         }
     }, [isAuthenticated, isAuthLoading, fetchOrderDetails, router, orderId]);
 
-    // Check if order can be cancelled
+    // Check xem đơn hàng có thể hủy được không
     const canCancelOrder = order && ['PENDING', 'PENDING_PAYMENT'].includes(order.status);
-
-    // --- Render Logic ---
+    
     if (isAuthLoading || (isLoading && !order && !error)) {
         return <LoadingSpinner />;
     }
 
     if (!isAuthenticated) {
-        // Fallback if redirect hasn't happened yet
+        // Fallback if redirect hasn't happened
         return <div className="text-center py-10 text-gray-700 dark:text-gray-300">Đang chuyển hướng đến trang đăng nhập...</div>;
     }
 
     if (error) {
-        // Display error (including 404 errors from fetch logic)
+        //  error
         return <ErrorMessage message={error} onRetry={fetchOrderDetails} />;
     }
 
     if (!order) {
-        // Case where there's no error but also no data (rare)
+        // Trường hợp không có dữ liệu đơn hàng
         return <div className="text-center py-10 text-gray-700 dark:text-gray-300">Không có dữ liệu đơn hàng.</div>;
     }
 
-    // --- Display order details ---
+    // Hiển thị chi tiết đơn hàng
     return (
         <div className="container mx-auto py-8 px-4 max-w-4xl">
             {/* Breadcrumbs */}
@@ -201,9 +199,9 @@ export default function OrderDetailPage() {
                     </div>
                 </div>
 
-                {/* Order Detail Information (Grid Layout) */}
+                {/* Thông tin đơn hàng */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 text-sm">
-                    {/* Recipient Information */}
+                    {/* Thông tin người nhận */}
                     <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md">
                         <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200 flex items-center">
                             <FiUser className="mr-2 text-orange-500" />Thông tin người nhận
@@ -213,7 +211,7 @@ export default function OrderDetailPage() {
                         <p className="text-gray-600 dark:text-gray-300"><strong className="text-gray-700 dark:text-gray-200">Điện thoại:</strong> {order.shippingPhone}</p>
                     </div>
 
-                    {/* Shipping Address */}
+                    {/* Địa chỉ giao hàng */}
                     <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md">
                         <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200 flex items-center">
                             <FiMapPin className="mr-2 text-orange-500" />Địa chỉ giao hàng
@@ -223,7 +221,7 @@ export default function OrderDetailPage() {
                         <p className="text-gray-600 dark:text-gray-300">{order.shippingCountry}</p>
                     </div>
 
-                    {/* Payment Information */}
+                    {/* Thông tin thanh toán */}
                     <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md">
                         <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200 flex items-center">
                             <FiDollarSign className="mr-2 text-orange-500" />Thông tin thanh toán
@@ -240,7 +238,7 @@ export default function OrderDetailPage() {
                         <p className="text-gray-600 dark:text-gray-300"><strong className="text-gray-700 dark:text-gray-200">Tổng tiền:</strong> <span className="font-bold text-lg text-orange-600 dark:text-orange-400">{formatCurrency(order.totalAmount)}</span></p>
                     </div>
 
-                    {/* Notes (if any) */}
+                    {/* Ghi chú (nếu có) */}
                     {order.notes && (
                         <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-md md:col-span-1">
                             <h3 className="font-semibold mb-2 text-yellow-800 dark:text-yellow-300 flex items-center">
@@ -251,7 +249,7 @@ export default function OrderDetailPage() {
                     )}
                 </div>
 
-                {/* Product List */}
+                {/* Danh sách sản phẩm */}
                 <div>
                     <h3 className="text-lg font-semibold mb-3 border-t border-gray-200 dark:border-gray-600 pt-4 text-gray-800 dark:text-gray-200">
                         Sản phẩm đã đặt ({order.orderItems?.length || 0})
@@ -283,7 +281,7 @@ export default function OrderDetailPage() {
                     </div>
                 </div>
 
-                {/* Back button */}
+                {/* Nút quay lại */}
                 <div className="mt-8 text-center">
                     <Link href="/orders/my-history" className="inline-flex items-center text-orange-600 dark:text-orange-400 hover:underline gap-2">
                         <FiArrowLeft /> Quay lại lịch sử đơn hàng

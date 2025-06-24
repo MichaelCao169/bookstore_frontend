@@ -1,4 +1,3 @@
-// src/components/chat/AiChatBubble.jsx
 'use client';
 
 import { FiX } from 'react-icons/fi';

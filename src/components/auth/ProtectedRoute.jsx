@@ -4,13 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
-/**
- * A component that protects routes requiring authentication/authorization
- * @param {Object} props
- * @param {React.ReactNode} props.children - The content to render when authorized
- * @param {Array<string>} props.requiredRoles - Optional array of roles required to access the route
- * @param {string} props.redirectTo - Where to redirect if not authenticated (default: '/login')
- */
+// Component bảo vệ route
 export default function ProtectedRoute({
     children,
     requiredRoles = [],

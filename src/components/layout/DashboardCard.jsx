@@ -5,12 +5,12 @@ export default function DashboardCard({ title, value, icon, iconComponent, color
     const [isAnimating, setIsAnimating] = useState(false);
 
     useEffect(() => {
-        // Only animate numeric values
+        // Chỉ animate số
         if (typeof value === 'number') {
             setIsAnimating(true);
             let startValue = 0;
             const endValue = value;
-            const duration = 1000; // Animation duration in ms
+            const duration = 1000; // Thời gian animation (ms)
             const frameDuration = 1000 / 60; // 60fps
             const totalFrames = Math.round(duration / frameDuration);
             const valueIncrement = endValue / totalFrames;
@@ -29,7 +29,7 @@ export default function DashboardCard({ title, value, icon, iconComponent, color
 
             return () => clearInterval(counter);
         } else {
-            // If not a number, just set it directly
+            // Nếu không phải số, set trực tiếp
             setDisplayValue(value);
         }
     }, [value]);

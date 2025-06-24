@@ -16,7 +16,7 @@ export default function CategoriesManagement() {
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(0);
-    const [itemsPerPage] = useState(10); // 10 items per page to split 20 into 2 pages
+    const [itemsPerPage] = useState(10); // 10 sản phẩm trên 1 trang 
 
     // Form visibility state
     const [showForm, setShowForm] = useState(false);
@@ -42,7 +42,7 @@ export default function CategoriesManagement() {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
 
-        // Clear error for this field when user starts typing
+        
         if (formErrors[name]) {
             setFormErrors({ ...formErrors, [name]: null });
         }
@@ -66,19 +66,19 @@ export default function CategoriesManagement() {
 
         try {
             if (editingCategoryId) {
-                // Update existing category
+                
                 await axiosInstance.put(`/admin/categories/${editingCategoryId}`, formData);
                 alert('Cập nhật danh mục thành công');
             } else {
-                // Create new category
+                // tạo danh mục mới
                 await axiosInstance.post('/admin/categories', formData);
                 alert('Tạo danh mục thành công');
             }
 
-            // Reset form and refresh categories
+            // Reset form và refresh danh mục
             setFormData({ name: '', description: '' });
             setEditingCategoryId(null);
-            setShowForm(false); // Hide form after successful submission
+            setShowForm(false); // Ẩn form sau khi thành công
             setCurrentPage(0); // Reset to first page
             fetchCategories();
         } catch (err) {
@@ -95,14 +95,14 @@ export default function CategoriesManagement() {
             description: category.description,
         });
         setEditingCategoryId(category.id);
-        setShowForm(true); // Show form when editing
+        setShowForm(true); // Hiển thị form khi chỉnh sửa
     };
 
     const handleCancelEdit = () => {
         setFormData({ name: '', description: '' });
         setEditingCategoryId(null);
         setFormErrors({});
-        setShowForm(false); // Hide form when canceling
+        setShowForm(false); // Ẩn form khi hủy
     };
 
     const handleDelete = async (categoryId) => {
@@ -113,7 +113,7 @@ export default function CategoriesManagement() {
         try {
             await axiosInstance.delete(`/admin/categories/${categoryId}`);
             alert('Xóa danh mục thành công');
-            setCurrentPage(0); // Reset to first page
+            setCurrentPage(0); // Reset về trang đầu tiên
             fetchCategories();
         } catch (err) {
             console.error('Error deleting category:', err);
@@ -143,7 +143,7 @@ export default function CategoriesManagement() {
                 </button>
             </div>
 
-            {/* Category Form - Show above the categories list when showForm is true */}
+            
             {showForm && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
                     <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center">
@@ -244,11 +244,11 @@ export default function CategoriesManagement() {
                 </div>
             )}
 
-            {/* Categories List - Full width when form is hidden */}
+            {/* Danh mục - Full width khi form ẩn */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center">
+                {/* <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200 flex items-center">
                     <FiFolder className="mr-2 text-orange-500" /> Tất cả Danh mục
-                </h2>
+                </h2> */}
 
                 {loading ? (
                     <div className="text-center py-4 text-gray-600 dark:text-gray-300 flex justify-center items-center">
@@ -280,7 +280,7 @@ export default function CategoriesManagement() {
                                 </thead>
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     {(() => {
-                                        // Calculate pagination
+                                        // Tính toán phân trang
                                         const startIndex = currentPage * itemsPerPage;
                                         const endIndex = startIndex + itemsPerPage;
                                         const paginatedCategories = categories.slice(startIndex, endIndex);
@@ -319,7 +319,7 @@ export default function CategoriesManagement() {
                             </table>
                         </div>
 
-                        {/* Pagination */}
+                        {/* Phân trang */}
                         {categories.length > itemsPerPage && (
                             <nav aria-label="Phân trang" className="flex items-center justify-center mt-6">
                                 <div className="flex items-center space-x-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">

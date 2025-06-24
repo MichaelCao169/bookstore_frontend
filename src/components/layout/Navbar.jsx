@@ -49,7 +49,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   console.log("Navbar received toggleTheme:", typeof toggleTheme);
   console.log("Navbar received theme:", theme);
 
-  // Simplified handleToggleTheme to directly use the provided function
+  // Xử lý toggle theme đơn giản
   const handleToggleTheme = () => {
     if (typeof toggleTheme === 'function') {
       console.log("Calling provided toggleTheme function");
@@ -85,7 +85,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
   const pathname = usePathname();
   const searchRef = useRef(null);
 
-  // Fetch wishlist data when user is authenticated
+  // Fetch wishlist khi user đã đăng nhập
   useEffect(() => {
     const fetchWishlistData = async () => {
       if (isAuthenticated && !isLoading) {
@@ -93,7 +93,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
           const response = await axiosInstance.get('/wishlist');
           const fetchedData = response.data || { items: [], itemCount: 0 };
           setWishlistCount(fetchedData.items?.length ?? 0);
-          // Set danh sách productId trong store
+          // Set danh sách productId vào store
           const productIds = (fetchedData.items || []).map(item => item.productId);
           setWishlistProductIds(productIds);
         } catch (error) {
@@ -103,7 +103,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
           setWishlistProductIds([]);
         }
       } else if (!isAuthenticated && !isLoading) {
-        // Clear wishlist data when not authenticated
+        // Xóa wishlist khi chưa đăng nhập
         setWishlistCount(0);
         setWishlistProductIds([]);
       }
@@ -127,7 +127,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
     fetchCategories();
   }, []);
 
-  // Debounced search effect
+  // Debounced search
   useEffect(() => {
     const searchTimeout = setTimeout(async () => {
       if (searchQuery.trim().length >= 2) {
@@ -136,7 +136,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
           const response = await axiosInstance.get('/api/products/search', {
             params: {
               keyword: searchQuery.trim(),
-              size: 5 // Limit to 5 results for dropdown
+              size: 5 // Giới hạn 5 kết quả cho dropdown
             }
           });
           setSearchResults(response.data.content || []);
@@ -154,7 +154,7 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
     }, 300); // 300ms debounce    return () => clearTimeout(searchTimeout);
   }, [searchQuery]);
 
-  // Close search dropdown when clicking outside
+  // Đóng search dropdown khi click ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {

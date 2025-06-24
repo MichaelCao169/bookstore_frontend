@@ -19,27 +19,27 @@ const SearchableSelect = ({
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
 
-    // Filter options based on search term
+    // Lọc options theo từ khóa
     const filteredOptions = options.filter(option => {
         const optionText = typeof option === 'string' ? option : option.label || option.name || '';
         return optionText.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
-    // Handle option selection
+    // Xử lý chọn option
     const handleSelect = (selectedValue) => {
         onChange(selectedValue);
         setIsOpen(false);
         setSearchTerm('');
     };
 
-    // Handle clear selection
+    // Xóa lựa chọn
     const handleClear = (e) => {
         e.stopPropagation();
         onChange('');
         setSearchTerm('');
     };
 
-    // Close dropdown when clicking outside
+    // Đóng dropdown khi click ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,21 +52,28 @@ const SearchableSelect = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Focus search input when dropdown opens
+    // Focus vào search khi mở dropdown
     useEffect(() => {
         if (isOpen && searchInputRef.current) {
             searchInputRef.current.focus();
         }
     }, [isOpen]);
 
-    // Get display value
+    // Lấy giá trị hiển thị
     const getDisplayValue = () => {
-        if (!value) return '';
+        if (!value) return placeholder;
+
         if (typeof value === 'string') return value;
+
         const selectedOption = options.find(opt =>
             (typeof opt === 'string' ? opt : opt.value) === value
         );
-        return selectedOption ? (typeof selectedOption === 'string' ? selectedOption : selectedOption.label) : '';
+
+        if (selectedOption) {
+            return typeof selectedOption === 'string' ? selectedOption : selectedOption.label || selectedOption.name || value;
+        }
+
+        return value;
     };
 
     return (
@@ -86,7 +93,7 @@ const SearchableSelect = ({
             >
                 <div className="flex items-center justify-between">
                     <span className={value ? '' : 'text-gray-500 dark:text-gray-400'}>
-                        {getDisplayValue() || placeholder}
+                        {getDisplayValue()}
                     </span>                    <div className="flex items-center space-x-1">
                         {value && !disabled && (
                             <span

@@ -56,16 +56,7 @@ export default function RegisterConfirmation() {
                                 <FiArrowRight className="inline-block mr-2" />
                                 Về trang chủ
                             </Link>
-                        </div>
-
-                        <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-md">
-                            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Không nhận được email?</h4>
-                            <p className="text-sm text-blue-700 dark:text-blue-400">
-                                - Vui lòng kiểm tra thư mục spam hoặc junk của bạn<br />
-                                - Đảm bảo địa chỉ email bạn đã nhập là chính xác<br />
-                                - Vui lòng đợi vài phút để email đến<br />
-                            </p>
-                        </div>
+                        </div>                       
                     </div>
                 </div>
             </div>

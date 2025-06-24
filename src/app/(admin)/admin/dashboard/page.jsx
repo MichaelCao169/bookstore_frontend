@@ -22,7 +22,7 @@ export default function AdminDashboard() {
     const [error, setError] = useState(null);
     const [recalculating, setRecalculating] = useState(false);
 
-    // Demo data to use as fallback
+    // Trong TH chưa có dữ liệu từ server, sẽ sử dụng dữ liệu mẫu này
     const demoStats = {
         totalOrders: 152,
         totalProducts: 76,
@@ -61,7 +61,7 @@ export default function AdminDashboard() {
             }
 
             try {
-                // Thử dùng token trong header thay vì dựa vào interceptor
+                
                 console.log("Đang gọi API dashboard stats...");
                 const statsResponse = await axiosInstance.get('/api/admin/dashboard/stats', {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -81,7 +81,7 @@ export default function AdminDashboard() {
             }
 
             try {
-                // Fetch recent orders với token rõ ràng
+                // Fetch recent orders với token 
                 console.log("Đang gọi API orders...");
                 const ordersResponse = await axiosInstance.get('/api/admin/orders', {
                     params: { page: 0, size: 5 },
@@ -117,12 +117,12 @@ export default function AdminDashboard() {
             }
 
             try {
-                // Fetch top products với token rõ ràng
-                console.log("Đang gọi API top products...");
-                const productsResponse = await axiosInstance.get('/api/products/top-selling', {
+                // Fetch top products với token rõ ràng - sử dụng admin endpoint
+                console.log("Đang gọi API admin top products...");
+                const productsResponse = await axiosInstance.get('/api/admin/dashboard/top-products', {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
                 });
-                console.log("Kết quả API top products:", productsResponse.data);                    // Đảm bảo dữ liệu có định dạng nhất quán
+                console.log("Kết quả API admin top products:", productsResponse.data);                    // Đảm bảo dữ liệu có định dạng nhất quán
                 const formattedProducts = productsResponse.data.map(product => ({
                     productId: product.productId,
                     title: product.title,
@@ -304,9 +304,9 @@ export default function AdminDashboard() {
         <div className="space-y-6">
             <div className="flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 text-white p-4 rounded-lg shadow-md">
                 <h1 className="text-2xl font-bold flex items-center">
-                    <FiActivity className="mr-2" /> Bảng điều khiển
+                    <FiActivity className="mr-2" /> Trang chủ
                 </h1>
-                <span className="text-sm text-white/90">Chào mừng đến với trang quản trị</span>
+                
             </div>
 
             {error && (

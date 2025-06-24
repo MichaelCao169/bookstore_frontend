@@ -38,7 +38,6 @@ const offers = [
     }
 ];
 
-// Component to display a countdown timer for offers with expiry dates
 const CountdownTimer = ({ expiryDate }) => {
     const [timeLeft, setTimeLeft] = React.useState({
         days: 0,

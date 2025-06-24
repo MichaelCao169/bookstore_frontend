@@ -25,7 +25,7 @@ const ReviewForm = ({
     // Nếu đang edit review, sử dụng dữ liệu từ review hiện có
     const isEditMode = Boolean(existingReview);
 
-    // Get the current user from auth store
+    // Lấy user hiện tại từ auth store
     const { user } = useAuthStore();
 
     useEffect(() => {
@@ -114,7 +114,7 @@ const ReviewForm = ({
                 toast.success('Cảm ơn bạn đã đánh giá sản phẩm!');
             }
 
-            // Reset form nếu đang ở chế độ tạo mới
+            // Reset form nếu đang tạo mới
             if (!isEditMode) {
                 setRating(0);
                 setComment('');

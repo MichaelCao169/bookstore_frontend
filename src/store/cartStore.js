@@ -1,4 +1,3 @@
-// src/store/cartStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -39,16 +38,11 @@ export const useCartStore = create(
         set({ itemCount: 0 });
       },
 
-        // -- CÁCH TIẾP CẬN TỐT HƠN: Đồng bộ với API --
-        // Thay vì increment/decrement mù mờ, gọi API để lấy count mới nhất
         fetchCartCount: async () => {
-          // Tạm thời đặt isLoading nhỏ trong store nếu muốn
-          // set({ isCountLoading: true });
          try {
-             // Dùng import động để tránh lỗi circular dependency tiềm ẩn nếu axiosInstance import store
               const axiosI = (await import('@/lib/axiosInstance')).default;
-              const response = await axiosI.get('/cart'); // Gọi API lấy cả giỏ hàng
-              const count = response.data?.items?.length ?? 0; // Đếm số item trả về
+              const response = await axiosI.get('/cart'); 
+              const count = response.data?.items?.length ?? 0; 
              console.log('CartStore: Fetched cart count:', count);
              set({ itemCount: count /*, isCountLoading: false */});
          } catch (error) {
@@ -73,7 +67,3 @@ export const useCartStore = create(
   )
 );
 
-// Optional: Gọi fetch count lần đầu khi store load nếu dùng cách fetch
-// if (typeof window !== 'undefined') {
-//     useCartStore.getState().fetchCartCount();
-// }

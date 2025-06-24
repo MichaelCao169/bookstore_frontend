@@ -1,4 +1,3 @@
-// src/components/chat/admin/ConversationListItem.jsx
 'use client';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';

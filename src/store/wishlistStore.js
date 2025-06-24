@@ -1,4 +1,3 @@
-// src/store/wishlistStore.js
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -61,7 +60,6 @@ export const useWishlistStore = create(
          return state.wishlistProductIds.has(productId);
        },
 
-        // TODO: Có thể thêm action fetchWishlistCount tương tự Cart nếu muốn đồng bộ mạnh hơn
     }),
     {
       name: 'wishlist-count-storage',

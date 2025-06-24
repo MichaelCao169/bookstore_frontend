@@ -1,4 +1,3 @@
-// src/components/chat/MessageItem.jsx
 'use client';
 import Image from 'next/image';
 import { format } from 'date-fns';
@@ -24,18 +23,17 @@ const MessageItem = ({ message, currentUserId }) => {
     isMyMessage: isMyMessage,
     senderName: message.senderName,
     content: message.content?.substring(0, 30) + '...',
-    isFromAdmin: message.isFromAdmin
+    isFromAdmin: message.isFromAdmin,
+    messageType: message.type,
+    hasFileUrl: !!message.fileUrl,
+    fileName: message.fileName
   });
 
-  // Additional verification: if we know this is from admin and current user is admin, it should be my message
-  // if we know this is from customer and current user is not admin, it should be my message
+    // Xác minh thêm: nếu tin nhắn từ admin và người dùng hiện tại là admin, thì đây phải là tin nhắn của tôi
   let finalIsMyMessage = isMyMessage;
 
-  // Use isFromAdmin field if available for more accurate alignment
   if (typeof message.isFromAdmin === 'boolean') {
-    // If current user is admin and message is from admin -> my message
-    // If current user is not admin and message is not from admin -> my message
-    const currentUserIsAdmin = message.currentUserIsAdmin; // We might need to pass this
+    const currentUserIsAdmin = message.currentUserIsAdmin; 
     if (currentUserIsAdmin !== undefined) {
       finalIsMyMessage = (currentUserIsAdmin && message.isFromAdmin) || (!currentUserIsAdmin && !message.isFromAdmin);
     }
@@ -69,7 +67,21 @@ const MessageItem = ({ message, currentUserId }) => {
   };
 
   const renderContent = () => {
-    if (message.type === 'file' && message.fileUrl) {
+    // Kiểm tra xem có phải là file không - kiểm tra cả messageType và type, cũng như fileUrl
+    const isFileMessage = (message.type === 'file' || message.type === 'FILE' ||
+      message.messageType === 'FILE' || message.messageType === 'file') &&
+      message.fileUrl;
+
+    console.log('MessageItem renderContent check:', {
+      messageId: message.id,
+      type: message.type,
+      messageType: message.messageType,
+      fileUrl: message.fileUrl,
+      fileName: message.fileName,
+      isFileMessage: isFileMessage
+    });
+
+    if (isFileMessage) {
       const fileType = getFileType(message.fileName || '');
       const isImage = fileType === 'image';
 
@@ -84,6 +96,7 @@ const MessageItem = ({ message, currentUserId }) => {
                 height={200}
                 className="object-cover w-full h-auto max-h-48"
                 onError={(e) => {
+                  console.error('Image load error:', e);
                   e.target.style.display = 'none';
                 }}
               />
@@ -91,12 +104,16 @@ const MessageItem = ({ message, currentUserId }) => {
           )}
           <a
             href={message.fileUrl}
+            download={message.fileName}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center p-3 rounded-lg transition-colors border ${isMyMessage
+            className={`flex items-center p-3 rounded-lg transition-colors border ${finalIsMyMessage
               ? 'bg-orange-100 dark:bg-orange-700 border-orange-200 dark:border-orange-600 text-orange-800 dark:text-orange-200 hover:bg-orange-200 dark:hover:bg-orange-600'
               : 'bg-white dark:bg-gray-600 border-gray-200 dark:border-gray-500 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-500'
               }`}
+            onClick={(e) => {
+              console.log('File download clicked:', message.fileUrl);
+            }}
           >
             {renderFileIcon(message.fileName, message.contentType)}
             <div className="flex-1 min-w-0">
@@ -114,7 +131,6 @@ const MessageItem = ({ message, currentUserId }) => {
         </div>
       );
     }
-    // Default to text if type is not file or fileUrl is missing
     return <p className="whitespace-pre-wrap break-words">{message.content}</p>;
   };
 

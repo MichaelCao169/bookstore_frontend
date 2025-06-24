@@ -1,18 +1,14 @@
-// src/app/(main)/cart/page.jsx
-'use client'; // Bắt buộc vì cần state và fetch dữ liệu client-side
-
+'use client'; 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiTrash2, FiShoppingCart, FiLoader, FiAlertCircle, FiArrowLeft, FiImage, FiMinus, FiPlus, FiChevronRight } from 'react-icons/fi'; // Icons
-import axiosInstance from '@/lib/axiosInstance'; // Axios instance
-import { useAuthStore } from '@/store/authStore'; // Kiểm tra auth nếu cần (dù route đã được bảo vệ)
+import axiosInstance from '@/lib/axiosInstance'; 
+import { useAuthStore } from '@/store/authStore'; 
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify'; // Để hiển thị thông báo
+import { toast } from 'react-toastify'; 
 import { useCartStore } from '@/store/cartStore';
 import BrandSpinner from '@/components/ui/BrandSpinner';
-
-const placeholderImage = '/sample_books.jpg';
 
 // Component để hiển thị loading hoặc lỗi
 const LoadingSpinner = () => (
@@ -31,7 +27,7 @@ const ErrorMessage = ({ message }) => (
     <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Đã xảy ra lỗi</h2>
     <p className="text-gray-600 dark:text-gray-400 mb-4">{message}</p>
     <button
-      onClick={() => window.location.reload()} // Đơn giản là tải lại trang
+      onClick={() => window.location.reload()} 
       className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors shadow-sm"
     >
       Thử lại
@@ -204,7 +200,7 @@ const CartPage = () => {
 
       if (fetchedCart.items?.length === 0) {
         console.log("Cart is empty after fetch.");
-        // Không cần redirect ở đây, để phần render xử lý
+      
       }
     } catch (err) {
       console.error('Failed to fetch cart:', err);
@@ -254,14 +250,14 @@ const CartPage = () => {
       console.error(`Failed to update quantity for item ${cartItemId}:`, error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể cập nhật số lượng.';
       toast.error(`Lỗi: ${errorMessage}`);
-      // Nếu lỗi, có thể cần fetch lại cart để đồng bộ lại số lượng đúng từ server
+      // Nếu lỗi cần fetch lại cart để đồng bộ lại số lượng đúng từ server
       fetchCart(); // Fetch lại để hiển thị số lượng đúng trước khi lỗi
     } finally {
       setUpdatingItemId(null); // Kết thúc trạng thái cập nhật cho item này
     }
   }, [fetchCart, updatingItemId]); // Thêm updatingItemId vào dependencies của useCallback
 
-  // --- Implement handleRemoveItem ---
+  // Component xóa sản phẩm
   const handleRemoveItem = useCallback(async (cartItemId, productTitle) => {
     // Xác nhận trước khi xóa (tùy chọn)
     if (!window.confirm(`Bạn có chắc muốn xóa "${productTitle}" khỏi giỏ hàng?`)) {
@@ -297,7 +293,6 @@ const CartPage = () => {
       await axiosInstance.delete('/cart'); // Gọi API xóa cart backend
       toast.success("Đã xóa toàn bộ giỏ hàng.");
 
-      // *** SỬA LẠI CÁCH RESET STATE cartData ***
       // Sử dụng số 0 thông thường cho totalPrice và totalItems
       setCartData({ items: [], itemCount: 0, totalPrice: 0, totalItems: 0 });
 
@@ -312,7 +307,6 @@ const CartPage = () => {
     }
   }, [clearCartCount, fetchCart]);
 
-  // --- Render Logic ---
 
   // Ưu tiên kiểm tra loading của auth store trước
   if (isAuthLoading) {
@@ -321,7 +315,7 @@ const CartPage = () => {
 
   // Nếu không loading auth nhưng chưa đăng nhập, useEffect đã redirect, có thể return null hoặc loading
   if (!isAuthenticated) {
-    return <div className="text-center py-10">Redirecting to login...</div>; // Hoặc null
+    return <div className="text-center py-10">Chuyển hướng đến login...</div>; 
   }
 
   // Nếu đã đăng nhập, kiểm tra loading của fetch cart
@@ -336,7 +330,7 @@ const CartPage = () => {
 
   // Xử lý trường hợp không có cart data
   if (!cartData) {
-    return <div className="text-center py-10">Could not load cart information.</div>;
+    return <div className="text-center py-10">Không thể load thông tin</div>;
   }
 
   // Hiển thị khi giỏ hàng trống

@@ -10,7 +10,7 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    // Fetch authors from API
+    // Fetch authors từ API
     const { authors, loading: authorsLoading, error: authorsError } = useAuthors();
 
     // State cho UI
@@ -22,7 +22,7 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
     const maxPrice = searchParams.get('maxPrice') || '';
     const selectedAuthor = searchParams.get('author') || '';
     const inStockOnly = searchParams.get('inStockOnly') === 'true';
-    
+
     // Xác định priceRange dựa trên minPrice và maxPrice
     const getPriceRange = () => {
         if (!minPrice && !maxPrice) return '';
@@ -32,7 +32,7 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
         if (minPrice === '500000' && !maxPrice) return 'over-500k';
         return 'custom'; // Khoảng giá tùy chỉnh
     };
-    
+
     const priceRange = getPriceRange();    // Xử lý thay đổi bộ lọc
     const handleFilterChange = (param, value) => {
         const params = new URLSearchParams(searchParams);
@@ -57,12 +57,12 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
     };// Xử lý thay đổi radio button giá
     const handlePriceRangeChange = (range) => {
         const params = new URLSearchParams(searchParams);
-        
+
         // Xóa các filter giá cũ
         params.delete('minPrice');
         params.delete('maxPrice');
         params.delete('priceRange');
-        
+
         if (range && range !== '') {
             // Chỉ set minPrice và maxPrice, không set priceRange để URL sạch hơn
             switch (range) {
@@ -82,7 +82,7 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                     break;
             }
         }
-        
+
         // Reset về trang 1 khi thay đổi bộ lọc
         params.set('page', '1');
 
@@ -90,7 +90,7 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
     };    // Xử lý thay đổi input range tùy chỉnh
     const handleCustomRangeChange = (param, value) => {
         const params = new URLSearchParams(searchParams);
-        
+
         if (value) {
             params.set(param, value);
         } else {
@@ -123,8 +123,8 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                         >
                             <option value="">Tất cả danh mục</option>
                             {initialCategories.map(category => (
-                                <option 
-                                    key={category.id} 
+                                <option
+                                    key={category.id}
                                     value={category.id.toString()}
                                     className="dark:bg-gray-700 py-1"
                                 >
@@ -174,22 +174,20 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                     onChange={(e) => handlePriceRangeChange('')}
                                     className="sr-only"
                                 />
-                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${
-                                    priceRange === '' 
-                                        ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105' 
-                                        : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
-                                }`}>
+                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${priceRange === ''
+                                    ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105'
+                                    : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
+                                    }`}>
                                     {priceRange === '' && (
                                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     )}
                                 </div>
-                                <span className={`ml-3 text-sm transition-colors duration-200 ${
-                                    priceRange === '' 
-                                        ? 'text-orange-600 dark:text-orange-400 font-medium' 
-                                        : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
-                                }`}>
+                                <span className={`ml-3 text-sm transition-colors duration-200 ${priceRange === ''
+                                    ? 'text-orange-600 dark:text-orange-400 font-medium'
+                                    : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                                    }`}>
                                     Tất cả giá
                                 </span>
                             </label>
@@ -203,22 +201,20 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                     onChange={(e) => handlePriceRangeChange('under-100k')}
                                     className="sr-only"
                                 />
-                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${
-                                    priceRange === 'under-100k' 
-                                        ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105' 
-                                        : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
-                                }`}>
+                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${priceRange === 'under-100k'
+                                    ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105'
+                                    : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
+                                    }`}>
                                     {priceRange === 'under-100k' && (
                                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     )}
                                 </div>
-                                <span className={`ml-3 text-sm transition-colors duration-200 ${
-                                    priceRange === 'under-100k' 
-                                        ? 'text-orange-600 dark:text-orange-400 font-medium' 
-                                        : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
-                                }`}>
+                                <span className={`ml-3 text-sm transition-colors duration-200 ${priceRange === 'under-100k'
+                                    ? 'text-orange-600 dark:text-orange-400 font-medium'
+                                    : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                                    }`}>
                                     Dưới 100,000đ
                                 </span>
                             </label>
@@ -232,22 +228,20 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                     onChange={(e) => handlePriceRangeChange('100k-300k')}
                                     className="sr-only"
                                 />
-                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${
-                                    priceRange === '100k-300k' 
-                                        ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105' 
-                                        : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
-                                }`}>
+                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${priceRange === '100k-300k'
+                                    ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105'
+                                    : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
+                                    }`}>
                                     {priceRange === '100k-300k' && (
                                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     )}
                                 </div>
-                                <span className={`ml-3 text-sm transition-colors duration-200 ${
-                                    priceRange === '100k-300k' 
-                                        ? 'text-orange-600 dark:text-orange-400 font-medium' 
-                                        : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
-                                }`}>
+                                <span className={`ml-3 text-sm transition-colors duration-200 ${priceRange === '100k-300k'
+                                    ? 'text-orange-600 dark:text-orange-400 font-medium'
+                                    : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                                    }`}>
                                     100,000đ - 300,000đ
                                 </span>
                             </label>
@@ -261,22 +255,20 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                     onChange={(e) => handlePriceRangeChange('300k-500k')}
                                     className="sr-only"
                                 />
-                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${
-                                    priceRange === '300k-500k' 
-                                        ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105' 
-                                        : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
-                                }`}>
+                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${priceRange === '300k-500k'
+                                    ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105'
+                                    : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
+                                    }`}>
                                     {priceRange === '300k-500k' && (
                                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     )}
                                 </div>
-                                <span className={`ml-3 text-sm transition-colors duration-200 ${
-                                    priceRange === '300k-500k' 
-                                        ? 'text-orange-600 dark:text-orange-400 font-medium' 
-                                        : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
-                                }`}>
+                                <span className={`ml-3 text-sm transition-colors duration-200 ${priceRange === '300k-500k'
+                                    ? 'text-orange-600 dark:text-orange-400 font-medium'
+                                    : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                                    }`}>
                                     300,000đ - 500,000đ
                                 </span>
                             </label>
@@ -290,22 +282,20 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                     onChange={(e) => handlePriceRangeChange('over-500k')}
                                     className="sr-only"
                                 />
-                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${
-                                    priceRange === 'over-500k' 
-                                        ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105' 
-                                        : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
-                                }`}>
+                                <div className={`w-5 h-5 border-2 rounded-sm flex items-center justify-center transition-all duration-200 ${priceRange === 'over-500k'
+                                    ? 'bg-orange-500 border-orange-500 shadow-md transform scale-105'
+                                    : 'border-gray-300 dark:border-gray-600 group-hover:border-orange-400'
+                                    }`}>
                                     {priceRange === 'over-500k' && (
                                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     )}
                                 </div>
-                                <span className={`ml-3 text-sm transition-colors duration-200 ${
-                                    priceRange === 'over-500k' 
-                                        ? 'text-orange-600 dark:text-orange-400 font-medium' 
-                                        : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
-                                }`}>
+                                <span className={`ml-3 text-sm transition-colors duration-200 ${priceRange === 'over-500k'
+                                    ? 'text-orange-600 dark:text-orange-400 font-medium'
+                                    : 'text-gray-600 dark:text-gray-300 group-hover:text-orange-600 dark:group-hover:text-orange-400'
+                                    }`}>
                                     Trên 500,000đ
                                 </span>
                             </label>
@@ -322,9 +312,8 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                 value={priceRange === 'custom' || (!priceRange && minPrice) ? minPrice : ''}
                                 onChange={(e) => handleCustomRangeChange('minPrice', e.target.value)}
                                 disabled={priceRange !== '' && priceRange !== 'custom'}
-                                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                                    priceRange !== '' && priceRange !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${priceRange !== '' && priceRange !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
                             />
                             <span className="text-gray-500">-</span>
                             <input
@@ -333,12 +322,11 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                 value={priceRange === 'custom' || (!priceRange && maxPrice) ? maxPrice : ''}
                                 onChange={(e) => handleCustomRangeChange('maxPrice', e.target.value)}
                                 disabled={priceRange !== '' && priceRange !== 'custom'}
-                                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
-                                    priceRange !== '' && priceRange !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${priceRange !== '' && priceRange !== 'custom' ? 'opacity-50 cursor-not-allowed' : ''
+                                    }`}
                             />
                         </div>
-                        
+
                         {/* Clear filter button */}
                         {(minPrice || maxPrice) && (
                             <button
@@ -373,7 +361,7 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                 Lỗi tải tác giả: {authorsError}
                             </div>
                         )}
-                        
+
                         {/* Author Dropdown */}
                         <select
                             value={selectedAuthor}
@@ -385,8 +373,8 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                                 {authorsLoading ? 'Đang tải...' : 'Tất cả tác giả'}
                             </option>
                             {authors.map(author => (
-                                <option 
-                                    key={author} 
+                                <option
+                                    key={author}
                                     value={author}
                                     className="dark:bg-gray-700 py-1"
                                 >

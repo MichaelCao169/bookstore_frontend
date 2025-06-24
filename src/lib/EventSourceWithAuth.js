@@ -1,6 +1,6 @@
 /**
- * Custom EventSource wrapper that properly handles authentication and CORS
- * This implementation helps solve issues with SSE connections across browsers
+ * Wrapper EventSource tùy chỉnh xử lý xác thực và CORS một cách phù hợp
+ * Implementation này giúp giải quyết các vấn đề với kết nối SSE trên các trình duyệt khác nhau
  */
 export default class EventSourceWithAuth {
     constructor(url, options = {}) {
@@ -14,17 +14,17 @@ export default class EventSourceWithAuth {
             'keep-alive': []
         };
         
-        this.readyState = 0; // 0 = CONNECTING
+        this.readyState = 0; // 0 = ĐANG KẾT NỐI
         this.reconnectDelay = 5000;
         this.maxReconnectDelay = 30000;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
         
-        // Check server availability before connecting
+        // Kiểm tra tính khả dụng của server trước khi kết nối
         this._checkServerAvailability()
             .then(isAvailable => {
                 if (isAvailable) {
-                    // Create the actual EventSource
+                    // Tạo EventSource thực tế
                     this._createEventSource();
                 } else {
                     console.error('Server is not available, will retry connection later');
@@ -32,21 +32,21 @@ export default class EventSourceWithAuth {
                 }
             })
             .catch(() => {
-                // If the check fails, try to connect anyway
+                // Nếu việc kiểm tra thất bại, vẫn thử kết nối
                 this._createEventSource();
             });
     }
     
-    // Check if the server is available by making a HEAD request
+    // Kiểm tra xem server có khả dụng bằng cách tạo request HEAD
     async _checkServerAvailability() {
         try {
-            // Use the same API_BASE_URL from apiRoutes.js instead of deriving from this.url
+            // Sử dụng API_BASE_URL giống trong apiRoutes.js thay vì lấy từ this.url
             const { API_BASE_URL } = require('./apiRoutes');
             const serverUrl = `${API_BASE_URL}/api/test/hello-public`;
             
             console.log(`Checking server availability at ${serverUrl}`);
             
-            // Use fetch with a short timeout
+            // Sử dụng fetch với timeout ngắn
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
             
@@ -71,25 +71,25 @@ export default class EventSourceWithAuth {
         }
     }
     
-    // Method to create the underlying EventSource
+    // Phương thức để tạo EventSource cơ bản
     _createEventSource() {
         try {
             console.log(`Creating EventSource connection to ${this.url}`);
             
-            // Add timestamp to URL to prevent caching issues
+            // Thêm timestamp vào URL để tránh vấn đề caching
             const urlWithNoCaching = new URL(this.url);
             urlWithNoCaching.searchParams.append('_t', Date.now());
             
             this.eventSource = new EventSource(urlWithNoCaching.toString(), this.options);
             
-            // Forward the readyState
+            // Chuyển tiếp readyState
             this.readyState = this.eventSource.readyState;
             
-            // Set up core event listeners
+            // Thiết lập các event listener cốt lõi
             this.eventSource.onopen = (event) => {
                 console.log('EventSource connection opened');
                 this.readyState = this.eventSource.readyState;
-                this.reconnectAttempts = 0; // Reset reconnect attempts on successful connection
+                this.reconnectAttempts = 0; // Đặt lại số lần thử kết nối khi kết nối thành công
                 this._dispatchEvent('open', event);
             };
             
@@ -101,15 +101,15 @@ export default class EventSourceWithAuth {
                 const readyStateText = ['CONNECTING', 'OPEN', 'CLOSED'][this.eventSource.readyState] || this.eventSource.readyState;
                 console.error(`EventSource error - ReadyState: ${readyStateText}(${this.eventSource.readyState})`);
                 
-                // Check if we're in a CORS error situation
-                if (this.eventSource.readyState === 2) { // CLOSED
+                // Kiểm tra xem có đang gặp lỗi CORS không
+                if (this.eventSource.readyState === 2) { // ĐÓNG
                     console.error('Connection closed due to an error. This might be due to CORS issues or server unavailability.');
-                    // Log diagnostic information
+                    // Ghi log thông tin chẩn đoán
                     console.log('URL:', this.url);
                     console.log('Options:', JSON.stringify(this.options));
                     console.log('Browser:', navigator.userAgent);
                     
-                    // Try to use polling fallback after consecutive failures
+                    // Thử sử dụng polling fallback sau các lần thất bại liên tiếp
                     if (this.reconnectAttempts >= 2) {
                         console.log('Multiple reconnect failures, switching to polling fallback');
                         this.close();
@@ -121,13 +121,13 @@ export default class EventSourceWithAuth {
                 this.readyState = this.eventSource.readyState;
                 this._dispatchEvent('error', event);
                 
-                // Handle automatic reconnection
-                if (this.eventSource.readyState === 2) { // CLOSED
+                // Xử lý kết nối lại tự động
+                if (this.eventSource.readyState === 2) { // ĐÓNG
                     this._handleReconnect();
                 }
             };
             
-            // Set up custom event listeners
+            // Thiết lập các event listener tùy chỉnh
             ['connection', 'keep-alive'].forEach(eventName => {
                 this.eventSource.addEventListener(eventName, (event) => {
                     this._dispatchEvent(eventName, event);
@@ -139,17 +139,17 @@ export default class EventSourceWithAuth {
         }
     }
     
-    // Handle reconnection logic
+    // Xử lý logic kết nối lại
     _handleReconnect() {
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
             console.warn(`Max reconnection attempts (${this.maxReconnectAttempts}) reached, giving up`);
             return;
         }
         
-        // Close existing connection if any
+        // Đóng kết nối hiện tại nếu có
         this.close();
         
-        // Calculate exponential backoff delay
+        // Tính toán độ trễ exponential backoff
         const delay = Math.min(
             this.maxReconnectDelay,
             this.reconnectDelay * Math.pow(1.5, this.reconnectAttempts)
@@ -157,14 +157,14 @@ export default class EventSourceWithAuth {
         
         console.log(`Attempting to reconnect in ${delay/1000} seconds (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})...`);
         
-        // Set timeout for reconnection
+        // Đặt timeout cho việc kết nối lại
         this.reconnectTimeout = setTimeout(() => {
             this.reconnectAttempts++;
             this._createEventSource();
         }, delay);
     }
     
-    // Helper to dispatch events to registered listeners
+    // Helper để gửi events cho các listeners đã đăng ký
     _dispatchEvent(type, event) {
         if (this.listeners[type]) {
             this.listeners[type].forEach(callback => {
@@ -177,14 +177,14 @@ export default class EventSourceWithAuth {
         }
     }
     
-    // Public API methods
+    // Các phương thức API công khai
     addEventListener(type, callback) {
         if (!this.listeners[type]) {
             this.listeners[type] = [];
         }
         this.listeners[type].push(callback);
         
-        // If this is for a custom event, add it to the underlying EventSource too
+        // Nếu đây là cho custom event, thêm vào EventSource cơ bản cũng
         if (this.eventSource && type !== 'message' && type !== 'error' && type !== 'open') {
             this.eventSource.addEventListener(type, callback);
         }
@@ -197,7 +197,7 @@ export default class EventSourceWithAuth {
             this.listeners[type] = this.listeners[type].filter(cb => cb !== callback);
         }
         
-        // Also remove from underlying EventSource if it exists
+        // Cũng xóa khỏi EventSource cơ bản nếu tồn tại
         if (this.eventSource && type !== 'message' && type !== 'error' && type !== 'open') {
             this.eventSource.removeEventListener(type, callback);
         }
@@ -205,33 +205,33 @@ export default class EventSourceWithAuth {
         return this;
     }
     
-    // Fallback to using polling with fetch when EventSource fails
+    // Fallback sang sử dụng polling với fetch khi EventSource thất bại
     _startPollingFallback() {
         console.log('Starting polling fallback for SSE');
         
-        // Create a synthetic open event
+        // Tạo một open event giả lập
         this._dispatchEvent('open', { data: 'Polling fallback connected' });
         
-        // Function to poll for messages
+        // Hàm để polling messages
         const poll = async () => {
-            if (this.readyState === 2) return; // Stop if closed
+            if (this.readyState === 2) return; // Dừng nếu đã đóng
             
             try {
-                // Use API_BASE_URL for polling endpoint
+                // Sử dụng API_BASE_URL cho polling endpoint
                 const { API_BASE_URL } = require('./apiRoutes');
                 
-                // Extract path and parameters from original SSE URL
+                // Trích xuất path và parameters từ URL SSE gốc
                 const originalUrl = new URL(this.url);
                 const pollUrl = new URL(`${API_BASE_URL}/api/poll/messages`);
                 
-                // Add the same parameters as the SSE URL
+                // Thêm các parameters giống như SSE URL
                 originalUrl.searchParams.forEach((value, key) => {
-                    if (key !== '_t') { // Skip timestamp
+                    if (key !== '_t') { // Bỏ qua timestamp
                         pollUrl.searchParams.append(key, value);
                     }
                 });
                 
-                // Add timestamp to prevent caching
+                // Thêm timestamp để tránh caching
                 pollUrl.searchParams.append('_t', Date.now());
                 
                 const response = await fetch(pollUrl.toString(), {
@@ -246,7 +246,7 @@ export default class EventSourceWithAuth {
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // Process any messages
+                    // Xử lý bất kỳ messages nào
                     if (data && data.messages && Array.isArray(data.messages)) {
                         data.messages.forEach(msg => {
                             this._dispatchEvent('message', { 
@@ -255,10 +255,10 @@ export default class EventSourceWithAuth {
                         });
                     }
                     
-                    // Send keep-alive event
+                    // Gửi keep-alive event
                     this._dispatchEvent('keep-alive', { data: '' });
                     
-                    // Reset reconnect attempts on success
+                    // Đặt lại số lần thử kết nối khi thành công
                     this.reconnectAttempts = 0;
                 } else {
                     throw new Error(`Polling failed with status: ${response.status}`);
@@ -274,7 +274,7 @@ export default class EventSourceWithAuth {
                 }
             }
             
-            // Schedule next poll with exponential backoff
+            // Lên lịch poll tiếp theo với exponential backoff
             const delay = Math.min(
                 this.maxReconnectDelay,
                 1000 * Math.pow(1.5, Math.min(3, this.reconnectAttempts))
@@ -283,7 +283,7 @@ export default class EventSourceWithAuth {
             this.pollTimeout = setTimeout(poll, delay);
         };
         
-        // Start polling
+        // Bắt đầu polling
         poll();
     }
     
@@ -303,6 +303,6 @@ export default class EventSourceWithAuth {
             this.eventSource = null;
         }
         
-        this.readyState = 2; // CLOSED
+        this.readyState = 2; // ĐÓNG
     }
 } 

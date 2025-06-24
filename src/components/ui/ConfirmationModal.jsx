@@ -9,7 +9,7 @@ const ConfirmationModal = ({
     message = "Bạn có chắc chắn muốn thực hiện hành động này?",
     confirmText = "Xác nhận",
     cancelText = "Hủy",
-    type = "warning", // warning, success, danger
+    type = "warning", 
     isLoading = false
 }) => {
     if (!isOpen) return null;

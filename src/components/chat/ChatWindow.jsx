@@ -1,4 +1,3 @@
-// src/components/chat/ChatWindow.jsx
 'use client';
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { FiX, FiLoader, FiAlertCircle, FiUserCircle } from 'react-icons/fi';
@@ -27,20 +26,20 @@ const ChatWindow = () => {
   const { isAiChatOpen, toggleAiChat } = useAiChatStore();
   const messagesEndRef = useRef(null);
   const chatBodyRef = useRef(null);
-  const [isOfflineNoticeVisible, setIsOfflineNoticeVisible] = useState(true);  // Initialize chat when component mounts and user is authenticated
+  const [isOfflineNoticeVisible, setIsOfflineNoticeVisible] = useState(true);  
   useEffect(() => {
     if (isAuthenticated && currentUser && currentUser.roles && currentUser.roles.includes('ROLE_CUSTOMER')) {
       initializeUserChat(currentUser);
 
-      // Set up periodic refresh only when chat is open to reduce unnecessary requests
+      // Set up periodic refresh only when chat is open
       const refreshInterval = setInterval(() => {
         if (isChatOpen && isAuthenticated) {
           console.log('ChatWindow: Refreshing user conversation data');
           useChatStore.getState().loadUserConversation();
         }
-      }, 30000); // Reduced frequency: refresh every 30 seconds when chat is open
+      }, 30000); 
 
-      // Connection check - only if not connected and not connecting
+      // Connection check
       const checkConnectionInterval = setInterval(() => {
         if (isAuthenticated && currentUser) {
           const { isConnected, isConnecting } = useChatStore.getState();
@@ -49,9 +48,9 @@ const ChatWindow = () => {
             initializeUserChat(currentUser);
           }
         }
-      }, 30000); // Check every 30 seconds instead of 10
+      }, 30000); 
 
-      // Clean up intervals on unmount
+      // Clean up intervals
       return () => {
         clearInterval(refreshInterval);
         clearInterval(checkConnectionInterval);
@@ -66,7 +65,7 @@ const ChatWindow = () => {
     }
   }, [isChatOpen, userMessages, markUserMessagesAsRead]);
 
-  // Reset thông báo offline khi admin quay lại online hoặc khi mở lại chat
+    // Reset thông báo offline khi admin quay lại online hoặc khi mở lại chat
   useEffect(() => {
     if (userConversation?.isAdminOnline || isChatOpen) {
       setIsOfflineNoticeVisible(true);
@@ -83,7 +82,7 @@ const ChatWindow = () => {
       return;
     }
 
-    await sendUserMessage(messageData.content);
+    await sendUserMessage(messageData);
   };
 
   const handleSwitchToAiChat = () => {

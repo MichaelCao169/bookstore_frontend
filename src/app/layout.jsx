@@ -12,8 +12,6 @@ import { FiLoader } from 'react-icons/fi';
 import ChatBubble from '@/components/chat/ChatBubble';
 import ChatWindow from '@/components/chat/ChatWindow';
 import BrandSpinner from '@/components/ui/BrandSpinner';
-
-// --- [BƯỚC 1: THÊM CÁC IMPORT MỚI] ---
 import AiChatBubble from '@/components/chat/AiChatBubble';
 import AiChatWindow from '@/components/chat/AiChatWindow';
 
@@ -36,7 +34,7 @@ export default function RootLayout({ children }) {
   const isLoading = useAuthStore((state) => state.isLoading);
   const [theme, setTheme] = useState('light');
 
-  // --- [PHẦN NÀY GIỮ NGUYÊN] ---
+ 
   // Xử lý mounting để tránh hydration mismatch
   useEffect(() => {
     setMounted(true);
@@ -89,7 +87,7 @@ export default function RootLayout({ children }) {
     }
   };
   
-  // --- [BƯỚC 2: SỬA LẠI CÁCH LẤY STATE] ---
+  
   // Lấy từng state một để tránh lỗi infinite loop
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
@@ -128,7 +126,7 @@ export default function RootLayout({ children }) {
             </main>
             <Footer />
 
-            {/* --- [BƯỚC 3: THÊM LOGIC HIỂN THỊ CHAT] --- */}
+           
 
             {/* Chat với Admin (hiển thị cho customer) */}
             {isAuthenticated && !isAdmin && (

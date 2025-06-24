@@ -1,17 +1,15 @@
 // src/app/(main)/products/[productId]/page.jsx
 // Hoặc src/app/products/[productId]/page.jsx
 
-// Đây là Server Component để fetch dữ liệu ban đầu
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 import { FiEdit, FiHome, FiBookOpen, FiTag, FiShoppingCart, FiHeart, FiStar, FiTruck, FiClock, FiInfo, FiCheckCircle, FiAlertCircle, FiAlertTriangle, FiBox } from 'react-icons/fi';
 import WriteReviewButton from '@/components/review/WriteReviewButton';
 import ProductImage from '@/components/product/ProductImage';
 import AddToCartButton from '@/components/product/AddToCartButton';
 import AddToWishlistButton from '@/components/product/AddToWishlistButton';
-import ReviewList from '@/components/review/ReviewList';
-import RichTextEditor from '@/components/ui/RichTextEditor';
-// import WriteReviewButton from '@/components/review/WriteReviewButton'; // Nên tách nút này ra
+import { LazyReviewList, LazyRichTextEditor } from '@/components/ui/LazyComponents';
 
 // Star rating
 const StarRating = ({ rating = 0, count = 0 }) => {
@@ -47,52 +45,109 @@ const StarRating = ({ rating = 0, count = 0 }) => {
   );
 };
 
+// Global cache cho product details
+const productDetailsCache = new Map();
 
-// Hàm lấy dữ liệu chi tiết sản phẩm - sửa để hỗ trợ UUID
-async function getProductDetails(productId) {
+// Hàm lấy dữ liệu chi tiết sản phẩm
+const getProductDetails = cache(async (productId) => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // Không cần chuyển đổi productId thành số vì giờ nó là UUID (chuỗi)
   if (!productId) return null;
 
+  const cacheKey = `product_${productId}`;
+  const now = Date.now();
+
+  // Check cache with timestamp
+  if (productDetailsCache.has(cacheKey)) {
+    const { data, timestamp } = productDetailsCache.get(cacheKey);
+    const cacheAge = now - timestamp;
+
+    // Cache valid in 5 minutes (300000ms)
+    if (cacheAge < 300000) {
+      console.log(`✅ Using cached product details for UUID: ${productId} (cached ${Math.round(cacheAge / 1000)}s ago)`);
+      return data;
+    } else {
+        // Cache expired, remove it
+      productDetailsCache.delete(cacheKey);
+    }
+  }
+
   try {
-    console.log(`Fetching product details for UUID: ${productId}`);
+    console.log(`🌐 Fetching product details for UUID: ${productId}`);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); 
+
     const res = await fetch(`${apiUrl}/products/${productId}`, {
       method: 'GET',
-      next: { revalidate: 300 }
+      signal: controller.signal,
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+      next: {
+        revalidate: 300,
+        tags: [`product-${productId}`]
+      }
     });
 
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(`API error fetching product ${productId}: Status ${res.status}`);
+    clearTimeout(timeoutId);
 
-    return await res.json();
+    if (res.status === 404) {
+      const nullResult = { data: null, timestamp: now };
+      productDetailsCache.set(cacheKey, nullResult);
+      return null;
+    }
+
+    if (!res.ok) {
+      throw new Error(`API error fetching product ${productId}: Status ${res.status}`);
+    }
+
+    const product = await res.json();
+
+    // Cache result with timestamp
+    const cacheEntry = { data: product, timestamp: now };
+    productDetailsCache.set(cacheKey, cacheEntry);
+
+    console.log(`✅ Product fetched and cached for UUID: ${productId}`);
+    return product;
   } catch (error) {
-    console.error(`Error fetching product ${productId}:`, error);
-    throw new Error(`Could not fetch product data for ID ${productId}.`);
+    if (error.name === 'AbortError') {
+      console.error(`⏰ Timeout fetching product ${productId}`);
+      throw new Error(`Timeout loading product ${productId}`);
+    }
+    console.error(`❌ Error fetching product ${productId}:`, error);
+    throw new Error(`Could not fetch product data for ID ${productId}`);
   }
-}
+});
 
 // Hàm lấy metadata cho trang
 export async function generateMetadata({ params }) {
-  // Make sure params is properly awaited first
   const resolvedParams = await Promise.resolve(params);
   const productId = resolvedParams.productId;
 
   try {
     const product = await getProductDetails(productId);
-    if (!product) return { title: 'Không tìm thấy sản phẩm - AtomikBooks' };
+    if (!product) return { title: 'Không tìm thấy sản phẩm - AtomicBooks' };
+
     return {
       title: `${product.title} - ${product.author} - AtomicBooks`,
       description: product.description?.substring(0, 160) || `Chi tiết về ${product.title}`,
+      openGraph: {
+        title: product.title,
+        description: product.description?.substring(0, 160),
+        images: product.coverLink ? [product.coverLink] : [],
+      },
     };
   } catch (error) {
-    return { title: 'Lỗi - AtomicBooks', description: 'Không thể tải thông tin sản phẩm.' };
+    return {
+      title: 'Lỗi - AtomicBooks',
+      description: 'Không thể tải thông tin sản phẩm.'
+    };
   }
 }
 
 // Component chính của trang chi tiết sản phẩm (Async Server Component)
 export default async function ProductDetailPage({ params }) {
-  // Make sure params is properly awaited first
   const resolvedParams = await Promise.resolve(params);
   const productId = resolvedParams.productId;
   let product = null;
@@ -101,7 +156,6 @@ export default async function ProductDetailPage({ params }) {
     product = await getProductDetails(productId);
   } catch (error) {
     console.error("Error rendering product page:", error.message);
-    // Có thể hiển thị thông báo lỗi chung ở đây hoặc để error.js xử lý
     return (
       <div className="text-center py-10">
         <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">Lỗi khi tải sản phẩm</h1>
@@ -114,18 +168,13 @@ export default async function ProductDetailPage({ params }) {
   }
 
   if (!product) {
-    notFound(); // Render trang 404
+    notFound();
   }
 
   // Format VND price
   const formatVND = (price) => {
-    // Handle null or undefined values
     if (price == null) return "0 ₫";
-
-    // Convert to number if it's a string
     const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-
-    // Use standard Vietnamese currency format
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND',
@@ -308,7 +357,7 @@ export default async function ProductDetailPage({ params }) {
           Mô tả sản phẩm
         </h2>
         <div className="prose prose-orange dark:prose-invert max-w-none">
-          <RichTextEditor
+          <LazyRichTextEditor
             content={product.description || '<p>Chưa có mô tả cho sản phẩm này.</p>'}
             editable={false}
             className="border-none bg-transparent"
@@ -323,7 +372,7 @@ export default async function ProductDetailPage({ params }) {
         </div>
 
         <div className="bg-gray-50 dark:bg-gray-700/50 rounded-md border border-gray-200 dark:border-gray-700">
-          <ReviewList productId={product.productId} />
+          <LazyReviewList productId={product.productId} />
         </div>
       </div>
     </div>

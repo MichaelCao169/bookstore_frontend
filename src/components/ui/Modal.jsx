@@ -21,19 +21,19 @@ const Modal = ({ isOpen, onClose, title, children, className = '', size = 'md' }
         if (isOpen) {
             document.addEventListener('keydown', handleEsc);
             document.addEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'hidden'; // Prevent scrolling
+            document.body.style.overflow = 'hidden'; // Chặn scroll
         }
 
         return () => {
             document.removeEventListener('keydown', handleEsc);
             document.removeEventListener('mousedown', handleClickOutside);
-            document.body.style.overflow = 'auto'; // Allow scrolling again
+            document.body.style.overflow = 'auto'; // Cho phép scroll lại
         };
     }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
-    // Handle different modal sizes
+    // Xử lý kích thước modal
     const sizeClasses = {
         sm: 'max-w-md',
         md: 'max-w-lg',
@@ -68,7 +68,7 @@ const Modal = ({ isOpen, onClose, title, children, className = '', size = 'md' }
         </div>
     );
 
-    // Use createPortal to render modal at the document body
+    // Dùng createPortal để render modal ở body
     return typeof window === 'undefined'
         ? null
         : createPortal(

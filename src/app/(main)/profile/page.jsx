@@ -17,7 +17,7 @@ const UserAvatar = dynamic(() => import('@/components/ui/UserAvatar'), { ssr: fa
 
 const ProfilePage = () => {
   const router = useRouter();
-  const { user, accessToken, logout, updateUser } = useAuthStore();  // Profile states
+  const { user, accessToken, logout, updateUser } = useAuthStore(); 
   const [profileData, setProfileData] = useState({
     name: '',
     phone: '',
@@ -31,7 +31,7 @@ const ProfilePage = () => {
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Password states
+  //Mật khẩu
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -42,12 +42,12 @@ const ProfilePage = () => {
     current: false,
     new: false,
     confirm: false
-  });    // Avatar states
+  });    
   const [previewAvatar, setPreviewAvatar] = useState(null);
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
   // Password strength
-  // Location states removed - now using memoized value
+
 
   // File input ref
   const fileInputRef = useRef(null);
@@ -262,15 +262,13 @@ const ProfilePage = () => {
       <div className="container mx-auto px-4 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full mb-6 shadow-lg">
+          <div className="inline-flex items-center justify-center w-15 h-15 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full mb-6 shadow-lg">
             <MdAccountCircle className="text-white text-4xl" />
           </div>
           <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
             Thông tin tài khoản
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Quản lý thông tin cá nhân và bảo mật tài khoản của bạn
-          </p>
+          
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -351,26 +349,6 @@ const ProfilePage = () => {
                   <MdEmail className="mr-2" />
                   {user?.email}
                 </p>
-
-                {/* Profile Stats */}
-                <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-500 mb-1">
-                      {user?.ordersCount || 0}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Đơn hàng
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-500 mb-1">
-                      {user?.wishlistCount || 0}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Yêu thích
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

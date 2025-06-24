@@ -1,4 +1,4 @@
-// src/app/(admin)/admin/chat/page.jsx
+
 'use client';
 import { useEffect, useState } from 'react';
 import { useChatStore } from '@/store/chatStore';
@@ -19,32 +19,32 @@ export default function AdminChatPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Force refresh conversations when component mounts - this ensures admin always sees latest
+  // Tải lại cuộc trò chuyện khi component mount
   useEffect(() => {
     if (isAuthenticated && currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN')) {
       console.log('AdminChatPage: Component mounted, force refreshing conversations...');
       loadAdminConversations();
     }
-  }, [isAuthenticated, currentUser, loadAdminConversations]);// Initialize admin chat when component mounts
+  }, [isAuthenticated, currentUser, loadAdminConversations]);// khởi tạo chat admin khi component mount
   useEffect(() => {
     if (isAuthenticated && currentUser && currentUser.roles && currentUser.roles.includes('ROLE_ADMIN')) {
       console.log('AdminChatPage: Initializing admin chat...');
       initializeAdminChat(currentUser);
 
-      // Set up periodic refresh for conversations - more frequent to catch new messages
+      // Thiết lập lại cuộc trò chuyện - thường xuyên hơn để bắt được tin nhắn mới
       const refreshInterval = setInterval(() => {
         if (isAuthenticated && currentUser) {
           console.log('AdminChatPage: Refreshing conversations...');
           useChatStore.getState().loadAdminConversations();
 
-          // If there's an active conversation, refresh its messages too
+          // Nếu có cuộc trò chuyện đang diễn ra, tải lại tin nhắn của nó
           const activeConvId = useChatStore.getState().adminActiveConversationId;
           if (activeConvId) {
             console.log('AdminChatPage: Refreshing active conversation messages...');
             useChatStore.getState().setAdminActiveConversation(activeConvId);
           }
         }
-      }, 30000); // Refresh every 30 seconds to catch missed messages      // Check WebSocket connection more frequently
+      }, 30000); // Tải lại mỗi 30 giây để bắt được tin nhắn bỏ lỡ      // Kiểm tra kết nối WebSocket thường xuyên hơn
       const connectionCheckInterval = setInterval(() => {
         if (isAuthenticated && currentUser) {
           const { isConnected, isConnecting } = useChatStore.getState();
@@ -53,9 +53,9 @@ export default function AdminChatPage() {
             initializeAdminChat(currentUser);
           }
         }
-      }, 15000); // Check every 15 seconds
+      }, 15000); // Kiểm tra mỗi 15 giây
 
-      // Clean up on unmount
+      // Dọn dẹp khi unmount
       return () => {
         clearInterval(refreshInterval);
         clearInterval(connectionCheckInterval);
@@ -73,7 +73,7 @@ export default function AdminChatPage() {
       </div>
 
       <div className="flex flex-grow overflow-hidden">
-        {/* Sidebar - Conversation List */}
+        {/* Sidebar - Danh sách cuộc trò chuyện */}
         <div className="w-1/3 min-w-[300px] max-w-[400px] bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
           <div className="p-3 border-b border-gray-200 dark:border-gray-700">
             <div className="relative">

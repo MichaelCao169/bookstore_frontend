@@ -3,15 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
-import { FiPlusCircle, FiSearch, FiEdit2, FiTrash2, FiLoader, FiInfo, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { formatCurrency } from '@/components/order/OrderHelpers';
+import { FiPlusCircle, FiSearch, FiEdit2, FiTrash2, FiLoader, FiChevronLeft, FiChevronRight, FiBook } from 'react-icons/fi';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 
-// Hàm rút gọn UUID để hiển thị
-const truncateUUID = (uuid, visibleChars = 8) => {
-    if (!uuid) return '';
-    // Hiển thị 8 ký tự đầu và dấu ...
-    return `${uuid.substring(0, visibleChars)}...`;
+// Hàm rút gọn ID sản phẩm để hiển thị (giống đơn hàng)
+const getTruncatedProductId = (productId) => {
+    return productId ? productId.substring(0, 6) : '';
 };
 
 export default function ProductsManagement() {
@@ -93,7 +90,9 @@ export default function ProductsManagement() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Quản lý Sản phẩm</h1>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
+                                    <FiBook className="mr-2 text-orange-500" /> Quản lý sản phẩm
+                </h1>
                 <Link
                     href="/admin/products/new"
                     className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md flex items-center transition-colors dark:bg-orange-500 dark:hover:bg-orange-600"
@@ -127,27 +126,17 @@ export default function ProductsManagement() {
                     <div className="text-center py-4 text-red-600 dark:text-red-400">{error}</div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto shadow-inner rounded-lg border border-gray-200 dark:border-gray-700 scrollbar-thin scrollbar-thumb-orange-400 scrollbar-track-gray-100 dark:scrollbar-track-gray-700 dark:scrollbar-thumb-orange-500">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 table-fixed"
-                                style={{ minWidth: '1200px' }}>
+                        <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                 <thead className="bg-gray-50 dark:bg-gray-700">
                                     <tr>
-                                        <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style={{ width: '150px' }}>
                                             ID
                                         </th>
-                                        <th className="w-80 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Tên sản phẩm
                                         </th>
-                                        <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Giá tiền
-                                        </th>
-                                        <th className="w-24 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Tồn kho
-                                        </th>
-                                        <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                            Danh mục
-                                        </th>
-                                        <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" style={{ width: '150px' }}>
                                             Thao tác
                                         </th>
                                     </tr>
@@ -155,35 +144,19 @@ export default function ProductsManagement() {
                                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                                     {products.length > 0 ? (products.map((product) => (
                                         <tr key={product.productId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                            <td className="w-32 px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100">
-                                                <div className="flex items-center">
-                                                    <span className="font-mono text-sm">{truncateUUID(product.productId)}</span>
-                                                    <span className="group relative ml-1 cursor-pointer">
-                                                        <FiInfo className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" size={16} />
-                                                        <div className="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded p-2 w-64 shadow-lg z-10">
-                                                            <div className="font-mono break-all">{product.productId}</div>
-                                                            <div className="absolute w-2 h-2 bg-gray-800 transform rotate-45 left-2 -bottom-1"></div>
-                                                        </div>
-                                                    </span>
-                                                </div>
+                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100 font-medium" style={{ width: '150px' }}>
+                                                <span
+                                                    title={product.productId}
+                                                >
+                                                    {getTruncatedProductId(product.productId)}
+                                                </span>
                                             </td>
-                                            <td className="w-80 px-6 py-4 text-gray-900 dark:text-gray-100">
-                                                <div className="max-w-xs truncate" title={product.title}>
+                                            <td className="px-6 py-4 text-gray-900 dark:text-gray-100">
+                                                <div title={product.title}>
                                                     {product.title}
                                                 </div>
                                             </td>
-                                            <td className="w-32 px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100 text-sm">{formatCurrency(product.currentPrice, 'VND', 'vi-VN')}</td>
-                                            <td className="w-24 px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-100 text-center">{product.quantity}</td>
-                                            <td className="w-48 px-6 py-4 text-gray-900 dark:text-gray-100">
-                                                <div className="max-w-xs truncate" title={product.categories && product.categories.length > 0
-                                                    ? product.categories.map(cat => cat.name).join(', ')
-                                                    : product.category?.name || 'N/A'}>
-                                                    {product.categories && product.categories.length > 0
-                                                        ? product.categories.map(cat => cat.name).join(', ')
-                                                        : product.category?.name || 'N/A'}
-                                                </div>
-                                            </td>
-                                            <td className="w-32 px-6 py-4 whitespace-nowrap space-x-2">
+                                            <td className="px-6 py-4 whitespace-nowrap space-x-2" style={{ width: '150px' }}>
                                                 <Link
                                                     href={`/admin/products/edit/${product.productId}`}
                                                     className="text-orange-600 hover:text-orange-900 dark:text-orange-400 dark:hover:text-orange-300 inline-flex items-center"
@@ -201,7 +174,7 @@ export default function ProductsManagement() {
                                     ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="6" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                            <td colSpan="3" className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                                 Không tìm thấy sản phẩm nào
                                             </td>
                                         </tr>

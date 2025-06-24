@@ -1,4 +1,3 @@
-// src/lib/websocketManager.js
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
@@ -12,8 +11,8 @@ class WebSocketManager {
     this.messageQueue = [];
     this.currentUser = null;
     this.token = null;
-    this.messageListeners = new Map(); // Map of type -> Set of callbacks
-    this.statusChangeCallbacks = new Set(); // Callbacks for connection status changes
+    this.messageListeners = new Map(); 
+    this.statusChangeCallbacks = new Set(); 
   }
 
   connect(token, user) {

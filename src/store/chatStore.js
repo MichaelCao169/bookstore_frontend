@@ -107,7 +107,7 @@ export const useChatStore = create((set, get) => ({
       
       // Prepare request based on message type
       let requestBody;
-      if (messageData.type === 'file') {
+      if (typeof messageData === 'object' && messageData.type === 'file') {
         requestBody = {
           content: messageData.content,
           messageType: 'FILE',
@@ -117,8 +117,9 @@ export const useChatStore = create((set, get) => ({
           contentType: messageData.contentType
         };
       } else {
+        // Handle both string and object inputs
         requestBody = {
-          content: messageData.content || messageData,
+          content: typeof messageData === 'string' ? messageData : messageData.content || messageData,
           messageType: 'TEXT'
         };
       }

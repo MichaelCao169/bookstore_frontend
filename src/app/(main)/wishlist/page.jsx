@@ -1,16 +1,16 @@
-// src/app/(main)/wishlist/page.jsx
-'use client'; // Cần client component để fetch và xử lý tương tác
+
+'use client'; 
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'; // Import hooks nếu cần cho phân trang wishlist (thường không cần)
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'; 
 import axiosInstance from '@/lib/axiosInstance';
 import { useAuthStore } from '@/store/authStore';
-import { useWishlistStore } from '@/store/wishlistStore'; // Import wishlist store
+import { useWishlistStore } from '@/store/wishlistStore'; 
 import { toast } from 'react-toastify';
 import { FiHeart, FiTrash2, FiLoader, FiAlertCircle, FiArrowLeft, FiGrid } from 'react-icons/fi';
 import { BsCartPlus } from 'react-icons/bs';
-import ProductCard from '@/components/ui/ProductCard'; // Tái sử dụng ProductCard
+import ProductCard from '@/components/ui/ProductCard'; 
 import Image from 'next/image';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 

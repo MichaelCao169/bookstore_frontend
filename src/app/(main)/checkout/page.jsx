@@ -63,7 +63,7 @@ const CheckoutPage = () => {
     const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
 
-    // Update available districts when city changes
+    // Update các quận/huyện khi chọn tỉnh/thành phố
     useEffect(() => {
         if (city) {
             const districts = getDistrictsByCity(city);
@@ -78,7 +78,7 @@ const CheckoutPage = () => {
         }
     }, [city, district]);
 
-    // ---- Fetch User Profile and Cart Data ----
+    // Fetch thông tin người dùng và giỏ hàng
     const fetchUserProfile = useCallback(async () => {
         const currentUser = user;
         if (!currentUser || !currentUser.id) return;
@@ -103,7 +103,7 @@ const CheckoutPage = () => {
         }
     }, []);
 
-    // ---- Fetch Cart Data ----
+    // Fetch giỏ hàng
     const fetchCart = useCallback(async () => {
         console.log('Checkout Page: Fetching cart data...');
         setIsLoadingCart(true);
@@ -145,7 +145,7 @@ const CheckoutPage = () => {
         }
     }, [user]);
 
-    // ---- Place Order Logic ----
+    // Xác thực form
     const validateForm = () => {
         const errors = {};
         if (!recipientName.trim()) errors.recipientName = 'Vui lòng nhập tên người nhận.';
@@ -219,7 +219,7 @@ const CheckoutPage = () => {
         }
     };
 
-    // --- Render Logic ---
+        // Render logic
     if (isAuthLoading || isLoadingCart) {
         return <LoadingSpinner />;
     }
@@ -241,7 +241,7 @@ const CheckoutPage = () => {
         );
     }
 
-    // --- Hiển thị trang Checkout với giao diện giống Profile ---
+    // Hiển thị trang Checkout 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8">
             <div className="container mx-auto px-4 max-w-6xl">

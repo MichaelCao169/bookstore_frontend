@@ -69,7 +69,6 @@ export const OrderStatusBadge = ({ status }) => {
 
     return (
         <span className={`inline-flex items-center gap-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${bgColor} ${textColor} whitespace-nowrap`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`}></span>
             {icon}
             {displayText}
         </span>
@@ -81,20 +80,18 @@ export const OrderStatusBadge = ({ status }) => {
 export const formatCurrency = (amount, currency = 'VND', locale = 'vi-VN') => {
     if (amount == null || isNaN(amount)) return 'N/A';
 
-    // Mặc định tiền Việt Nam đồng
-    // Có thể dùng 'USD' cho Đô la Mỹ nếu cần
     try {
         return new Intl.NumberFormat(locale, {
             style: 'currency',
             currency: currency,
-            maximumFractionDigits: currency === 'VND' ? 0 : 2, // VND không cần số thập phân
+            maximumFractionDigits: currency === 'VND' ? 0 : 2, //số thập phân
         }).format(amount);
     } catch (error) {
         console.error("Error formatting currency:", error);
         if (currency === 'VND') {
-            return `${amount.toLocaleString('vi-VN')} ₫`; // Fallback đơn giản cho VND
+            return `${amount.toLocaleString('vi-VN')} ₫`; 
         }
-        return `${currency} ${amount.toFixed(2)}`; // Fallback cho các loại tiền khác
+        return `${currency} ${amount.toFixed(2)}`; 
     }
 }
 

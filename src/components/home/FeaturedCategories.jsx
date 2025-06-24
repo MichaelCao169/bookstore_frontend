@@ -1,127 +1,113 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { FiBookOpen, FiHeart, FiAward, FiFeather, FiCoffee, FiGlobe } from 'react-icons/fi';
-import axiosInstance from '@/lib/axiosInstance';
+import { FiBookOpen, FiDollarSign, FiTarget, FiUsers, FiTrendingUp, FiCompass } from 'react-icons/fi';
 
-// Map category names to icons and styles
-const categoryStyles = {
-    'Tiểu thuyết': {
+
+const FEATURED_CATEGORIES = [
+    {
+        id: 1,
+        name: 'Tiểu Thuyết',
+        description: 'Khám phá thế giới của trí tưởng tượng',
         icon: <FiBookOpen className="w-6 h-6" />,
-        bgColor: "bg-blue-100 dark:bg-blue-900/30",
-        textColor: "text-blue-800 dark:text-blue-300",
-        borderColor: "border-blue-200 dark:border-blue-800/50",
-        image: "/images/fiction.jpg",
+        bgGradient: "bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600",
+        textColor: "text-white",
+        iconBg: "bg-white/20 backdrop-blur-sm",
+        iconColor: "text-white",
     },
-    'Lãng mạn': {
-        icon: <FiHeart className="w-6 h-6" />,
-        bgColor: "bg-rose-100 dark:bg-rose-900/30",
-        textColor: "text-rose-800 dark:text-rose-300",
-        borderColor: "border-rose-200 dark:border-rose-800/50",
-        image: "/images/romance.jpg",
+    {
+        id: 8,
+        name: 'Tài chính, tiền tệ',
+        description: 'Quản lý tài chính thông minh',
+        icon: <FiDollarSign className="w-6 h-6" />,
+        bgGradient: "bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600",
+        textColor: "text-white",
+        iconBg: "bg-white/20 backdrop-blur-sm",
+        iconColor: "text-white",
     },
-    'Phát triển bản thân': {
-        icon: <FiAward className="w-6 h-6" />,
-        bgColor: "bg-amber-100 dark:bg-amber-900/30",
-        textColor: "text-amber-800 dark:text-amber-300",
-        borderColor: "border-amber-200 dark:border-amber-800/50",
-        image: "/images/self-help.jpg",
+    {
+        id: 2,
+        name: 'Tư duy - kĩ năng sống',
+        description: 'Phát triển tư duy và kỹ năng',
+        icon: <FiTarget className="w-6 h-6" />,
+        bgGradient: "bg-gradient-to-br from-purple-400 via-purple-500 to-indigo-600",
+        textColor: "text-white",
+        iconBg: "bg-white/20 backdrop-blur-sm",
+        iconColor: "text-white",
     },
-    'Tiểu sử': {
-        icon: <FiFeather className="w-6 h-6" />,
-        bgColor: "bg-emerald-100 dark:bg-emerald-900/30",
-        textColor: "text-emerald-800 dark:text-emerald-300",
-        borderColor: "border-emerald-200 dark:border-emerald-800/50",
-        image: "/images/biography.jpg",
+    {
+        id: 15,
+        name: 'Quản trị, lãnh đạo',
+        description: 'Nghệ thuật lãnh đạo và quản lý',
+        icon: <FiUsers className="w-6 h-6" />,
+        bgGradient: "bg-gradient-to-br from-indigo-400 via-blue-500 to-purple-600",
+        textColor: "text-white",
+        iconBg: "bg-white/20 backdrop-blur-sm",
+        iconColor: "text-white",
     },
-    'Nấu ăn': {
-        icon: <FiCoffee className="w-6 h-6" />,
-        bgColor: "bg-orange-100 dark:bg-orange-900/30",
-        textColor: "text-orange-800 dark:text-orange-300",
-        borderColor: "border-orange-200 dark:border-orange-800/50",
-        image: "/images/cooking.jpg",
+    {
+        id: 16,
+        name: 'Marketing-bán hàng',
+        description: 'Chiến lược marketing hiệu quả',
+        icon: <FiTrendingUp className="w-6 h-6" />,
+        bgGradient: "bg-gradient-to-br from-orange-400 via-red-500 to-pink-600",
+        textColor: "text-white",
+        iconBg: "bg-white/20 backdrop-blur-sm",
+        iconColor: "text-white",
     },
-    'Du lịch': {
-        icon: <FiGlobe className="w-6 h-6" />,
-        bgColor: "bg-indigo-100 dark:bg-indigo-900/30",
-        textColor: "text-indigo-800 dark:text-indigo-300",
-        borderColor: "border-indigo-200 dark:border-indigo-800/50",
-        image: "/images/travel.jpg",
-    },
-};
+    {
+        id: 6,
+        name: 'Giả tưởng -huyền bí-phiêu lưu',
+        description: 'Cuộc phiêu lưu đầy bí ẩn',
+        icon: <FiCompass className="w-6 h-6" />,
+        bgGradient: "bg-gradient-to-br from-rose-400 via-pink-500 to-purple-600",
+        textColor: "text-white",
+        iconBg: "bg-white/20 backdrop-blur-sm",
+        iconColor: "text-white",
+    }
+];
 
 const FeaturedCategories = () => {
-    const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const response = await axiosInstance.get('/api/categories');
-                // Lọc ra 6 categories cần hiển thị
-                const featuredCategories = response.data.filter(cat =>
-                    Object.keys(categoryStyles).includes(cat.name)
-                );
-                setCategories(featuredCategories);
-            } catch (error) {
-                console.error('Error fetching categories:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchCategories();
-    }, []);
-
-    // Placeholder image handling
-    const getImageSrc = (path) => {
-        return path || '/sample_books.jpg';
-    };
-
-    if (loading) {
-        return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, index) => (
-                    <div key={index} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                ))}
-            </div>
-        );
-    }
-
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map(category => {
-                const style = categoryStyles[category.name];
-                return (
-                    <Link
-                        key={category.id}
-                        href={`/products?categoryId=${category.id}`}
-                        className="group relative overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center h-48 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                    >
-                        {/* Hình ảnh nền với lớp phủ */}
-                        <div className="absolute inset-0 z-0">
-                            <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/70 group-hover:from-black/50 group-hover:to-black/80 transition-all duration-300 z-10"></div>
-                            <Image
-                                src={getImageSrc(style?.image)}
-                                alt={category.name}
-                                fill
-                                className="object-cover transform group-hover:scale-110 transition-transform duration-700"
-                            />
-                        </div>
+            {FEATURED_CATEGORIES.map(category => (
+                <Link
+                    key={category.id}
+                    href={`/products?categoryId=${category.id}`}
+                    className="group relative overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 flex items-center justify-center h-48 transform hover:scale-105"
+                >
+                    {/* Gradient Background */}
+                    <div className={`absolute inset-0 ${category.bgGradient} transition-all duration-300 group-hover:opacity-90`}>
+                        {/* Overlay Pattern for added visual interest */}
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/5 transition-all duration-300"></div>
 
-                        {/* Nội dung icon và văn bản */}
-                        <div className="relative z-20 text-center px-6 py-8 w-full">
-                            <div className={`mx-auto mb-3 ${style?.bgColor} ${style?.textColor} p-3 rounded-full w-14 h-14 flex items-center justify-center ${style?.borderColor} border transition-transform group-hover:scale-110 duration-300`}>
-                                {style?.icon}
-                            </div>
-                            <h3 className="text-xl font-semibold text-white mb-1">{category.name}</h3>
-                            <p className="text-sm text-gray-200 opacity-90">{category.description}</p>
+                        {/* Subtle pattern overlay */}
+                        <div
+                            className="absolute inset-0 opacity-30 group-hover:opacity-20 transition-all duration-300"
+                            style={{
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                            }}
+                        ></div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative z-20 text-center px-6 py-8 w-full">
+                        <div className={`mx-auto mb-4 ${category.iconBg} ${category.iconColor} p-4 rounded-full w-16 h-16 flex items-center justify-center border border-white/30 transition-all group-hover:scale-110 group-hover:border-white/50 duration-300`}>
+                            {category.icon}
                         </div>
-                    </Link>
-                );
-            })}
+                        <h3 className={`text-xl font-bold ${category.textColor} mb-2 drop-shadow-sm`}>
+                            {category.name}
+                        </h3>
+                        <p className={`text-sm ${category.textColor} opacity-90 drop-shadow-sm`}>
+                            {category.description}
+                        </p>
+                    </div>
+
+                    {/* Hover Effect Glow */}
+                    <div className="absolute inset-0 rounded-xl bg-white/0 group-hover:bg-white/5 transition-all duration-300 pointer-events-none"></div>
+                </Link>
+            ))}
         </div>
     );
 };

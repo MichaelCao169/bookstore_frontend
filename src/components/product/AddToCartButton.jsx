@@ -14,7 +14,9 @@ const AddToCartButton = ({ productId, quantity, isInStock, className }) => {
   const [isLoading, setIsLoading] = useState(false);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated); // Lấy trạng thái đăng nhập
   const router = useRouter();
-  const fetchCartCount = useCartStore((state) => state.fetchCartCount); const handleAddToCart = async () => {
+  const fetchCartCount = useCartStore((state) => state.fetchCartCount);
+
+  const handleAddToCart = async () => {
     console.log('AddToCartButton: Attempting to add to cart...', { productId, isAuthenticated, isInStock });
 
     // 1. Kiểm tra đăng nhập
@@ -37,43 +39,56 @@ const AddToCartButton = ({ productId, quantity, isInStock, className }) => {
     console.log('AddToCartButton: Starting API call...');
 
     try {
-      // 3. Gọi API thêm vào giỏ hàng
       const response = await axiosInstance.post('/cart/items', {
         productId: productId,
-        quantity: 1, // Mặc định thêm 1 sản phẩm mỗi lần click
+        quantity: quantity || 1,
       });
 
+      console.log('AddToCartButton: API success', response.data);
       toast.success('Đã thêm sản phẩm vào giỏ hàng!');
-      // *** GỌI FETCH CART COUNT ĐỂ CẬP NHẬT STATE ***
-      if (fetchCartCount) await fetchCartCount();
 
+      // Refresh cart count
+      await fetchCartCount();
     } catch (error) {
-      console.error('Failed to add to cart:', error.response?.data || error.message);
-      const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể thêm sản phẩm vào giỏ hàng.';
-      toast.error(`Lỗi: ${errorMessage}`); // Thông báo lỗi
+      console.error('AddToCartButton: API error', error.response?.data || error);
+
+      if (error.response?.status === 409) {
+        toast.info('Sản phẩm đã có trong giỏ hàng. Vui lòng mở giỏ hàng để điều chỉnh số lượng.');
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể thêm sản phẩm vào giỏ hàng.';
+        toast.error(`Lỗi: ${errorMessage}`);
+      }
     } finally {
       setIsLoading(false); // Kết thúc loading
     }
   };
 
   const isDisabled = !isInStock || (quantity !== undefined && quantity <= 0);
+
   return (
     <button
-      disabled={isDisabled || isLoading} // Disable cả khi đang loading
       onClick={handleAddToCart}
-      className={className || `w-full sm:w-auto flex-grow px-6 py-3 rounded font-semibold text-white transition-colors duration-200 flex items-center justify-center ${isDisabled
-        ? 'bg-gray-400 cursor-not-allowed'
-        : isLoading
-          ? 'bg-orange-400 cursor-wait' // Màu nhạt hơn khi loading
-          : 'bg-orange-500 hover:bg-orange-600'
-        }`}
-      aria-label={isDisabled ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
-    >{isLoading ? (
-      <BrandSpinner size="sm" className="mr-2" /> // Icon loading
-    ) : (
-      <FiShoppingCart className="inline mr-2" size={18} />
-    )}
-      {isDisabled ? 'Hết hàng' : isLoading ? 'Đang thêm...' : 'Thêm vào giỏ hàng'}
+      disabled={isDisabled || isLoading} // Disable cả khi đang loading
+      className={`
+        flex items-center justify-center px-4 py-2 rounded-md font-medium transition-all duration-200 text-sm
+        ${isDisabled || isLoading
+          ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+          : 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-700 text-white shadow-md hover:shadow-lg transform hover:scale-105'
+        }
+        ${className}
+      `}
+    >
+      {isLoading ? (
+        <>
+          <BrandSpinner size="sm" className="mr-2" /> {/* Icon loading */}
+          <span>Đang thêm...</span>
+        </>
+      ) : (
+        <>
+          <FiShoppingCart className="mr-2" />
+          <span>{isDisabled ? 'Hết hàng' : 'Thêm vào giỏ'}</span>
+        </>
+      )}
     </button>
   );
 };

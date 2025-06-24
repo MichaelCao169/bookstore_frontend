@@ -1,4 +1,3 @@
-// src/components/chat/AiChatWindow.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { FiX, FiCpu, FiSend } from 'react-icons/fi';
@@ -7,7 +6,7 @@ import { useChatStore } from '@/store/chatStore';
 import UserAvatar from '@/components/ui/UserAvatar';
 import { useAuthStore } from '@/store/authStore';
 import { format } from 'date-fns';
-import { RiRobot2Line } from 'react-icons/ri'; // Import icon robot
+import { RiRobot2Line } from 'react-icons/ri'; 
 
 // Component cho tin nhắn (Không đổi)
 const AiMessageItem = ({ message }) => {

@@ -1,4 +1,3 @@
-// src/components/chat/ChatBubble.jsx
 'use client';
 import { FiMessageSquare, FiX } from 'react-icons/fi';
 import { useChatStore } from '@/store/chatStore';

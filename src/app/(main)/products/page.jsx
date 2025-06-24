@@ -8,7 +8,7 @@ async function getProducts(searchParams) {
     // Make sure searchParams is properly handled
     const resolvedParams = searchParams || {};
 
-    const page = resolvedParams.page ? parseInt(resolvedParams.page, 10) - 1 : 0; // page param thường là 1-based
+    const page = resolvedParams.page ? parseInt(resolvedParams.page, 10) - 1 : 0; // page param  là 1-based
     const size = resolvedParams.size ? parseInt(resolvedParams.size, 10) : 12; // Số lượng sản phẩm mỗi trang
     const sort = resolvedParams.sort || 'title,asc'; // Mặc định sắp xếp theo tên
 
