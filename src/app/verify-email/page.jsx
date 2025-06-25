@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
@@ -14,9 +14,14 @@ export default function VerifyEmail() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get('token');
+    const hasRun = useRef(false); // Prevent multiple executions
 
     useEffect(() => {
         const verifyEmail = async () => {
+            // Prevent multiple executions (React Strict Mode causes useEffect to run twice)
+            if (hasRun.current) return;
+            hasRun.current = true;
+
             // If there's no token, we can't verify
             if (!token) {
                 setVerifying(false);
@@ -36,7 +41,29 @@ export default function VerifyEmail() {
                 // Handle error messages from the API
                 if (err.response) {
                     if (err.response.status === 404) {
-                        setError('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+                        // Check if the error message indicates token already used
+                        const errorMessage = err.response.data || '';
+                        if (errorMessage.includes('already used') || errorMessage.includes('just verified')) {
+                            // Likely case: email was already verified in a previous request
+                            setSuccess(true);
+                            setVerifying(false);
+                            return;
+                        } else if (errorMessage.includes('not found') || errorMessage.includes('Token not found')) {
+                            setError('Mã xác thực không hợp lệ, đã được sử dụng hoặc đã hết hạn. Nếu bạn vừa xác thực thành công, hãy thử đăng nhập.');
+                        } else {
+                            setError('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+                        }
+                    } else if (err.response.status === 400) {
+                        // Bad request - likely expired token
+                        const errorMessage = err.response.data || '';
+                        if (errorMessage.includes('expired')) {
+                            setError('Mã xác thực đã hết hạn. Vui lòng yêu cầu gửi lại email xác thực.');
+                        } else {
+                            setError('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại đường dẫn.');
+                        }
+                    } else if (err.response.status === 409) {
+                        // Conflict - email already verified
+                        setSuccess(true);
                     } else if (err.response.data && err.response.data.message) {
                         setError(err.response.data.message);
                     } else {

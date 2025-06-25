@@ -23,7 +23,7 @@ function LoadingState() {
     <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
       <BrandSpinner
         size="text-6xl"
-        text="Đang tải AtomicBooks..."
+        text="Đang tải AtomikBooks..."
       />
     </div>
   );
@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
   const isLoading = useAuthStore((state) => state.isLoading);
   const [theme, setTheme] = useState('light');
 
- 
+
   // Xử lý mounting để tránh hydration mismatch
   useEffect(() => {
     setMounted(true);
@@ -86,8 +86,8 @@ export default function RootLayout({ children }) {
       document.documentElement.classList.remove('dark');
     }
   };
-  
-  
+
+
   // Lấy từng state một để tránh lỗi infinite loop
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const user = useAuthStore(state => state.user);
@@ -97,7 +97,7 @@ export default function RootLayout({ children }) {
     <html lang="vi" suppressHydrationWarning className={theme === 'dark' ? 'dark' : ''}>
       <head>
         <title>AtomikBooks - Hiệu Sách Trực Tuyến</title>
-        <meta name="description" content="AtomicBooks - Hiệu sách trực tuyến với kho sách phong phú và đa dạng." />
+        <meta name="description" content="AtomikBooks - Hiệu sách trực tuyến với kho sách phong phú và đa dạng." />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="alternate icon" href="/favicon.ico" type="image/x-icon" />
@@ -126,7 +126,7 @@ export default function RootLayout({ children }) {
             </main>
             <Footer />
 
-           
+
 
             {/* Chat với Admin (hiển thị cho customer) */}
             {isAuthenticated && !isAdmin && (

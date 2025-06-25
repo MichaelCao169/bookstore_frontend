@@ -67,7 +67,7 @@ const getProductDetails = cache(async (productId) => {
       console.log(`✅ Using cached product details for UUID: ${productId} (cached ${Math.round(cacheAge / 1000)}s ago)`);
       return data;
     } else {
-        // Cache expired, remove it
+      // Cache expired, remove it
       productDetailsCache.delete(cacheKey);
     }
   }
@@ -76,7 +76,7 @@ const getProductDetails = cache(async (productId) => {
     console.log(`🌐 Fetching product details for UUID: ${productId}`);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); 
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const res = await fetch(`${apiUrl}/products/${productId}`, {
       method: 'GET',
@@ -127,10 +127,10 @@ export async function generateMetadata({ params }) {
 
   try {
     const product = await getProductDetails(productId);
-    if (!product) return { title: 'Không tìm thấy sản phẩm - AtomicBooks' };
+    if (!product) return { title: 'Không tìm thấy sản phẩm - AtomikBooks' };
 
     return {
-      title: `${product.title} - ${product.author} - AtomicBooks`,
+      title: `${product.title} - ${product.author} - AtomikBooks`,
       description: product.description?.substring(0, 160) || `Chi tiết về ${product.title}`,
       openGraph: {
         title: product.title,
@@ -140,7 +140,7 @@ export async function generateMetadata({ params }) {
     };
   } catch (error) {
     return {
-      title: 'Lỗi - AtomicBooks',
+      title: 'Lỗi - AtomikBooks',
       description: 'Không thể tải thông tin sản phẩm.'
     };
   }

@@ -9,7 +9,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/a
 
 // --- Admin Info ---
 export const ADMIN_EMAIL = 'admin@atomik.com';
-export const ADMIN_NAME = 'Admin AtomicBooks';
+export const ADMIN_NAME = 'Admin AtomikBooks';
 export const ADMIN_AVATAR = '/admin-avatar.png';
 
 export const useChatStore = create((set, get) => ({
