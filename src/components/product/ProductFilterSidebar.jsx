@@ -3,24 +3,20 @@
 import React from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { FiChevronDown, FiXCircle, FiLoader, FiTag } from 'react-icons/fi';
-import useAuthors from '../../hooks/useAuthors';
 
 const ProductFilterSidebar = ({ initialCategories = [] }) => {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
 
-    // Fetch authors từ API
-    const { authors, loading: authorsLoading, error: authorsError } = useAuthors();
-
     // State cho UI
     const [showCategoryFilter, setShowCategoryFilter] = React.useState(true);
     const [showPriceFilter, setShowPriceFilter] = React.useState(true);
-    const [showAuthorFilter, setShowAuthorFilter] = React.useState(true);    // Lấy giá trị từ URL
+
+    // Lấy giá trị từ URL
     const selectedCategory = searchParams.get('categoryId') || '';
     const minPrice = searchParams.get('minPrice') || '';
     const maxPrice = searchParams.get('maxPrice') || '';
-    const selectedAuthor = searchParams.get('author') || '';
     const inStockOnly = searchParams.get('inStockOnly') === 'true';
 
     // Xác định priceRange dựa trên minPrice và maxPrice
@@ -341,63 +337,6 @@ const ProductFilterSidebar = ({ initialCategories = [] }) => {
                             >
                                 <FiXCircle className="mr-1" /> Xóa bộ lọc giá
                             </button>
-                        )}
-                    </div>
-                )}
-            </div>
-
-            {/* Author Filter */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-                <button
-                    onClick={() => setShowAuthorFilter(!showAuthorFilter)}
-                    className="flex items-center justify-between w-full text-left text-gray-900 dark:text-white font-medium"
-                >
-                    <span>Tác giả</span>
-                    <FiChevronDown className={`transform transition-transform ${showAuthorFilter ? 'rotate-180' : ''}`} />
-                </button>                {showAuthorFilter && (
-                    <div className="mt-4 space-y-3">
-                        {authorsError && (
-                            <div className="text-sm text-red-600 dark:text-red-400 mb-2">
-                                Lỗi tải tác giả: {authorsError}
-                            </div>
-                        )}
-
-                        {/* Author Dropdown */}
-                        <select
-                            value={selectedAuthor}
-                            onChange={(e) => handleFilterChange('author', e.target.value)}
-                            disabled={authorsLoading}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50"
-                        >
-                            <option value="">
-                                {authorsLoading ? 'Đang tải...' : 'Tất cả tác giả'}
-                            </option>
-                            {authors.map(author => (
-                                <option
-                                    key={author}
-                                    value={author}
-                                    className="dark:bg-gray-700 py-1"
-                                >
-                                    {author}
-                                </option>
-                            ))}
-                        </select>
-
-                        {/* Selected Author Tag */}
-                        {selectedAuthor && (
-                            <div className="space-y-2">
-                                <div className="flex items-center bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 px-3 py-2 rounded-full text-sm w-fit">
-                                    <FiTag className="mr-2 flex-shrink-0" />
-                                    <span className="font-medium">{selectedAuthor}</span>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleFilterChange('author', '')}
-                                        className="ml-2 text-orange-600 dark:text-orange-400 hover:text-orange-800 dark:hover:text-orange-200 transition-colors"
-                                    >
-                                        <FiXCircle size={16} />
-                                    </button>
-                                </div>
-                            </div>
                         )}
                     </div>
                 )}

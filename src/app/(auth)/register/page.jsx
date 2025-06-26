@@ -278,7 +278,7 @@ const RegisterPage = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your-email@example.com"
+                placeholder="michaelcao@gmail.com"
                 className={`block w-full rounded-md border-0 py-1.5 pl-10 pr-3 text-gray-900 shadow-sm outline-none ${validationErrors.email
                   ? 'border-2 border-red-500 focus:border-red-500 dark:border-red-500'
                   : 'border border-gray-300 dark:border-gray-600 focus:border-2 focus:border-orange-600 dark:focus:border-orange-500'

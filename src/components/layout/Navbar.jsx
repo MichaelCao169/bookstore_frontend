@@ -315,26 +315,27 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
                 {/* Dropdown Menu */}
                 {showCategoryDropdown && (
                   <div
-                    className="absolute left-1/2 -translate-x-1/2 mt-1 w-[36rem] bg-white dark:bg-gray-800 shadow-xl rounded-md border border-gray-200 dark:border-gray-600 py-2 z-50"
+                    className="absolute left-1/2 -translate-x-1/2 mt-1 w-[48rem] bg-white dark:bg-gray-800 shadow-xl rounded-md border border-gray-200 dark:border-gray-600 py-2 z-50"
                     onMouseLeave={() => setShowCategoryDropdown(false)}
                   >
                     <div className="absolute h-2 w-full top-[-8px]"></div>
-                    <div className="grid grid-cols-4 gap-x-4 gap-y-1 p-4">
+                    <div className="grid grid-cols-3 gap-x-6 gap-y-2 p-6">
                       {categories.slice(0, 20).map((category) => (
                         <Link
                           key={category.id}
                           href={`/products?categoryId=${category.id}`}
-                          className="text-base text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 py-1.5 truncate"
+                          className="text-base text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 py-2 px-3 rounded-md hover:bg-orange-50 dark:hover:bg-gray-700 transition-all duration-200 block"
                           onClick={() => setShowCategoryDropdown(false)}
+                          title={category.name}
                         >
                           {category.name}
                         </Link>
                       ))}
                     </div>
-                    <div className="border-t border-gray-200 dark:border-gray-600 mt-1 pt-1.5">
+                    <div className="border-t border-gray-200 dark:border-gray-600 mt-2 pt-2">
                       <Link
                         href="/products"
-                        className="block px-4 py-2.5 text-base font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
+                        className="block px-6 py-3 text-base font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-orange-50 dark:hover:bg-gray-700 transition-all duration-200"
                         onClick={() => setShowCategoryDropdown(false)}
                       >
                         Xem tất cả thể loại →
@@ -554,26 +555,27 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
 
               {/* Mobile Categories Dropdown Menu */}
               {showCategoryDropdown && (
-                <div className="bg-gray-50 dark:bg-gray-700 px-5 py-3 rounded-md mt-1 border border-gray-200 dark:border-gray-600">
-                  <div className="grid grid-cols-3 gap-x-4 gap-y-1">
+                <div className="bg-gray-50 dark:bg-gray-700 px-4 py-4 rounded-md mt-1 border border-gray-200 dark:border-gray-600">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2">
                     {categories.slice(0, 20).map((category) => (
                       <Link
                         key={category.id}
                         href={`/products?categoryId=${category.id}`}
-                        className="text-base text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 py-1.5 truncate"
+                        className="text-sm text-gray-700 dark:text-gray-300 hover:text-orange-500 dark:hover:text-orange-400 py-2 px-2 rounded-md hover:bg-white dark:hover:bg-gray-600 transition-all duration-200 block"
                         onClick={() => {
                           setShowCategoryDropdown(false);
                           setMobileMenuOpen(false);
                         }}
+                        title={category.name}
                       >
                         {category.name}
                       </Link>
                     ))}
                   </div>
-                  <div className="border-t border-gray-200 dark:border-gray-600 mt-1.5 pt-1.5">
+                  <div className="border-t border-gray-200 dark:border-gray-600 mt-3 pt-3">
                     <Link
                       href="/products"
-                      className="block py-2.5 text-base font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300"
+                      className="block py-2 text-sm font-medium text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 hover:bg-white dark:hover:bg-gray-600 px-2 rounded-md transition-all duration-200"
                       onClick={() => {
                         setShowCategoryDropdown(false);
                         setMobileMenuOpen(false);

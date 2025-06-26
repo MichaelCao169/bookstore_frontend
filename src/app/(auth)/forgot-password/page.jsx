@@ -133,7 +133,7 @@ const ForgotPasswordPage = () => {
                                         ? 'border-2 border-red-500 focus:border-red-500 dark:border-red-500'
                                         : 'border border-gray-300 dark:border-gray-600 focus:border-2 focus:border-orange-600 dark:focus:border-orange-500'
                                         } placeholder:text-gray-400 sm:text-sm sm:leading-6 dark:bg-gray-800 dark:text-white`}
-                                    placeholder="your-email@example.com"
+                                    placeholder="michaelcao@gmail.com"
                                 />
                             </div>
                             {validationErrors.email && (

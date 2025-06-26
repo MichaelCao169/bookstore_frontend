@@ -17,11 +17,12 @@ async function getProducts(searchParams) {
     const categoryId = resolvedParams.categoryId || '';
     const minPrice = resolvedParams.minPrice || '';
     const maxPrice = resolvedParams.maxPrice || '';
-    const author = resolvedParams.author || '';
-    const inStockOnly = resolvedParams.inStockOnly || ''; const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const inStockOnly = resolvedParams.inStockOnly || '';
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     console.log('API URL:', apiUrl);
     console.log('Query params:', {
-        page, size, sort, keyword, categoryId, minPrice, maxPrice, author, inStockOnly
+        page, size, sort, keyword, categoryId, minPrice, maxPrice, inStockOnly
     });
 
     try {
@@ -33,7 +34,6 @@ async function getProducts(searchParams) {
             ...(categoryId && { categoryId }),
             ...(minPrice && { minPrice }),
             ...(maxPrice && { maxPrice }),
-            ...(author && { author }),
             ...(inStockOnly === 'true' && { inStockOnly: 'true' }), // Chỉ thêm nếu là true
         }).toString();
 
