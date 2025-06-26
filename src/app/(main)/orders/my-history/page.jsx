@@ -6,8 +6,9 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
-import { FiPackage, FiLoader, FiAlertCircle, FiCalendar, FiTag, FiDollarSign, FiInfo, FiUser, FiMapPin, FiCreditCard, FiTruck, FiShoppingBag, FiClock, FiCheckCircle, FiXCircle, FiArrowRight, FiRefreshCw } from 'react-icons/fi'; 
-import Pagination from '@/components/ui/Pagination'; 
+import { FiPackage, FiLoader, FiAlertCircle, FiCalendar, FiTag, FiInfo, FiUser, FiMapPin, FiCreditCard, FiTruck, FiShoppingBag, FiClock, FiCheckCircle, FiXCircle, FiArrowRight, FiRefreshCw } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
+import Pagination from '@/components/ui/Pagination';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // Components Loading/Error
@@ -38,7 +39,7 @@ const ErrorMessage = ({ message }) => (
   </div>
 );
 
-    // Component hiển thị tag trạng thái đơn hàng
+// Component hiển thị tag trạng thái đơn hàng
 const OrderStatusBadge = ({ status }) => {
   let bgColor = 'bg-gray-100 dark:bg-gray-700';
   let textColor = 'text-gray-600 dark:text-gray-300';
@@ -262,7 +263,7 @@ const OrderHistoryPage = () => {
                 </div>
                 <div className="flex items-center">
                   <span className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg mr-3">
-                    <FiDollarSign className="text-orange-500 dark:text-orange-400" />
+                    <PiMoneyWavyLight className="text-orange-500 dark:text-orange-400" />
                   </span>
                   <div>
                     <div className="text-sm text-gray-500 dark:text-gray-400">Tổng tiền</div>
@@ -302,7 +303,7 @@ const OrderHistoryPage = () => {
                   <FiCreditCard className="mr-2 text-orange-500 dark:text-orange-400" />
                   Phương thức thanh toán
                 </h4>
-                <p className="text-gray-600 dark:text-gray-300">{order.paymentMethod || "Chưa cập nhật"}</p>              
+                <p className="text-gray-600 dark:text-gray-300">{order.paymentMethod || "Chưa cập nhật"}</p>
               </div>
             </div>
 

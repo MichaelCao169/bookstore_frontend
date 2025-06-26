@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FiBookOpen, FiDollarSign, FiTarget, FiUsers, FiTrendingUp, FiCompass } from 'react-icons/fi';
+import { FiBookOpen, FiTarget, FiUsers, FiTrendingUp, FiCompass } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
 
 
 const FEATURED_CATEGORIES = [
@@ -20,7 +21,7 @@ const FEATURED_CATEGORIES = [
         id: 8,
         name: 'Tài chính, tiền tệ',
         description: 'Quản lý tài chính thông minh',
-        icon: <FiDollarSign className="w-6 h-6" />,
+        icon: <PiMoneyWavyLight className="w-6 h-6" />,
         bgGradient: "bg-gradient-to-br from-emerald-400 via-green-500 to-teal-600",
         textColor: "text-white",
         iconBg: "bg-white/20 backdrop-blur-sm",

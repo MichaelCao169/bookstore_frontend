@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import axiosInstance from '@/lib/axiosInstance';
 import DashboardCard from '@/components/layout/DashboardCard';
-import { FiShoppingBag, FiPackage, FiUsers, FiDollarSign, FiActivity, FiStar, FiTrendingUp, FiAlertCircle, FiLoader, FiMessageCircle } from 'react-icons/fi';
+import { FiShoppingBag, FiPackage, FiUsers, FiActivity, FiStar, FiTrendingUp, FiAlertCircle, FiLoader, FiMessageCircle } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import BrandSpinner from '@/components/ui/BrandSpinner';
@@ -61,7 +62,7 @@ export default function AdminDashboard() {
             }
 
             try {
-                
+
                 console.log("Đang gọi API dashboard stats...");
                 const statsResponse = await axiosInstance.get('/api/admin/dashboard/stats', {
                     headers: token ? { Authorization: `Bearer ${token}` } : {}
@@ -306,7 +307,7 @@ export default function AdminDashboard() {
                 <h1 className="text-2xl font-bold flex items-center">
                     <FiActivity className="mr-2" /> Trang chủ
                 </h1>
-                
+
             </div>
 
             {error && (
@@ -344,6 +345,7 @@ export default function AdminDashboard() {
                 <DashboardCard
                     title="Tổng doanh thu"
                     value={formatCurrency(stats.totalRevenue)}
+                    icon={<PiMoneyWavyLight className="text-purple-600 dark:text-purple-400" />}
                     color="bg-purple-100"
                     darkColor="bg-purple-900/30"
                 />

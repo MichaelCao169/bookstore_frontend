@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
 import { use } from 'react';
-import { FiUser, FiMail, FiCalendar, FiLoader, FiArrowLeft, FiShoppingBag, FiDollarSign, FiEye, FiTag } from 'react-icons/fi';
+import { FiUser, FiMail, FiCalendar, FiLoader, FiArrowLeft, FiShoppingBag, FiEye, FiTag } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
 import Image from 'next/image';
 import Link from 'next/link';
 import UserAvatar from '@/components/ui/UserAvatar';
@@ -387,7 +388,7 @@ export default function UserDetail({ params }) {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-gray-200">
                                                     <div className="flex items-center">
-                                                        <FiDollarSign className="mr-1 text-gray-500 dark:text-gray-400" />
+                                                        <PiMoneyWavyLight className="mr-1 text-gray-500 dark:text-gray-400" />
                                                         {formatCurrency(order.totalAmount || 0)}
                                                     </div>
                                                 </td>

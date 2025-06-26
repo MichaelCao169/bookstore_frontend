@@ -1,14 +1,15 @@
-'use client'; 
+'use client';
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiTrash2, FiShoppingCart, FiLoader, FiAlertCircle, FiArrowLeft, FiImage, FiMinus, FiPlus, FiChevronRight } from 'react-icons/fi'; // Icons
-import axiosInstance from '@/lib/axiosInstance'; 
-import { useAuthStore } from '@/store/authStore'; 
+import axiosInstance from '@/lib/axiosInstance';
+import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-toastify'; 
+import { toast } from 'react-toastify';
 import { useCartStore } from '@/store/cartStore';
 import BrandSpinner from '@/components/ui/BrandSpinner';
+import Pagination from '@/components/ui/Pagination';
 
 // Component để hiển thị loading hoặc lỗi
 const LoadingSpinner = () => (
@@ -27,7 +28,7 @@ const ErrorMessage = ({ message }) => (
     <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">Đã xảy ra lỗi</h2>
     <p className="text-gray-600 dark:text-gray-400 mb-4">{message}</p>
     <button
-      onClick={() => window.location.reload()} 
+      onClick={() => window.location.reload()}
       className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-md transition-colors shadow-sm"
     >
       Thử lại
@@ -131,7 +132,7 @@ const CartItem = ({ item, onUpdateQuantity, onRemoveItem, updatingItemId, removi
               }
             }}
             disabled={updatingItemId === item.cartItemId || removingItemId === item.cartItemId}
-            className="w-12 text-center py-1 border-x border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none"
+            className="w-12 text-center py-1 border-x border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             aria-label="Số lượng"
           />
 
@@ -176,6 +177,10 @@ const CartPage = () => {
   const [error, setError] = useState(null);
   const [updatingItemId, setUpdatingItemId] = useState(null);
   const [removingItemId, setRemovingItemId] = useState(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(5); // Hiển thị 5 sản phẩm mỗi trang
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isAuthLoading = useAuthStore((state) => state.isLoading);
   const logoutAction = useAuthStore((state) => state.logout);
@@ -200,7 +205,7 @@ const CartPage = () => {
 
       if (fetchedCart.items?.length === 0) {
         console.log("Cart is empty after fetch.");
-      
+
       }
     } catch (err) {
       console.error('Failed to fetch cart:', err);
@@ -228,6 +233,17 @@ const CartPage = () => {
     }
   }, [isAuthenticated, isAuthLoading, fetchCart, router]);
 
+  // Reset trang hiện tại nếu vượt quá số trang có sẵn
+  useEffect(() => {
+    if (cartData?.items) {
+      const totalItems = cartData.items.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(totalPages);
+      }
+    }
+  }, [currentPage, cartData?.items, itemsPerPage]);
+
   const handleUpdateQuantity = useCallback(async (cartItemId, newQuantity, currentQuantity) => {
     // Không làm gì nếu số lượng không đổi hoặc đang cập nhật item khác
     if (newQuantity === currentQuantity || updatingItemId !== null) {
@@ -241,17 +257,42 @@ const CartPage = () => {
     }
 
     setUpdatingItemId(cartItemId);
+
+    // Cập nhật state local trước để giữ nguyên thứ tự
+    setCartData(prevCart => {
+      if (!prevCart?.items) return prevCart;
+
+      const updatedItems = prevCart.items.map(item => {
+        if (item.cartItemId === cartItemId) {
+          const updatedItem = { ...item, quantity: newQuantity };
+          updatedItem.subtotal = updatedItem.quantity * updatedItem.productCurrentPrice;
+          return updatedItem;
+        }
+        return item;
+      });
+
+      // Tính lại tổng tiền
+      const newTotalPrice = updatedItems.reduce((sum, item) => sum + (item.subtotal || (item.quantity * item.productCurrentPrice)), 0);
+      const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      return {
+        ...prevCart,
+        items: updatedItems,
+        totalPrice: newTotalPrice,
+        totalItems: newTotalItems
+      };
+    });
+
     try {
       await axiosInstance.put(`/cart/items/${cartItemId}`, { quantity: newQuantity });
       toast.success("Cập nhật số lượng thành công!");
-      // Fetch lại cart để đảm bảo đồng bộ (bao gồm cả việc cập nhật count)
-      await fetchCart();
+      // Không cần fetch lại vì đã cập nhật local state
     } catch (error) {
       console.error(`Failed to update quantity for item ${cartItemId}:`, error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể cập nhật số lượng.';
       toast.error(`Lỗi: ${errorMessage}`);
-      // Nếu lỗi cần fetch lại cart để đồng bộ lại số lượng đúng từ server
-      fetchCart(); // Fetch lại để hiển thị số lượng đúng trước khi lỗi
+      // Chỉ fetch lại khi có lỗi để khôi phục trạng thái chính xác
+      fetchCart();
     } finally {
       setUpdatingItemId(null); // Kết thúc trạng thái cập nhật cho item này
     }
@@ -266,21 +307,41 @@ const CartPage = () => {
 
     setRemovingItemId(cartItemId);
 
+    // Cập nhật state local trước để giữ nguyên thứ tự
+    setCartData(prevCart => {
+      if (!prevCart?.items) return prevCart;
+
+      const updatedItems = prevCart.items.filter(item => item.cartItemId !== cartItemId);
+
+      // Tính lại tổng tiền sau khi xóa
+      const newTotalPrice = updatedItems.reduce((sum, item) => sum + (item.subtotal || (item.quantity * item.productCurrentPrice)), 0);
+      const newTotalItems = updatedItems.reduce((sum, item) => sum + item.quantity, 0);
+
+      return {
+        ...prevCart,
+        items: updatedItems,
+        totalPrice: newTotalPrice,
+        totalItems: newTotalItems,
+        itemCount: updatedItems.length
+      };
+    });
+
     try {
       // Gọi API DELETE
       await axiosInstance.delete(`/cart/items/${cartItemId}`);
       toast.success(`Đã xóa "${productTitle}" khỏi giỏ hàng.`);
-      // Fetch lại dữ liệu giỏ hàng
-      await fetchCart();
+      // Cập nhật cart count trong store
+      setCartCount(cartData?.items?.length - 1 || 0);
     } catch (error) {
       console.error(`Failed to remove item ${cartItemId}:`, error.response?.data || error.message);
       const errorMessage = error.response?.data?.message || error.response?.data || 'Không thể xóa sản phẩm.';
       toast.error(`Lỗi: ${errorMessage}`);
+      // Chỉ fetch lại khi có lỗi để khôi phục trạng thái chính xác
       fetchCart();
     } finally {
       setRemovingItemId(null);
     }
-  }, [fetchCart, removingItemId]);
+  }, [fetchCart, removingItemId, cartData?.items?.length, setCartCount]);
 
   // Hàm xóa toàn bộ giỏ hàng
   const handleClearCart = useCallback(async () => {
@@ -315,7 +376,7 @@ const CartPage = () => {
 
   // Nếu không loading auth nhưng chưa đăng nhập, useEffect đã redirect, có thể return null hoặc loading
   if (!isAuthenticated) {
-    return <div className="text-center py-10">Chuyển hướng đến login...</div>; 
+    return <div className="text-center py-10">Chuyển hướng đến login...</div>;
   }
 
   // Nếu đã đăng nhập, kiểm tra loading của fetch cart
@@ -333,8 +394,17 @@ const CartPage = () => {
     return <div className="text-center py-10">Không thể load thông tin</div>;
   }
 
+  // Calculate pagination (moved before early returns)
+  const totalItems = cartData?.items?.length || 0;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = cartData?.items?.slice(indexOfFirstItem, indexOfLastItem) || [];
+
+
+
   // Hiển thị khi giỏ hàng trống
-  if (!cartData.items || cartData.items.length === 0) {
+  if (!cartData?.items || cartData.items.length === 0) {
     return <EmptyCart />;
   }
 
@@ -371,17 +441,37 @@ const CartPage = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Danh sách sản phẩm trong giỏ hàng */}
-          <div className="lg:col-span-2 space-y-4">
-            {cartData.items.map((item) => (
-              <CartItem
-                key={item.cartItemId}
-                item={item}
-                onUpdateQuantity={handleUpdateQuantity}
-                onRemoveItem={handleRemoveItem}
-                updatingItemId={updatingItemId}
-                removingItemId={removingItemId}
-              />
-            ))}
+          <div className="lg:col-span-2">
+            <div className="space-y-4">
+              {currentItems.map((item) => (
+                <CartItem
+                  key={item.cartItemId}
+                  item={item}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onRemoveItem={handleRemoveItem}
+                  updatingItemId={updatingItemId}
+                  removingItemId={removingItemId}
+                />
+              ))}
+            </div>
+
+            {/* Phân trang */}
+            {totalPages > 1 && (
+              <div className="mt-8 flex justify-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
+
+            {/* Thông tin hiển thị */}
+            {totalPages > 1 && (
+              <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                Hiển thị {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, totalItems)} trong tổng số {totalItems} sản phẩm
+              </div>
+            )}
           </div>
 
           {/* Tóm tắt giỏ hàng */}

@@ -4,12 +4,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { FiPackage, FiUser, FiMapPin, FiCalendar, FiDollarSign, FiInfo, FiTruck, FiLoader, FiAlertCircle, FiArrowLeft, FiXCircle } from 'react-icons/fi';
+import { FiPackage, FiUser, FiMapPin, FiCalendar, FiInfo, FiTruck, FiLoader, FiAlertCircle, FiArrowLeft, FiXCircle } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
 import { OrderStatusBadge, formatCurrency, formatDate, formatDateTime } from '@/components/order/OrderHelpers';
 import axiosInstance from '@/lib/axiosInstance';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-toastify';
 import BrandSpinner from '@/components/ui/BrandSpinner';
+import Pagination from '@/components/ui/Pagination';
 
 // Loading component
 const LoadingSpinner = () => (
@@ -54,8 +56,12 @@ export default function OrderDetailPage() {
     const [error, setError] = useState(null);
     const [isCancelling, setIsCancelling] = useState(false);
 
+    // Pagination state for order items
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(5); // Show 5 items per page
+
     const params = useParams();
-    const orderId = params.id; 
+    const orderId = params.id;
     const router = useRouter();
 
     const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -83,7 +89,7 @@ export default function OrderDetailPage() {
         try {
             const response = await axiosInstance.get(`/orders/${orderId}`);
             console.log('Order details received:', response.data);
-            setOrder(response.data); 
+            setOrder(response.data);
         } catch (err) {
             console.error(`Failed to fetch order ${orderId}:`, err);
 
@@ -91,7 +97,7 @@ export default function OrderDetailPage() {
                 setError("Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn hàng này.");
             } else if (err.response?.status === 401 || err.response?.status === 403) {
                 toast.error("Phiên đăng nhập hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.");
-                logout(); 
+                logout();
                 router.push(`/login?redirect=/orders/${orderId}`);
             } else {
                 setError(err.response?.data?.message || err.message || 'Không thể tải thông tin đơn hàng.');
@@ -135,7 +141,22 @@ export default function OrderDetailPage() {
 
     // Check xem đơn hàng có thể hủy được không
     const canCancelOrder = order && ['PENDING', 'PENDING_PAYMENT'].includes(order.status);
-    
+
+    // Calculate pagination for order items
+    const orderItems = order?.orderItems || [];
+    const totalItems = orderItems.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = orderItems.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Reset current page if it exceeds total pages
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
     if (isAuthLoading || (isLoading && !order && !error)) {
         return <LoadingSpinner />;
     }
@@ -224,7 +245,7 @@ export default function OrderDetailPage() {
                     {/* Thông tin thanh toán */}
                     <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-md">
                         <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200 flex items-center">
-                            <FiDollarSign className="mr-2 text-orange-500" />Thông tin thanh toán
+                            <PiMoneyWavyLight className="mr-2 text-orange-500" />Thông tin thanh toán
                         </h3>
                         <p className="text-gray-600 dark:text-gray-300"><strong className="text-gray-700 dark:text-gray-200">Phương thức:</strong> {order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : order.paymentMethod}</p>
                         <p className="text-gray-600 dark:text-gray-300"><strong className="text-gray-700 dark:text-gray-200">Trạng thái:</strong> <span className="font-medium">{order.status === 'PENDING' ? 'Chờ xử lý' :
@@ -252,12 +273,12 @@ export default function OrderDetailPage() {
                 {/* Danh sách sản phẩm */}
                 <div>
                     <h3 className="text-lg font-semibold mb-3 border-t border-gray-200 dark:border-gray-600 pt-4 text-gray-800 dark:text-gray-200">
-                        Sản phẩm đã đặt ({order.orderItems?.length || 0})
+                        Sản phẩm đã đặt ({totalItems})
                     </h3>
                     <div className="space-y-4">
-                        {order.orderItems?.map((item) => (
+                        {currentItems.map((item) => (
                             <div key={item.orderItemId || item.id} className="flex items-center gap-4 border-b border-gray-200 dark:border-gray-700 pb-4 last:border-b-0 last:pb-0">
-                                <div className="w-16 h-20 flex-shrink-0 relative rounded overflow-hidden bg-gray-100 dark:bg-gray-700">
+                                <Link href={`/products/${item.productId}`} className="w-16 h-20 flex-shrink-0 relative rounded overflow-hidden bg-gray-100 dark:bg-gray-700 hover:opacity-80 transition-opacity cursor-pointer">
                                     <Image
                                         src={item.productImageUrl || '/sample_books.jpg'}
                                         alt={item.productTitle || 'Sách'}
@@ -266,9 +287,11 @@ export default function OrderDetailPage() {
                                         sizes="64px"
                                         onError={(e) => { e.target.src = '/sample_books.jpg'; }}
                                     />
-                                </div>
+                                </Link>
                                 <div className="flex-grow">
-                                    <p className="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200 line-clamp-2">{item.productTitle}</p>
+                                    <Link href={`/products/${item.productId}`} className="font-medium text-sm sm:text-base text-gray-800 dark:text-gray-200 line-clamp-2 hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                                        {item.productTitle}
+                                    </Link>
                                     <p className="text-xs text-gray-500 dark:text-gray-400">tác giả: {item.productAuthor || 'Không có'}</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Giá: {formatCurrency(item.priceAtPurchase)}</p>
                                 </div>
@@ -279,6 +302,24 @@ export default function OrderDetailPage() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Phân trang cho sản phẩm */}
+                    {totalPages > 1 && (
+                        <div className="mt-6 flex justify-center">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={setCurrentPage}
+                            />
+                        </div>
+                    )}
+
+                    {/* Thông tin hiển thị */}
+                    {totalPages > 1 && (
+                        <div className="mt-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                            Hiển thị {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, totalItems)} trong tổng số {totalItems} sản phẩm
+                        </div>
+                    )}
                 </div>
 
                 {/* Nút quay lại */}

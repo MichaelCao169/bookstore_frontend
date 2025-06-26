@@ -39,7 +39,6 @@ export {
   FiBookOpen,
   FiArrowRight,
   FiImage,
-  FiDollarSign,
   FiFileText,
   FiBookmark,
   FiBarChart2,
@@ -65,3 +64,7 @@ export {
 export {
   RiRobot2Line
 } from 'react-icons/ri';
+
+export {
+  PiMoneyWavyLight
+} from 'react-icons/pi';

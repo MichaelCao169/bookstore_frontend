@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '@/lib/axiosInstance';
 import RichTextEditor from '@/components/ui/RichTextEditor';
-import { FiSave, FiX, FiBookOpen, FiDollarSign, FiPackage, FiImage, FiGrid, FiUser, FiBookmark, FiAlertCircle, FiCheckCircle, FiTag, FiPlus } from 'react-icons/fi';
+import { FiSave, FiX, FiBookOpen, FiPackage, FiImage, FiGrid, FiUser, FiBookmark, FiAlertCircle, FiCheckCircle, FiTag, FiPlus } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
 
 export default function NewProduct() {
     const router = useRouter();
@@ -246,7 +247,7 @@ export default function NewProduct() {
                         )}
                     </div>                        <div className="space-y-1">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center">
-                            <FiDollarSign className="mr-1 text-orange-500 dark:text-orange-400" /> Giá hiện tại (VNĐ) *
+                            <PiMoneyWavyLight className="mr-1 text-orange-500 dark:text-orange-400" /> Giá hiện tại (VNĐ) *
                         </label>
                         <input
                             type="number"

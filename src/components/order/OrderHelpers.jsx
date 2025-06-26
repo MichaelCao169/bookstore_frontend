@@ -1,6 +1,7 @@
 // src/components/order/OrderHelpers.jsx
 import React from 'react';
-import { FiInfo, FiLoader, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiDollarSign } from 'react-icons/fi'; // Thêm các icons cần thiết
+import { FiInfo, FiLoader, FiPackage, FiTruck, FiCheckCircle, FiXCircle } from 'react-icons/fi'; // Thêm các icons cần thiết
+import { PiMoneyWavyLight } from 'react-icons/pi';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 
 // --- Order Status Badge Component ---
@@ -24,7 +25,7 @@ export const OrderStatusBadge = ({ status }) => {
             bgColor = 'bg-orange-50 dark:bg-orange-900/30';
             textColor = 'text-orange-700 dark:text-orange-400';
             dotColor = 'bg-orange-500';
-            icon = <FiDollarSign size={12} className="hidden sm:inline" />;
+            icon = <PiMoneyWavyLight size={12} className="hidden sm:inline" />;
             displayText = 'Chờ thanh toán';
             break;
         case 'PROCESSING':
@@ -89,9 +90,9 @@ export const formatCurrency = (amount, currency = 'VND', locale = 'vi-VN') => {
     } catch (error) {
         console.error("Error formatting currency:", error);
         if (currency === 'VND') {
-            return `${amount.toLocaleString('vi-VN')} ₫`; 
+            return `${amount.toLocaleString('vi-VN')} ₫`;
         }
-        return `${currency} ${amount.toFixed(2)}`; 
+        return `${currency} ${amount.toFixed(2)}`;
     }
 }
 

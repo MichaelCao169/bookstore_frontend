@@ -127,9 +127,6 @@ export default function UsersManagement() {
                                             Vai trò
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                            Trạng thái
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                             Thao tác
                                         </th>
                                     </tr>
@@ -152,16 +149,6 @@ export default function UsersManagement() {
                                                             </span>
                                                         ))}
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <span
-                                                        className={`px-2 py-1 text-xs rounded-full ${user.enabled
-                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                                            }`}
-                                                    >
-                                                        {user.enabled ? 'Đang hoạt động' : 'Đã vô hiệu hóa'}
-                                                    </span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex space-x-2">

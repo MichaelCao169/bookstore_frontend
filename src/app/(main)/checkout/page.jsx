@@ -12,6 +12,7 @@ import { formatCurrency } from '@/components/order/OrderHelpers';
 import BrandSpinner from '@/components/ui/BrandSpinner';
 import { cities, getDistrictsByCity } from '@/data/vietnamLocations';
 import { vnpayService } from '@/services/vnpayService';
+import { useCartStore } from '@/store/cartStore';
 
 // Components Loading/Error
 const LoadingSpinner = () => (
@@ -62,6 +63,9 @@ const CheckoutPage = () => {
     const isAuthLoading = useAuthStore((state) => state.isLoading);
     const logout = useAuthStore((state) => state.logout);
     const router = useRouter();
+
+    // Cart store
+    const clearCartCount = useCartStore((state) => state.clearCartCount);
 
     // Update các quận/huyện khi chọn tỉnh/thành phố
     useEffect(() => {
@@ -207,6 +211,9 @@ const CheckoutPage = () => {
             console.log('Order placed successfully:', createdOrder);
             toast.success(`Đơn hàng #${createdOrder.orderId} đã được đặt thành công!`);
 
+            // Clear cart store để cập nhật icon giỏ hàng ngay lập tức
+            clearCartCount();
+
             router.push(`/order-success?orderId=${createdOrder.orderId}`);
 
         } catch (error) {
@@ -219,7 +226,7 @@ const CheckoutPage = () => {
         }
     };
 
-        // Render logic
+    // Render logic
     if (isAuthLoading || isLoadingCart) {
         return <LoadingSpinner />;
     }

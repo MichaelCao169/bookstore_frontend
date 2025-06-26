@@ -17,7 +17,7 @@ const UserAvatar = dynamic(() => import('@/components/ui/UserAvatar'), { ssr: fa
 
 const ProfilePage = () => {
   const router = useRouter();
-  const { user, accessToken, logout, updateUser } = useAuthStore(); 
+  const { user, accessToken, logout, updateUser } = useAuthStore();
   const [profileData, setProfileData] = useState({
     name: '',
     phone: '',
@@ -42,7 +42,7 @@ const ProfilePage = () => {
     current: false,
     new: false,
     confirm: false
-  });    
+  });
   const [previewAvatar, setPreviewAvatar] = useState(null);
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
@@ -268,7 +268,7 @@ const ProfilePage = () => {
           <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-4">
             Thông tin tài khoản
           </h1>
-          
+
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

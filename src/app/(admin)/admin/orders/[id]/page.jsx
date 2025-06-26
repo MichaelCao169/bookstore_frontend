@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
 import { use } from 'react';
-import { FiPackage, FiUser, FiCalendar, FiDollarSign, FiCreditCard, FiTag, FiArrowLeft, FiSave, FiLoader } from 'react-icons/fi';
+import { FiPackage, FiUser, FiCalendar, FiCreditCard, FiTag, FiArrowLeft, FiSave, FiLoader } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
+import Pagination from '@/components/ui/Pagination';
 
 export default function OrderDetail({ params }) {
     const unwrappedParams = use(params);
@@ -15,6 +18,10 @@ export default function OrderDetail({ params }) {
     const [error, setError] = useState(null);
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const [newStatus, setNewStatus] = useState('');
+
+    // Pagination state for order items
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage] = useState(5); // Show 5 items per page
 
     const fetchOrderDetails = async () => {
         try {
@@ -114,6 +121,21 @@ export default function OrderDetail({ params }) {
         }
     };
 
+    // Calculate pagination for order items
+    const orderItems = order?.orderItems || [];
+    const totalItems = orderItems.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = orderItems.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Reset current page if it exceeds total pages
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-full p-8">
@@ -186,7 +208,7 @@ export default function OrderDetail({ params }) {
                         </div>
                         <div>
                             <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                                <FiDollarSign className="mr-2 text-orange-500 dark:text-orange-400" /> Tổng tiền
+                                <PiMoneyWavyLight className="mr-2 text-orange-500 dark:text-orange-400" /> Tổng tiền
                             </p>
                             <p className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(order.totalAmount)}</p>
                         </div>
@@ -262,8 +284,8 @@ export default function OrderDetail({ params }) {
                     <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Địa chỉ giao hàng</p>
                         <p className="font-medium text-gray-800 dark:text-gray-200">
-                            {order.shippingCountry}, {order.shippingDistrict},{' '}
-                            {order.shippingCity}, {order.shippingStreet}
+                            {order.shippingStreet}, {order.shippingDistrict},{' '}
+                            {order.shippingCity}, {order.shippingCountry}
                         </p>
                     </div>
                     <div>
@@ -275,7 +297,9 @@ export default function OrderDetail({ params }) {
 
             {/* Order Items */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Sản phẩm đặt mua</h2>
+                <h2 className="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">
+                    Sản phẩm đặt mua ({totalItems})
+                </h2>
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-700">
@@ -295,25 +319,29 @@ export default function OrderDetail({ params }) {
                             </tr>
                         </thead>
                         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            {order.orderItems?.length > 0 ? (
-                                order.orderItems.map((item) => (
+                            {currentItems.length > 0 ? (
+                                currentItems.map((item) => (
                                     <tr key={item.orderItemId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10">
                                                     {item?.productImageUrl ? (
-                                                        <img
-                                                            className="h-10 w-10 object-cover rounded-md"
-                                                            src={item.productImageUrl}
-                                                            alt={item.productTitle}
-                                                        />
+                                                        <Link href={`/products/${item.productId}`} className="block hover:opacity-80 transition-opacity">
+                                                            <img
+                                                                className="h-10 w-10 object-cover rounded-md cursor-pointer"
+                                                                src={item.productImageUrl}
+                                                                alt={item.productTitle}
+                                                            />
+                                                        </Link>
                                                     ) : (
                                                         <div className="h-10 w-10 bg-gray-200 dark:bg-gray-600 rounded-md"></div>
                                                     )}
                                                 </div>
                                                 <div className="ml-4">
                                                     <div className="text-sm font-medium text-gray-900 dark:text-gray-200">
-                                                        {item?.productTitle || 'Sản phẩm không xác định'}
+                                                        <Link href={`/products/${item.productId}`} className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors cursor-pointer">
+                                                            {item?.productTitle || 'Sản phẩm không xác định'}
+                                                        </Link>
                                                     </div>
                                                     <div className="text-sm text-gray-500 dark:text-gray-400">
                                                         {item?.productAuthor || ''}
@@ -352,6 +380,24 @@ export default function OrderDetail({ params }) {
                         </tfoot>
                     </table>
                 </div>
+
+                {/* Phân trang cho sản phẩm */}
+                {totalPages > 1 && (
+                    <div className="mt-6 flex justify-center">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
+
+                {/* Thông tin hiển thị */}
+                {totalPages > 1 && (
+                    <div className="mt-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                        Hiển thị {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, totalItems)} trong tổng số {totalItems} sản phẩm
+                    </div>
+                )}
             </div>
         </div>
     );

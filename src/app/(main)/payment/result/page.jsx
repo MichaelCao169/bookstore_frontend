@@ -10,7 +10,7 @@ export default function PaymentResultPage() {
     const searchParams = useSearchParams();
     const [paymentResult, setPaymentResult] = useState(null);
     const [loading, setLoading] = useState(true);
-    const clearCart = useCartStore(state => state.clearCart);
+    const clearCartCount = useCartStore(state => state.clearCartCount);
 
     useEffect(() => {
         const processPaymentResult = async () => {
@@ -45,9 +45,9 @@ export default function PaymentResultPage() {
                     backendMessage: backendResult
                 });
 
-                // Nếu thanh toán thành công, xóa giỏ hàng
+                // Nếu thanh toán thành công, xóa giỏ hàng count
                 if (result.success) {
-                    clearCart();
+                    clearCartCount();
                 }
 
             } catch (error) {
@@ -63,7 +63,7 @@ export default function PaymentResultPage() {
         };
 
         processPaymentResult();
-    }, [searchParams, clearCart]);
+    }, [searchParams, clearCartCount]);
 
     const handleGoToOrders = () => {
         router.push('/orders');

@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import axiosInstance from '@/lib/axiosInstance';
-import { FiShoppingBag, FiEye, FiLoader, FiCalendar, FiUser, FiDollarSign, FiTag, FiChevronLeft, FiChevronRight, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiShoppingBag, FiEye, FiLoader, FiCalendar, FiUser, FiTag, FiChevronLeft, FiChevronRight, FiSearch, FiFilter } from 'react-icons/fi';
+import { PiMoneyWavyLight } from 'react-icons/pi';
 
 export default function OrdersManagement() {
     const [allOrders, setAllOrders] = useState([]); // Lưu tất cả orders từ server
@@ -288,13 +289,13 @@ export default function OrdersManagement() {
                     <div className="flex items-center justify-end space-x-3 mt-4">
                         <button
                             onClick={resetFilters}
-                            className="px-4 py-2 text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+                            className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-opacity-50"
                         >
-                            Đặt lại
+                            <span className="flex items-center">
+                                 Đặt lại
+                            </span>
                         </button>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            Tự động áp dụng khi nhập
-                        </span>
+
                     </div>
                 </div>
             )}
