@@ -51,37 +51,13 @@ async function getBestsellers() {
   }
 }
 
-// Hàm lấy sách đề xuất ngẫu nhiên
-async function getRandomRecommendations() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  try {
-    // Lấy một page lớn để có nhiều sách để chọn ngẫu nhiên
-    const res = await fetch(`${apiUrl}/products?page=0&size=50&sort=title,asc`, {
-      method: 'GET',
-      next: { revalidate: 1800 } // Cache 30 minutes
-    });
-
-    if (!res.ok) return [];
-
-    const data = await res.json();
-    const products = data.content || [];
-
-    // Trộn ngẫu nhiên và lấy 8 sản phẩm
-    const shuffled = products.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 8);
-  } catch (error) {
-    console.error("Error fetching random recommendations:", error);
-    return [];
-  }
-}
 
 // Trang chủ là một Async Server Component
 export default async function HomePage() {
   // Gọi hàm lấy dữ liệu
   const newArrivalsData = await getNewArrivals();
   const bestsellersData = await getBestsellers();
-  const recommendedProducts = await getRandomRecommendations();
 
   return (
     <div className="space-y-12 pb-10">
@@ -105,7 +81,7 @@ export default async function HomePage() {
         <NewArrivals products={newArrivalsData.content} />
       </section>
 
-      
+
 
       {/* Bestsellers Section */}
       <section className="container mx-auto px-4">
@@ -140,7 +116,7 @@ export default async function HomePage() {
             Xem tất cả sản phẩm →
           </a>
         </div>
-        <RecommendedBooks products={recommendedProducts} />
+        <RecommendedBooks />
       </section>
     </div>
   );

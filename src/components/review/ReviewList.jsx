@@ -26,9 +26,7 @@ const EmptyReviews = () => (
   <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
     <FiMessageSquare className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">Chưa có đánh giá</h3>
-    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-      Hãy là người đầu tiên đánh giá sản phẩm này và chia sẻ trải nghiệm của bạn với những khách hàng khác.
-    </p>
+    
   </div>
 );
 

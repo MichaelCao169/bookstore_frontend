@@ -1,37 +1,55 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiArrowRight, FiBookOpen } from 'react-icons/fi';
-
-const featuredAuthor = {
-    id: 'cal-newport',
-    name: 'Cal Newport',
-    bio: 'Cal Newport là một tác giả, giáo sư khoa học máy tính tại Đại học Georgetown và là diễn giả nổi tiếng về năng suất và công việc trí óc sâu sắc. Ông nổi bật với các tác phẩm như "Làm Việc Sâu" và "Chủ Nghĩa Tối Giản Kỹ Thuật Số", tập trung vào cách tối ưu hóa hiệu suất và sống một cuộc sống có chủ đích trong thời đại công nghệ số.',
-    image: '/images/author.jpg',
-    books: [
-        {
-            productId: 'book1',
-            title: 'Làm Việc Sâu: Quy Tắc Thành Công Trong Thế Giới Đầy Xao Nhãng',
-            cover: '/images/book1.jpg',
-            currentPrice: 195000,
-        },
-        {
-            productId: 'book2',
-            title: 'Chủ Nghĩa Tối Giản Kỹ Thuật Số: Lựa Chọn Cuộc Sống Tập Trung Trong Thế Giới Ồn Ào',
-            cover: '/images/book2.jpg',
-            currentPrice: 180000,
-        },
-        {
-            productId: 'book3',
-            title: 'Giỏi Đến Mức Họ Không Thể Phớt Lờ Bạn',
-            cover: '/images/book3.jpg',
-            currentPrice: 175000,
-        }
-    ]
-}
+import { FiBookOpen } from 'react-icons/fi';
+import axiosInstance from '@/lib/axiosInstance';
 
 const AuthorSpotlight = () => {
-    // Dùng ảnh placeholder nếu cần
+    const [featuredAuthor, setFeaturedAuthor] = useState({
+        name: 'Cal Newport',
+        bio: 'Cal Newport là một tác giả, giáo sư khoa học máy tính tại Đại học Georgetown và là diễn giả nổi tiếng về năng suất và công việc trí óc sâu sắc. Ông nổi bật với các tác phẩm như "Làm Việc Sâu" và "Chủ Nghĩa Tối Giản Kỹ Thuật Số", tập trung vào cách tối ưu hóa hiệu suất và sống một cuộc sống có chủ đích trong thời đại công nghệ số.',
+        image: '/images/author.jpg',
+        books: []
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAuthorBooks = async () => {
+            try {
+                setLoading(true);
+                // Fetch sách của Cal Newport từ API
+                const response = await axiosInstance.get('/api/products', {
+                    params: {
+                        keyword: 'Cal Newport',
+                        size: 3, // Chỉ lấy 3 cuốn sách nổi bật
+                        sort: 'soldCount,desc' // Sắp xếp theo số lượng bán giảm dần
+                    }
+                });
+
+                const books = response.data.content.map(product => ({
+                    productId: product.productId,
+                    title: product.title,
+                    cover: product.coverLink,
+                    currentPrice: product.currentPrice
+                }));
+
+                setFeaturedAuthor(prev => ({
+                    ...prev,
+                    books: books
+                }));
+            } catch (error) {
+                console.error('Error fetching author books:', error);
+                // Giữ nguyên state ban đầu nếu có lỗi
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAuthorBooks();
+    }, []);
+
     const getImageSrc = (path) => {
         return path || '/sample_books.jpg';
     };
@@ -56,14 +74,6 @@ const AuthorSpotlight = () => {
                         <p className="text-sm text-white/90 mb-6 flex-grow">
                             {featuredAuthor.bio}
                         </p>
-
-                        <Link
-                            href={`/authors/${featuredAuthor.id}`}
-                            className="inline-flex items-center justify-center w-full px-4 py-2 bg-white/20 hover:bg-white/30 rounded-md text-white font-medium transition-colors duration-200"
-                        >
-                            Xem trang tác giả
-                            <FiArrowRight className="ml-2" />
-                        </Link>
                     </div>
                 </div>
 
@@ -76,7 +86,7 @@ const AuthorSpotlight = () => {
                         </h3>
 
                         <Link
-                            href={`/authors/${featuredAuthor.id}`}
+                            href={`/products?keyword=${encodeURIComponent(featuredAuthor.name)}`}
                             className="text-orange-600 dark:text-orange-400 hover:underline text-sm font-medium"
                         >
                             Xem tất cả sách
@@ -84,33 +94,51 @@ const AuthorSpotlight = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {featuredAuthor.books.map(book => (
-                            <Link
-                                key={book.productId}
-                                href={`/products/${book.productId}`}
-                                className="group flex bg-gray-50 dark:bg-gray-700/50 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
-                            >
-                                {/* Book cover */}
-                                <div className="w-1/3 relative h-32">
-                                    <Image
-                                        src={getImageSrc(book.cover)}
-                                        alt={book.title}
-                                        fill
-                                        className="object-cover"
-                                    />
+                        {loading ? (
+                            // Loading skeleton
+                            Array.from({ length: 3 }).map((_, index) => (
+                                <div key={index} className="flex bg-gray-50 dark:bg-gray-700/50 rounded-lg overflow-hidden animate-pulse">
+                                    <div className="w-1/3 h-32 bg-gray-300 dark:bg-gray-600"></div>
+                                    <div className="w-2/3 p-3 space-y-2">
+                                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                                        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
+                                        <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                                    </div>
                                 </div>
+                            ))
+                        ) : featuredAuthor.books.length > 0 ? (
+                            featuredAuthor.books.map(book => (
+                                <Link
+                                    key={book.productId}
+                                    href={`/products/${book.productId}`}
+                                    className="group flex bg-gray-50 dark:bg-gray-700/50 rounded-lg overflow-hidden hover:shadow-md transition-shadow duration-200"
+                                >
+                                    {/* Book cover */}
+                                    <div className="w-1/3 relative h-32 overflow-hidden">
+                                        <Image
+                                            src={getImageSrc(book.cover)}
+                                            alt={book.title}
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    </div>
 
-                                {/* Book info */}
-                                <div className="w-2/3 p-3">
-                                    <h4 className="font-medium text-gray-800 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200 line-clamp-2">
-                                        {book.title}
-                                    </h4>
-                                    <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-2">
-                                        {book.currentPrice?.toLocaleString('vi-VN')} ₫
-                                    </p>
-                                </div>
-                            </Link>
-                        ))}
+                                    {/* Book info */}
+                                    <div className="w-2/3 p-3">
+                                        <h4 className="font-medium text-gray-800 dark:text-white mb-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200 line-clamp-2">
+                                            {book.title}
+                                        </h4>
+                                        <p className="text-sm font-bold text-orange-600 dark:text-orange-400 mt-2">
+                                            {book.currentPrice?.toLocaleString('vi-VN')} ₫
+                                        </p>
+                                    </div>
+                                </Link>
+                            ))
+                        ) : (
+                            <div className="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+                                Không tìm thấy sách của tác giả này
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

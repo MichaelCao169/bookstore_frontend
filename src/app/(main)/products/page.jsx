@@ -20,10 +20,6 @@ async function getProducts(searchParams) {
     const inStockOnly = resolvedParams.inStockOnly || '';
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    console.log('API URL:', apiUrl);
-    console.log('Query params:', {
-        page, size, sort, keyword, categoryId, minPrice, maxPrice, inStockOnly
-    });
 
     try {
         const queryParams = new URLSearchParams({
@@ -38,7 +34,6 @@ async function getProducts(searchParams) {
         }).toString();
 
         const fullUrl = `${apiUrl}/products?${queryParams}`;
-        console.log('Fetching from URL:', fullUrl);
 
         const res = await fetch(fullUrl, {
             method: 'GET',

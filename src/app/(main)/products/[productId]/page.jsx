@@ -73,7 +73,6 @@ const getProductDetails = cache(async (productId) => {
   }
 
   try {
-    console.log(`🌐 Fetching product details for UUID: ${productId}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -108,7 +107,6 @@ const getProductDetails = cache(async (productId) => {
     const cacheEntry = { data: product, timestamp: now };
     productDetailsCache.set(cacheKey, cacheEntry);
 
-    console.log(`✅ Product fetched and cached for UUID: ${productId}`);
     return product;
   } catch (error) {
     if (error.name === 'AbortError') {

@@ -23,7 +23,7 @@ export default function AdminDashboard() {
     const [error, setError] = useState(null);
     const [recalculating, setRecalculating] = useState(false);
 
-    // Trong TH chưa có dữ liệu từ server, sẽ sử dụng dữ liệu mẫu này
+    // Dữ liệu mẫu demo nếu k cos data từ server
     const demoStats = {
         totalOrders: 152,
         totalProducts: 76,

@@ -8,7 +8,6 @@ import { useAuthStore } from '@/store/authStore';
 import { format } from 'date-fns';
 import { RiRobot2Line } from 'react-icons/ri'; 
 
-// Component cho tin nhắn (Không đổi)
 const AiMessageItem = ({ message }) => {
   const isUser = message.sender === 'user';
   const user = useAuthStore((state) => state.user);
@@ -16,7 +15,6 @@ const AiMessageItem = ({ message }) => {
   return (
     <div className={`flex items-start gap-3 ${isUser ? 'justify-end' : ''}`}>
       {!isUser && (
-        // [CẬP NHẬT MÀU SẮC]
         <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white flex-shrink-0">
           <RiRobot2Line size={18} />
         </div>
@@ -39,7 +37,6 @@ const AiMessageItem = ({ message }) => {
   );
 };
 
-// Component cho cửa sổ chat (Cập nhật vị trí và màu sắc)
 const AiChatWindow = () => {
   const { isAiChatOpen, toggleAiChat, aiMessages, isLoading, sendAiMessage } = useAiChatStore();
   const { isChatOpen: isAdminChatOpen } = useChatStore();
@@ -60,7 +57,6 @@ const AiChatWindow = () => {
 
   if (!isAiChatOpen) return null;
 
-  // AI chat window ở bên phải màn hình, bên trái của các bubble chat
   const positionClass = "fixed bottom-20 right-20 w-[360px] h-[500px] bg-white dark:bg-gray-800 shadow-2xl rounded-lg flex flex-col border border-gray-200 dark:border-gray-700 z-[999] overflow-hidden transition-all duration-300 ease-in-out";
 
   return (
@@ -68,7 +64,7 @@ const AiChatWindow = () => {
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
         <div className="flex items-center">
-          {/* [THAY ĐỔI 2: MÀU SẮC HEADER] */}
+          
           <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white mr-3">
             <RiRobot2Line size={22} />
           </div>
@@ -86,7 +82,7 @@ const AiChatWindow = () => {
         </button>
       </div>
 
-      {/* Message Area (giữ nguyên) */}
+      {/* Message Area  */}
       <div className="flex-grow p-4 space-y-4 overflow-y-auto bg-gray-50 dark:bg-gray-700/50">
         {aiMessages.map((msg) => (
           <AiMessageItem key={msg.id} message={msg} />

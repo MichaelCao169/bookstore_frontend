@@ -99,7 +99,10 @@ const CheckoutPage = () => {
                     setStreet(profileData.defaultAddress.street || '');
                     setDistrict(profileData.defaultAddress.district || '');
                     setCity(profileData.defaultAddress.city || '');
-                    setCountry(profileData.defaultAddress.country || 'Việt Nam');
+                    setCountry(profileData.defaultAddress.country && profileData.defaultAddress.country.trim() !== '' ? profileData.defaultAddress.country : 'Việt Nam');
+                } else {
+                    // Nếu không có địa chỉ mặc định, đảm bảo country vẫn là "Việt Nam"
+                    setCountry('Việt Nam');
                 }
             }
         } catch (err) {

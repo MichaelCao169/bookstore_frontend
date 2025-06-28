@@ -220,8 +220,8 @@ const Navbar = ({ theme = 'light', toggleTheme }) => {
       <div className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center">
-            <LiaAtomSolid className="mr-2" />
+          <Link href="/" className="text-2xl font-bold text-orange-600 dark:text-orange-400 flex items-center ml-20">
+            <LiaAtomSolid />
             AtomikBooks
           </Link>
 
