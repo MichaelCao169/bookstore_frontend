@@ -35,16 +35,16 @@ export default function EditProduct({ params }) {
             try {
                 setLoadingProduct(true);
 
-                // Fetch product details
+                // Lấy chi tiết sản phẩm
                 const productResponse = await axiosInstance.get(`/api/products/${productId}`);
                 const product = productResponse.data;
 
-                // Fetch categories
+                // Lấy danh mục
                 const categoriesResponse = await axiosInstance.get('/api/categories');
                 setCategories(categoriesResponse.data);                // Set image preview
                 setPreviewImage(product.coverLink || '');
 
-                // Set form data from product
+                // Đặt dữ liệu form từ sản phẩm
                 setFormData({
                     title: product.title || '',
                     description: product.description || '',
@@ -56,7 +56,7 @@ export default function EditProduct({ params }) {
                     publisher: product.publisher || '',
                     pages: product.pages?.toString() || '',
                     categoryId: product.category?.id?.toString() || '',
-                    // Get category IDs from product.categories if it exists
+                    // Lấy ID danh mục từ product.categories nếu tồn tại
                     categoryIds: product.categories ? product.categories.map(cat => cat.id) :
                         (product.category ? [product.category.id] : []),
                 });
@@ -73,58 +73,58 @@ export default function EditProduct({ params }) {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
 
-        // Update image preview if coverLink changes
+        // Cập nhật ảnh xem trước nếu coverLink thay đổi
         if (name === 'coverLink') {
             setPreviewImage(value);
         }
 
-        // Clear error for this field when user starts typing
+        // Xóa lỗi cho trường này khi người dùng bắt đầu gõ
         if (errors[name]) {
             setErrors({ ...errors, [name]: null });
         }
     };
 
-    // Handle selection of multiple categories
+    // Xử lý chọn nhiều danh mục
     const handleCategoryChange = (e) => {
         const selectedId = Number(e.target.value);
 
-        // If user selects default empty option, do nothing
+        // Nếu người dùng chọn tùy chọn mặc định rỗng, không làm gì cả
         if (!selectedId) return;
 
-        // Check if the category is already selected
+        // Kiểm tra xem danh mục đã được chọn chưa
         if (!formData.categoryIds.includes(selectedId)) {
             const newCategoryIds = [...formData.categoryIds, selectedId];
             setFormData({
                 ...formData,
                 categoryIds: newCategoryIds,
-                // Set the first selected category as the primary category if not already set
+                // Đặt danh mục đầu tiên được chọn làm danh mục chính nếu chưa được đặt
                 categoryId: formData.categoryId || newCategoryIds[0].toString()
             });
 
-            // Clear categories error if selections were made
+            // Xóa lỗi danh mục nếu đã chọn
             if (errors.categoryIds) {
                 setErrors({ ...errors, categoryIds: null });
             }
         }
 
-        // Reset dropdown to default value
+        // Đặt lại dropdown về giá trị mặc định
         e.target.value = '';
     };
 
-    // Remove a selected category
+    // Xóa một danh mục đã chọn
     const removeCategory = (categoryId) => {
         const newCategoryIds = formData.categoryIds.filter(id => id !== categoryId);
         setFormData({
             ...formData,
             categoryIds: newCategoryIds,
-            // Update primary category if removed
+            // Cập nhật danh mục chính nếu đã xóa
             categoryId: newCategoryIds.length > 0 ?
                 (categoryId.toString() === formData.categoryId ? newCategoryIds[0].toString() : formData.categoryId) :
                 ''
         });
     };
 
-    // Get category name from ID
+    // Lấy tên danh mục từ ID
     const getCategoryName = (categoryId) => {
         const category = categories.find(cat => cat.id === categoryId);
         return category ? category.name : '';
@@ -132,7 +132,7 @@ export default function EditProduct({ params }) {
         const newErrors = {};
         if (!formData.title) newErrors.title = 'Tiêu đề là bắt buộc';
 
-        // Kiểm tra mô tả sản phẩm (rich text HTML content)
+        // Kiểm tra mô tả sản phẩm (nội dung HTML rich text)
         if (!formData.description || formData.description.trim() === '' || formData.description === '<p></p>') {
             newErrors.description = 'Mô tả là bắt buộc';
         }
@@ -156,7 +156,7 @@ export default function EditProduct({ params }) {
         if (!validate()) return;
 
         try {
-            setLoading(true);            // Convert string values to numbers where appropriate
+            setLoading(true);            
             const productData = {
                 ...formData,
                 currentPrice: Number(formData.currentPrice),
@@ -187,7 +187,7 @@ export default function EditProduct({ params }) {
 
     return (
         <div className="space-y-6">
-            {/* Header - Updated to match create product styling */}
+            {/* Header - Cập nhật để phù hợp với kiểu dáng tạo sản phẩm */}
             <div className="flex items-center justify-between bg-gradient-to-r from-orange-500 to-orange-600 dark:from-orange-600 dark:to-orange-700 text-white p-4 rounded-lg shadow-md">
                 <h1 className="text-2xl font-bold flex items-center">
                     <FiBookOpen className="mr-2" /> Chỉnh sửa sản phẩm
@@ -335,7 +335,7 @@ export default function EditProduct({ params }) {
                                     <FiGrid className="mr-1 text-orange-500 dark:text-orange-400" /> Danh mục *
                                 </label>
 
-                                {/* Selected Categories as Tags */}
+                                {/* Danh mục đã chọn dưới dạng tag */}
                                 <div className="flex flex-wrap gap-2 mb-2">
                                     {formData.categoryIds.map((categoryId) => (
                                         <div

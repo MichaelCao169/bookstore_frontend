@@ -1,14 +1,13 @@
-// src/app/(auth)/login/page.jsx
-'use client'; // Cần client component vì có form state và event handler
+'use client'; 
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation'; // Import hooks
-import { useAuthStore } from '@/store/authStore'; // Import auth store
+import { useRouter, useSearchParams } from 'next/navigation'; 
+import { useAuthStore } from '@/store/authStore'; 
 import { FiLogIn, FiMail, FiLock, FiAlertCircle, FiEye, FiEyeOff } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import axios from 'axios'; // Import axios trực tiếp
-import axiosInstance from '@/lib/axiosInstance'; // Import axiosInstance for profile API call
+import axios from 'axios'; 
+import axiosInstance from '@/lib/axiosInstance'; 
 
 // Tạo instance axios riêng (không dùng axiosInstance có interceptors để tránh reload)
 const authApi = axios.create({

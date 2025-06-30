@@ -1,4 +1,3 @@
-// src/services/fileUploadService.js
 import axiosInstance from '@/lib/axiosInstance';
 
 export const uploadChatFile = async (file) => {

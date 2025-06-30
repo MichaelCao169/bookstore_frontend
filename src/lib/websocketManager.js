@@ -78,7 +78,7 @@ class WebSocketManager {
         this.isConnected = false;
         this.notifyStatusChange();
         
-        if (event.code !== 1000) { // Not a normal closure
+        if (event.code !== 1000) { 
           this.scheduleReconnect();
         }
       };
@@ -304,7 +304,7 @@ class WebSocketManager {
   }
 }
 
-// Create singleton instance
+// Tạo singleton instance
 const webSocketManager = new WebSocketManager();
 
 export default webSocketManager;

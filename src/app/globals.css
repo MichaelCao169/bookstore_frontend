@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Smooth theme transitions */
+/* Làm mượt chuyển đổi theme */
 *,
 *::before,
 *::after {
@@ -9,14 +9,14 @@
     border-color 0.3s ease, fill 0.3s ease, stroke 0.3s ease;
 }
 
-/* Disable transitions for scrollbar elements to prevent flickering in some browsers */
+/* Vô hiệu hóa chuyển đổi cho các phần tử thanh cuộn để tránh hiệu ứng lấp lánh trong một số trình duyệt */
 ::-webkit-scrollbar,
 ::-webkit-scrollbar-track,
 ::-webkit-scrollbar-thumb {
   transition: none;
 }
 
-/* Revert transitions for certain interactive elements for better UX */
+/* Đảo ngược chuyển đổi cho một số phần tử tương tác để cải thiện UX */
 button,
 a {
   transition: transform 0.1s ease, box-shadow 0.2s ease,
@@ -27,7 +27,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Line clamp utilities */
+/* Công cụ line clamp */
 .line-clamp-1 {
   overflow: hidden;
   display: -webkit-box;

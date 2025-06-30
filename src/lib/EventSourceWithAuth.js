@@ -1,7 +1,4 @@
-/**
- * Wrapper EventSource tùy chỉnh xử lý xác thực và CORS một cách phù hợp
- * Implementation này giúp giải quyết các vấn đề với kết nối SSE trên các trình duyệt khác nhau
- */
+
 export default class EventSourceWithAuth {
     constructor(url, options = {}) {
         this.url = url;
